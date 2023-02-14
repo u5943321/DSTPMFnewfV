@@ -53,7 +53,7 @@ Theorem main:
            Pf0Drv Σ aths (insth fσ vσ (uniqify uσ th))
 Proof         
 Induct_on ‘Pf’ >> rw[] >> TRY (metis_tac[]) (* 15 *)
->- rw[Pf0Drv_def] >> irule_at Any Pf0_AX >>
+>- (rw[Pf0Drv_def] >> irule_at Any Pf0_AX >>
    gs[Uof_SUBSET,PULL_EXISTS] >>
    first_x_assum $ drule_then assume_tac >>
    gs[SUBSET_DEF] >>
@@ -67,8 +67,8 @@ Induct_on ‘Pf’ >> rw[] >> TRY (metis_tac[]) (* 15 *)
    rw[fVars_finst,vinst_fVar_def] >>
    Cases_on ‘x'’ >> first_x_assum $ irule_at Any >>
    qspecl_then [‘vσ’,‘q’,‘r’] assume_tac vinst_fVar_def >>
-   pop_assum SUBST_ALL_TAC
-   simp[vinst_fVar_def] >> cheat
+   pop_assum SUBST_ALL_TAC >>
+   simp[vinst_fVar_def])
 >- cheat (* hyp *)
 >- (qabbrev_tac ‘eqthl = (map2list (LENGTH sl − 1) eqths)’ >>
    ‘insth fσ vσ (uniqify uσ (fVcong eqthl P sl)) =
