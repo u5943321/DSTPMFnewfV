@@ -419,15 +419,14 @@ QED
 
 
 
-(*
+
 Theorem fVars_vinst:
 ∀f. fVars (finst vσ f) = IMAGE (vinst_fVar vσ) (fVars f)
 Proof
 Induct_on ‘f’ >> gs[vinst_fVar_def,finst_def,fVars_def]
 QED        
-*)
 
-
+           
 Theorem instf_fVinst_finst:
  instf fσ vσ = fVinst fσ ∘ finst vσ
 Proof

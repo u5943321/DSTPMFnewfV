@@ -11,7 +11,7 @@ struct
   structure TDB = struct
     val thydata = 
       TheoryReader.load_thydata "newdefs"
-        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFcopy/formalisation/newdefsTheory.dat")
+        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/newdefsTheory.dat")
     fun find s = Redblackmap.find (thydata,s)
   end
   
@@ -19,8 +19,6 @@ struct
   fun op assum_def _ = () val op assum_def = TDB.find "assum_def"
   fun op concl_def _ = () val op concl_def = TDB.find "concl_def"
   fun op thfVars_def _ = () val op thfVars_def = TDB.find "thfVars_def"
-  fun op vinst_fVar_def _ = ()
-  val op vinst_fVar_def = TDB.find "vinst_fVar_def"
   fun op genavds_def _ = () val op genavds_def = TDB.find "genavds_def"
   fun op map2list _ = () val op map2list = TDB.find "map2list"
   fun op Lofeqths_def _ = () val op Lofeqths_def = TDB.find "Lofeqths_def"
@@ -70,6 +68,10 @@ struct
   fun op vsfv_def _ = () val op vsfv_def = TDB.find "vsfv_def"
   fun op wffsig_def _ = () val op wffsig_def = TDB.find "wffsig_def"
   fun op absapLs_def _ = () val op absapLs_def = TDB.find "absapLs_def"
+  fun op fVmap_fVrn_def _ = ()
+  val op fVmap_fVrn_def = TDB.find "fVmap_fVrn_def"
+  fun op plainfV_def _ = () val op plainfV_def = TDB.find "plainfV_def"
+  fun op rn2fVmap_def _ = () val op rn2fVmap_def = TDB.find "rn2fVmap_def"
   fun op map2list_compute _ = ()
   val op map2list_compute = TDB.find "map2list_compute"
   fun op ffv_IFF _ = () val op ffv_IFF = TDB.find "ffv_IFF"
@@ -184,6 +186,24 @@ struct
   fun op wff_IMP _ = () val op wff_IMP = TDB.find "wff_IMP"
   fun op wfvmap_IN_ofMAP_wfs _ = ()
   val op wfvmap_IN_ofMAP_wfs = TDB.find "wfvmap_IN_ofMAP_wfs"
+  fun op ffv_finst_alt _ = ()
+  val op ffv_finst_alt = TDB.find "ffv_finst_alt"
+  fun op finst_o_vmap _ = () val op finst_o_vmap = TDB.find "finst_o_vmap"
+  fun op FDOM_fVmap_fVrn _ = ()
+  val op FDOM_fVmap_fVrn = TDB.find "FDOM_fVmap_fVrn"
+  fun op FAPPLY_fVmap_fVrn _ = ()
+  val op FAPPLY_fVmap_fVrn = TDB.find "FAPPLY_fVmap_fVrn"
+  fun op uniqifn_FDOM_SUBSET _ = ()
+  val op uniqifn_FDOM_SUBSET = TDB.find "uniqifn_FDOM_SUBSET"
+  fun op fVinst_ffVrn _ = () val op fVinst_ffVrn = TDB.find "fVinst_ffVrn"
+  fun op uniqifn_ex _ = () val op uniqifn_ex = TDB.find "uniqifn_ex"
+  fun op FDOM_rn2fVmap _ = ()
+  val op FDOM_rn2fVmap = TDB.find "FDOM_rn2fVmap"
+  fun op FAPPLY_rn2fVmap _ = ()
+  val op FAPPLY_rn2fVmap = TDB.find "FAPPLY_rn2fVmap"
+  fun op MAP_tprpl_mk_bmap_REVERSE _ = ()
+  val op MAP_tprpl_mk_bmap_REVERSE = TDB.find "MAP_tprpl_mk_bmap_REVERSE"
+  fun op ffVrn_fVinst _ = () val op ffVrn_fVinst = TDB.find "ffVrn_fVinst"
   
   
 val _ = if !Globals.print_thy_loads then TextIO.print "done\n" else ()

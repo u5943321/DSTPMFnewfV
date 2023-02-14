@@ -1,4 +1,4 @@
-(theory (("fVinst" "1676327638" "306452") ("fsytx" "1676327411" "198455"))
+(theory (("fVinst" "1676360784" "491556") ("fsytx" "1676360704" "344136"))
  (core-data
   (tables
    (string-table "min" "fun" "bool" "list" "string" "char" "num"

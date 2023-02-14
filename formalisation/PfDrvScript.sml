@@ -155,8 +155,8 @@ Inductive Pf:
 End
         
   
-Theorem Pf0_cont_is_cont:
-∀pf. Pf0 Σ aths pf ⇒
+Theorem Pf_cont_is_cont:
+∀pf. Pf Σ axs pf ⇒
  ∀Γ A f. MEM (Γ,A,f) pf ⇒ is_cont Γ
 Proof
  Induct_on ‘Pf’ >> rw[] >> TRY (metis_tac[]) (* 13 *)
@@ -505,6 +505,36 @@ gs[wff_EQ] >> rw[Leq_Req_EQ]
 QED
 
 
+
+
+Theorem wff_IFF:
+wff Σ (IFF f1 f2) ⇔ wff Σ f1 ∧ wff Σ f2
+Proof
+Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+rw[IFF_def,CONJ_def,NEG_def,wff_IMP,wff_False,EQ_def] >>
+metis_tac[]
+QED   
+
+Theorem wff_fVar':
+ ∀P sl tl. wfabsap (FST Σ) sl tl ⇒ wff Σ (fVar P sl tl)
+Proof
+ Cases_on ‘Σ’ >> Cases_on ‘r’>> simp[] >>
+ metis_tac[wff_fVar]
+QED 
+
+Theorem wff_False':    
+wff Σ False
+Proof
+Cases_on ‘Σ’ >> Cases_on ‘r’ >> gs[wff_False]
+QED
+
+Theorem wff_NEG:
+ wff Σ (NEG f) ⇔ wff Σ f
+Proof
+ gs[NEG_def,wff_IMP,wff_False']
+QED
+
+                
 Theorem Pf_ffv_SUBSET_wff:
  wfsig (Σf,Σp,Σe) ∧ 
 (∀ax. ax ∈ axs ⇒ wff (Σf,Σp,Σe) ax) ⇒

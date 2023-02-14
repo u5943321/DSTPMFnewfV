@@ -24,6 +24,7 @@ sig
     val disch_def : thm
     val fVcong_def : thm
     val fVinsth_def : thm
+    val fVmap_fVrn_def : thm
     val fVrn_def : thm
     val fcong_def : thm
     val ffVrn_def : thm
@@ -35,7 +36,9 @@ sig
     val is_cth : thm
     val map2list : thm
     val o_fVmap_def : thm
+    val plainfV_def : thm
     val refl_def : thm
+    val rn2fVmap_def : thm
     val subfm_def : thm
     val sym_def_primitive : thm
     val thfVars_def : thm
@@ -43,7 +46,6 @@ sig
     val uniqifn_def : thm
     val vinst_bmap_def : thm
     val vinst_cont_def : thm
-    val vinst_fVar_def : thm
     val vinst_fVmap_def : thm
     val vinsth_def : thm
     val vsfv_def : thm
@@ -57,12 +59,16 @@ sig
     val EMPTY_is_cont : thm
     val FALLL_components : thm
     val FALLL_fbounds : thm
+    val FAPPLY_fVmap_fVrn : thm
     val FAPPLY_o_fVmap : thm
     val FAPPLY_o_fVmap1 : thm
     val FAPPLY_o_fVmap2 : thm
+    val FAPPLY_rn2fVmap : thm
     val FAPPLY_vinst_bmap : thm
     val FAPPLY_vinst_fVmap : thm
+    val FDOM_fVmap_fVrn : thm
     val FDOM_o_fVmap : thm
+    val FDOM_rn2fVmap : thm
     val FDOM_vinst_bmap : thm
     val FDOM_vinst_fVmap : thm
     val IN_Uof : thm
@@ -71,6 +77,7 @@ sig
     val IN_vsfv : thm
     val LENGTH_LRofeqthl : thm
     val LENGTH_map2list : thm
+    val MAP_tprpl_mk_bmap_REVERSE : thm
     val MEM_Lofeqthl_map2list : thm
     val MEM_Rofeqthl_map2list : thm
     val MEM_map2list : thm
@@ -89,14 +96,18 @@ sig
     val fVar_subfm_IN_absapLs : thm
     val fVars_ffVrn : thm
     val fVars_vinst : thm
+    val fVinst_ffVrn : thm
     val fVinst_fprpl : thm
     val fVslfv_fabs : thm
+    val ffVrn_fVinst : thm
     val ffv_IFF : thm
     val ffv_NEG : thm
+    val ffv_finst_alt : thm
     val ffv_finst_wfvmap : thm
     val ffv_frpl : thm
     val ffv_frpl_SUBSET : thm
     val finst_fprpl : thm
+    val finst_o_vmap : thm
     val frpl_fprpl : thm
     val frpl_id : thm
     val instf_fVinst : thm
@@ -114,8 +125,10 @@ sig
     val tshift_tinst : thm
     val undisch_def : thm
     val undisch_ind : thm
+    val uniqifn_FDOM_SUBSET : thm
     val uniqifn_SUBSET : thm
     val uniqifn_alluniq : thm
+    val uniqifn_ex : thm
     val vinst_bmap_alt : thm
     val vinst_cont_EMPTY : thm
     val vinst_cont_UNION : thm
@@ -226,6 +239,16 @@ sig
           (ct ∪ ofFMAP ffv σf (Uof fVars ({f} ∪ asm)),
            IMAGE (fVinst σf) asm,fVinst σf f)
    
+   [fVmap_fVrn_def]  Definition
+      
+      ⊢ ∀σ uσ.
+          fVmap_fVrn σ uσ =
+          FUN_FMAP
+            (λ(P,sl).
+                 σ '
+                 (CHOICE {(P0,sl) | uσ ' (P0,sl) = P ∧ (P0,sl) ∈ FDOM σ}))
+            (IMAGE (fVrn uσ) (FDOM σ))
+   
    [fVrn_def]  Definition
       
       ⊢ ∀uσ P sl.
@@ -296,9 +319,19 @@ sig
                  if (P,sl) ∈ FDOM σ1 then fVinst σ2 (σ1 ' (P,sl))
                  else σ2 ' (P,sl)) (FDOM σ1 ∪ FDOM σ2)
    
+   [plainfV_def]  Definition
+      
+      ⊢ ∀P sl.
+          plainfV (P,sl) =
+          fVar P sl (MAP Bound (REVERSE (COUNT_LIST (LENGTH sl))))
+   
    [refl_def]  Definition
       
       ⊢ ∀t. refl t = (tfv t,∅,EQ t t)
+   
+   [rn2fVmap_def]  Definition
+      
+      ⊢ ∀uσ. rn2fVmap uσ = FUN_FMAP (λfV. plainfV (fVrn uσ fV)) (FDOM uσ)
    
    [subfm_def]  Definition
       
@@ -348,7 +381,7 @@ sig
           uniqifn uσ fVs ⇔
           fVs ⊆ FDOM uσ ∧
           ∀P1 P2 sl1 sl2.
-            (P1,sl1) ∈ fVs ∧ (P2,sl2) ∈ fVs ∧ sl1 ≠ sl2 ⇒
+            (P1,sl1) ∈ fVs ∧ (P2,sl2) ∈ fVs ∧ (P1,sl1) ≠ (P2,sl2) ⇒
             uσ ' (P1,sl1) ≠ uσ ' (P2,sl2)
    
    [vinst_bmap_def]  Definition
@@ -359,10 +392,6 @@ sig
    [vinst_cont_def]  Definition
       
       ⊢ ∀σ Γ. vinst_cont σ Γ = ofFMAP tfv σ Γ
-   
-   [vinst_fVar_def]  Definition
-      
-      ⊢ ∀vσ P sl. vinst_fVar vσ (P,sl) = (P,MAP (sinst vσ) sl)
    
    [vinst_fVmap_def]  Definition
       
@@ -428,6 +457,12 @@ sig
           wff (Σf,Σg,Σe) (FALLL sl b) ⇒
           fbounds b ⊆ count (LENGTH sl)
    
+   [FAPPLY_fVmap_fVrn]  Theorem
+      
+      ⊢ uniqifn uσ (FDOM σ) ⇒
+        ∀P sl.
+          (P,sl) ∈ FDOM σ ⇒ fVmap_fVrn σ uσ ' (uσ ' (P,sl),sl) = σ ' (P,sl)
+   
    [FAPPLY_o_fVmap]  Theorem
       
       ⊢ (P,sl) ∈ FDOM σ1 ∪ FDOM σ2 ⇒
@@ -443,6 +478,10 @@ sig
       ⊢ (P,sl) ∉ FDOM σ1 ∧ (P,sl) ∈ FDOM σ2 ⇒
         o_fVmap σ2 σ1 ' (P,sl) = σ2 ' (P,sl)
    
+   [FAPPLY_rn2fVmap]  Theorem
+      
+      ⊢ fV ∈ FDOM uσ ⇒ rn2fVmap uσ ' fV = plainfV (fVrn uσ fV)
+   
    [FAPPLY_vinst_bmap]  Theorem
       
       ⊢ i ∈ FDOM bmap ⇒ vinst_bmap σ bmap ' i = tinst σ (bmap ' i)
@@ -454,9 +493,17 @@ sig
           vinst_fVmap vσ fσ ' (vinst_fVar vσ (P,sl)) =
           finst vσ (fσ ' (P,sl))
    
+   [FDOM_fVmap_fVrn]  Theorem
+      
+      ⊢ FDOM (fVmap_fVrn σ uσ) = IMAGE (fVrn uσ) (FDOM σ)
+   
    [FDOM_o_fVmap]  Theorem
       
       ⊢ FDOM (o_fVmap σ2 σ1) = FDOM σ1 ∪ FDOM σ2
+   
+   [FDOM_rn2fVmap]  Theorem
+      
+      ⊢ FDOM (rn2fVmap uσ) = FDOM uσ
    
    [FDOM_vinst_bmap]  Theorem
       
@@ -493,6 +540,12 @@ sig
    [LENGTH_map2list]  Theorem
       
       ⊢ ∀n. LENGTH (map2list n f) = n + 1
+   
+   [MAP_tprpl_mk_bmap_REVERSE]  Theorem
+      
+      ⊢ MAP (tprpl (mk_bmap (REVERSE l0)) ∘ Bound)
+          (REVERSE (COUNT_LIST (LENGTH l0))) =
+        l0
    
    [MEM_Lofeqthl_map2list]  Theorem
       
@@ -582,6 +635,12 @@ sig
       
       ⊢ ∀f. fVars (finst vσ f) = IMAGE (vinst_fVar vσ) (fVars f)
    
+   [fVinst_ffVrn]  Theorem
+      
+      ⊢ uniqifn uσ (FDOM σ) ⇒
+        ∀f. fVars f ⊆ FDOM σ ⇒
+            fVinst (fVmap_fVrn σ uσ) (ffVrn uσ f) = fVinst σ f
+   
    [fVinst_fprpl]  Theorem
       
       ⊢ ∀ϕ σ bmap.
@@ -593,6 +652,11 @@ sig
       
       ⊢ fVslfv (fabs v i f) = fVslfv f
    
+   [ffVrn_fVinst]  Theorem
+      
+      ⊢ ∀f. (∀P sl tl. fVar P sl tl ∈ subfm f ⇒ LENGTH sl = LENGTH tl) ⇒
+            ffVrn uσ f = fVinst (rn2fVmap uσ) f
+   
    [ffv_IFF]  Theorem
       
       ⊢ ffv (IFF f1 f2) = ffv f1 ∪ ffv f2
@@ -600,6 +664,11 @@ sig
    [ffv_NEG]  Theorem
       
       ⊢ ffv (NEG f) = ffv f
+   
+   [ffv_finst_alt]  Theorem
+      
+      ⊢ cstt σ ∧ ffv f ⊆ FDOM σ ∧ no_bound σ ⇒
+        ffv (finst σ f) = ofFMAP tfv σ (ffv f)
    
    [ffv_finst_wfvmap]  Theorem
       
@@ -626,6 +695,12 @@ sig
           ffv f ⊆ FDOM σ ∧ (∀n s. (n,s) ∈ ffv f ⇒ sbounds s = ∅) ∧
           (∀n s. (n,s) ∈ FDOM σ ⇒ tbounds (σ ' (n,s)) = ∅) ⇒
           finst σ (fprpl bmap f) = fprpl (vinst_bmap σ bmap) (finst σ f)
+   
+   [finst_o_vmap]  Theorem
+      
+      ⊢ ∀f σ1 σ2.
+          ffv f ⊆ FDOM σ1 ∧ ffv (finst σ1 f) ⊆ FDOM σ2 ⇒
+          finst σ2 (finst σ1 f) = finst (o_vmap σ2 σ1) f
    
    [frpl_fprpl]  Theorem
       
@@ -756,6 +831,10 @@ sig
             (∀v27 v26 v17 v18 v19. P (v27,v26,fVar v17 v18 v19)) ⇒
             ∀v v1 v2. P (v,v1,v2)
    
+   [uniqifn_FDOM_SUBSET]  Theorem
+      
+      ⊢ uniqifn uσ fVs ⇒ fVs ⊆ FDOM uσ
+   
    [uniqifn_SUBSET]  Theorem
       
       ⊢ uniqifn uσ A ∧ B ⊆ A ⇒ uniqifn uσ B
@@ -763,6 +842,10 @@ sig
    [uniqifn_alluniq]  Theorem
       
       ⊢ ∀f. uniqifn uσ (fVars f) ⇒ alluniq (fVars (ffVrn uσ f))
+   
+   [uniqifn_ex]  Theorem
+      
+      ⊢ ∀fVs. FINITE fVs ⇒ ∃uσ. uniqifn uσ fVs
    
    [vinst_bmap_alt]  Theorem
       

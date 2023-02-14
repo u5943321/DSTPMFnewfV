@@ -11,7 +11,7 @@ struct
   structure TDB = struct
     val thydata = 
       TheoryReader.load_thydata "fsytx"
-        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFcopy/formalisation/fsytxTheory.dat")
+        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/fsytxTheory.dat")
     fun find s = Redblackmap.find (thydata,s)
   end
   

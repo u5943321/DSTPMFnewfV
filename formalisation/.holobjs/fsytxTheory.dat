@@ -1,4 +1,4 @@
-(theory (("fsytx" "1676327411" "198455") ("tmsytx" "1676327319" "126274"))
+(theory (("fsytx" "1676360704" "344136") ("tmsytx" "1676360508" "99071"))
  (core-data
   (tables
    (string-table "min" "fun" "bool" "ind_type" "recspace" "pair" "prod"
