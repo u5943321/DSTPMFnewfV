@@ -525,7 +525,7 @@ QED
 
 
           
-Theorem uniqifn_alluniq:
+Theorem uniqifn_alluniq0:
 ∀s. uniqifn uσ s ⇒ alluniq (IMAGE (fVrn uσ) s)
 Proof
 rw[] >>
@@ -541,7 +541,7 @@ Theorem uniqifn_alluniq:
 ∀f. uniqifn uσ (fVars f) ⇒
     alluniq (fVars (ffVrn uσ f))
 Proof
-rw[fVars_ffVrn] >> metis_tac[uniqifn_alluniq]
+rw[fVars_ffVrn] >> metis_tac[uniqifn_alluniq0]
 QED
 
 
@@ -1435,8 +1435,28 @@ QED
 *)
         
 
+
 Theorem uniqifn_ex:
-∀fVs. FINITE fVs ⇒ ∃uσ:string # (sort list) |-> string. uniqifn uσ fVs
+∀fVs. FINITE fVs ⇒ ∃uσ:string # (sort list) |-> string. uniqifn uσ fVs ∧ FDOM uσ = fVs
+Proof
+Induct_on ‘FINITE’ >>
+rw[] (* 2 *)
+>- (qexists ‘FEMPTY’ >> simp[uniqifn_def]) >>
+qexists ‘uσ |+ (e,variant (fromSet (IMAGE (λfV. uσ ' fV) (FDOM uσ))) "")’ >>
+‘variant (fromSet (IMAGE (λfV. uσ ' fV) (FDOM uσ))) ""
+ ∉ toSet (fromSet (IMAGE (λfV. uσ ' fV) (FDOM uσ)))’
+by (simp[GSYM fIN_IN] >> simp[variant_NOT_fIN]) >>
+‘FINITE (IMAGE (λfV. uσ ' fV) (FDOM uσ))’ by simp[] >>
+drule_then assume_tac toSet_fromSet >> gs[] >>
+rw[uniqifn_def] (* 3 *)
+>> (rw[FAPPLY_FUPDATE_THM] >>
+   gs[uniqifn_def,SUBSET_DEF] >> metis_tac[])
+QED
+
+
+(*        
+Theorem uniqifn_ex:
+∀fVs. FINITE fVs ⇒ ∃uσ:string # (sort list) |-> string. uniqifn uσ fVs 
 Proof
 Induct_on ‘FINITE’ >>
 rw[] (* 2 *)
@@ -1452,7 +1472,7 @@ rw[uniqifn_def] (* 4 *)
 >> (rw[FAPPLY_FUPDATE_THM] >>
    gs[uniqifn_def,SUBSET_DEF] >> metis_tac[])
 QED
-
+*)
 
 Definition plainfV_def:
 plainfV (P,sl) =
@@ -1537,11 +1557,34 @@ simp[MAP_tprpl_mk_bmap_REVERSE]
 QED
 
 
-        
+Theorem ok_abs_wff_fVar:
+ok_abs sl ⇒ w
+Proof
+
+wff_FALL_alt
+Theorem wff_FALL1:
+wff Σ (FALL s b) ⇔
+wft (FST Σ) s ∧
+∀n. wff Σ (substb (Var n s) b)
+Proof
+            
+
 Theorem wff_FALLL_plainfV:
-∀n sl. LENGTH sl = n ∧ ok_abs sl ⇒
+∀n sl. LENGTH sl = n ∧ wfabsap Σf sl tl ⇒
+       ∃f. wff Σ
        FALLL sl (plainfV (P,sl)) = mk_FALLL
        () (fVar P sl (MAP (λs. Var "" s) sl))
+Proof
+Induct_on ‘n’ >> rw[] (* 2 *)
+>- (rw[rich_listTheory.COUNT_LIST_def,ok_abs_def,FALLL_def,plainfV_def] >>
+   irule wff_fVar' >> simp[wfabsap_def]) >>
+rw[] >> Cases_on ‘sl’  (* 2 *)
+>- gs[] >>
+gs[] >>        
+
+Theorem wff_FALLL_plainfV:
+∀n sl. LENGTH sl = n ∧ ok_abs sl ⇒
+       wff Σ (FALLL sl (plainfV (P,sl)))
 Proof
 Induct_on ‘n’ >> rw[] (* 2 *)
 >- (rw[rich_listTheory.COUNT_LIST_def,ok_abs_def,FALLL_def,plainfV_def] >>
@@ -1557,15 +1600,14 @@ Induct_on ‘sl’ (* 2 *)
 ok_abs_def   
    rw[]
 gs[FALLL_def,ok_abs_def,plainfV_def,]         
-
+*)
 
 Theorem wffVmap_rn2fVmap:
 (∀P sl. (P,sl) ∈ FDOM uσ ⇒ ok_abs sl) ⇒ wffVmap Σ (rn2fVmap uσ)
 Proof
 rw[wffVmap_def,FDOM_rn2fVmap] >>
 drule_then assume_tac FAPPLY_rn2fVmap >> gs[] >>
-rw[fVrn_def,plainfV_def] >>
-
+rw[fVrn_def,plainfV_def] >> cheat
 QED
 
 
@@ -1604,13 +1646,37 @@ gs[fVrn_def]
 QED                
 
 
+Theorem finst_FALLL:
+∀sl b. finst vσ (FALLL sl b) =
+ FALLL (MAP (sinst vσ) sl) (finst vσ b) 
+Proof
+Induct_on ‘sl’ >> gs[finst_def,FALLL_def]
+QED
+
+Theorem IN_slfv':
+v ∈ slfv sl ⇔ ∃s0. MEM s0 sl ∧ v ∈ sfv s0
+Proof
+Cases_on ‘v’ >> rw[IN_slfv]
+QED
+        
 Theorem wffVmap_vinst_fVmap:
-∀σ. wffVmap Σ σ ∧ alluniq (FDOM σ)  ⇒
+∀σ. wffsig (FST Σ) ∧ wffVmap Σ σ ∧ alluniq (FDOM σ) ∧ wfvmap (FST Σ) vσ ∧
+    presname vσ ∧
+   BIGUNION  {ffv (σ ' (P,sl)) ∪ slfv sl | (P,sl) | (P,sl) ∈ FDOM σ} ⊆ FDOM vσ ⇒
         wffVmap Σ (vinst_fVmap vσ σ)
 Proof
-cheat
-QED                
-                           
+rw[wffVmap_def] >> gs[FDOM_vinst_fVmap] >>
+Cases_on ‘x’ >>
+drule_all_then assume_tac FAPPLY_vinst_fVmap >>
+gs[] >> gs[vinst_fVar_def] >>
+first_x_assum $ drule_all_then assume_tac >>
+rw[GSYM finst_FALLL] >>
+Cases_on ‘Σ’ >> Cases_on ‘r'’ >> gs[] >> irule wff_finst >>
+gs[wffsig_def] >> gs[wfvmap_def] >>
+gs[ffv_FALLL,SUBSET_DEF,PULL_EXISTS]  >>
+gs[IN_slfv'] >> rw[] (* 2 *) >> metis_tac[]
+QED                 
+           
 
 Theorem ffv_ffVrn:
 ffv (ffVrn uσf f) = ffv f
@@ -1641,7 +1707,8 @@ rw[] >>
  by (irule ffVrn_fVinst >>
     rw[] >> irule wff_subfm_fVar_LENGTH >> metis_tac[]) >>
 simp[] >>
-‘wffVmap (Σf,Σp,Σe) (rn2fVmap uσ)’ by cheat >>
+‘wffVmap (Σf,Σp,Σe) (rn2fVmap uσ)’
+ by (irule wffVmap_rn2fVmap >> cheat) >>
 ‘fVinst (rn2fVmap uσ) (fVinst fσ f) =
  fVinst (o_fVmap (rn2fVmap uσ) fσ) f’
  by (irule fVar_prpl_o_fVmap >> rpt (first_x_assum $ irule_at Any)) >>
@@ -1660,11 +1727,35 @@ simp[] >>
           vσ
           (ffVrn uσf f))’
  by (irule instf_fVinst >> simp[ffv_ffVrn] >>
-    simp[FDOM_fVmap_fVrn,FDOM_o_fVmap,fVars_ffVrn,FDOM_rn2fVmap] >>
-    cheat) >>
+    simp[FDOM_fVmap_fVrn,FDOM_o_fVmap,fVars_ffVrn,FDOM_rn2fVmap] >> rw[] (* 6 *)
+    >- (gs[wfvmap_def] >>
+       metis_tac[wfcod_no_bound,no_bound_def])
+    >- metis_tac[wff_no_vbound]
+    >- (gs[FDOM_o_fVmap,FDOM_rn2fVmap] >>
+        drule_all_then assume_tac uniqifn_alluniq0 >>
+        gs[IMAGE_UNION])
+    >- (gs[SUBSET_DEF] >> metis_tac[])
+    >- (* gs[ffv_fVinst]  *) cheat >>
+    irule_at Any wffVmap_fVmap_fVrn >>
+    simp[FDOM_o_fVmap,FDOM_rn2fVmap] >>
+    irule_at Any wffVmap_o_fVmap >>
+    first_x_assum $ irule_at Any >> simp[]) >>
 simp[] >> rw[instf_def] >>
 irule fVar_prpl_o_fVmap >> gs[wfcfVmap_def] >>
-rpt (first_x_assum $ irule_at Any) >> cheat
+rpt (first_x_assum $ irule_at Any) >>
+irule wffVmap_vinst_fVmap >> simp[] >>
+‘BIGUNION
+          {ffv (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf ' (P,sl)) ∪ slfv sl |
+           (P,sl) |
+           (P,sl) ∈ FDOM (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)} ⊆
+        FDOM vσ’
+ by simp[FDOM_o_fVmap,FDOM_rn2fVmap,FDOM_fVmap_fVrn] >>
+    (* restrict fσ to fVars, uσ to (fVars (fVinst fσ th)),
+        then as ffv f ⊆ FDOM vσ
+    8.  ffv (fVinst fσ f) ⊆ FDOM vσ, should fine
+       uniqifn uσ (fVars (fVinst fσ th))*)
+
+cheat
 QED
 
 first_x_assum
@@ -1690,7 +1781,130 @@ fVinst (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσ
        (finst vσ (ffVrn uσf f))
 
 
-        fVinst_ffVrn
+        
+
+Definition fVrnwinst_def:
+fVrwinst vσ uσ1 hσ uσ2 =
+FUN_FMAP
+(λ(P,sl).
+  uσ1 '
+      (vinst_fVar vσ (CHOICE
+       {(P0,sl0) |
+        (P,sl) =
+        vinst_fVar (o_vmap hσ vσ) (fVrn uσ2 (P0,sl0)) ∧
+        (P0,sl0) ∈ FDOM uσ2})))
+(IMAGE ((vinst_fVar (o_vmap hσ vσ)) o (fVrn uσ2)) (FDOM uσ2))
+End
+
+
+Theorem FDOM_fVrnwinst:
+FDOM (fVrwinst vσ uσ1 hσ uσ2) =
+(IMAGE ((vinst_fVar (o_vmap hσ vσ)) o (fVrn uσ2)) (FDOM uσ2))
+Proof
+rw[fVrnwinst_def,FUN_FMAP_DEF]
+QED
+
+Theorem FAPPLY_fVrnwinst:
+uniqifn uσ2 (FDOM uσ2) ∧ (P:string,sl) ∈ FDOM uσ2 ⇒
+fVrwinst vσ uσ1 hσ uσ2 '
+         (vinst_fVar (o_vmap hσ vσ) (fVrn uσ2 (P,sl))) =
+uσ1 ' (vinst_fVar vσ (P,sl))
+Proof
+rw[] >> rw[fVrnwinst_def] >>
+qspecl_then [‘ (λ(P,sl).
+               uσ1 '
+               (vinst_fVar vσ
+                  (CHOICE
+                     {(P0,sl0) |
+                      (P,sl) = vinst_fVar (o_vmap hσ vσ) (fVrn uσ2 (P0,sl0)) ∧
+                      (P0,sl0) ∈ FDOM uσ2})))’,
+              ‘(IMAGE (vinst_fVar (o_vmap hσ vσ) ∘ fVrn uσ2) (FDOM uσ2))’,‘(vinst_fVar (o_vmap hσ vσ) (fVrn uσ2 (P,sl)))’]
+ assume_tac (SRULE [PULL_FORALL] FUN_FMAP_DEF) >>
+ gs[PULL_EXISTS] >>
+ first_x_assum $ qspecl_then [‘(P,sl)’] assume_tac >>
+ gs[] >>
+ Cases_on ‘(vinst_fVar (o_vmap hσ vσ) (fVrn uσ2 (P,sl)))’ >>
+ rw[] >>
+ gs[fVrn_def] >> gs[vinst_fVar_def] >>
+ ‘{(P0,sl0) |
+               (q,r) =
+               vinst_fVar (o_vmap hσ vσ)
+                 (if (P0,sl0) ∈ FDOM uσ2 then (uσ2 ' (P0,sl0),sl0)
+                  else (P0,sl0)) ∧ (P0,sl0) ∈ FDOM uσ2} =
+ {(P,sl)}’
+  by (rw[Once EXTENSION,EQ_IMP_THM] (* 2 *)
+     >- (gs[] >> gs[vinst_fVar_def] >>
+        gs[uniqifn_def] >> metis_tac[]) >>
+     simp[vinst_fVar_def]) >>
+gs[vinst_fVar_def]
+QED
+        
+
+Theorem Pf2Pf0_vinst_lemma:
+∀f. uniqifn uσ2 (FDOM uσ2) ∧ fVars f ⊆ FDOM uσ2 ∧
+    IMAGE (vinst_fVar vσ) (fVars f) ⊆ FDOM uσ1 ∧
+    ffv f ⊆ FDOM vσ ∧ ffv (finst vσ f) ⊆ FDOM hσ  ⇒
+    finst hσ (ffVrn uσ1 (finst vσ f)) =
+    ffVrn (fVrwinst vσ uσ1 hσ uσ2) (finst (o_vmap hσ vσ) (ffVrn uσ2 f))
+Proof
+Induct_on ‘f’ >>
+gs[fVars_def,finst_def,ffVrn_def,MAP_MAP_o,MAP_EQ_f] (* 3 *)
+>- (rw[] >> irule $ cj 1 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[])
+>- (rw[] >> irule $ cj 2 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[]) >>
+rw[] >> gs[FDOM_fVrnwinst,MAP_MAP_o,MAP_EQ_f] (* 12 *)
+>- (rw[GSYM vinst_fVar_def] >> Cases_on ‘x’ >>
+   ‘(q,r) = (s,l)’
+     by (gs[vinst_fVar_def,fVrn_def,uniqifn_def] >>
+     metis_tac[]) >> gs[] >>     
+   irule $ GSYM FAPPLY_fVrnwinst >> simp[])
+>- (rw[] >> irule $ cj 2 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[]) 
+>- (rw[] >> irule $ cj 1 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[])
+>- (first_x_assum $ qspecl_then [‘(s,l)’] assume_tac >>
+   gs[vinst_fVar_def,fVrn_def])
+>- (rw[] >> irule $ cj 2 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[]) 
+>- (rw[] >> irule $ cj 1 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[]) 
+>- gs[vinst_fVar_def]
+>- (rw[] >> irule $ cj 2 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[]) 
+>- (rw[] >> irule $ cj 1 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[]) 
+>- (first_x_assum $ qspecl_then [‘(s,l)’] assume_tac >>
+   gs[vinst_fVar_def,fVrn_def])
+>- (rw[] >> irule $ cj 2 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[])  >>
+(rw[] >> irule $ cj 1 inst_o_vmap >>
+   gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[])
+QED   
+
+        
+fVinst fσ (finst vσ (ffVrn uσ (finst σ f))) =
+(* fVinst_ffVrn *)
+fVinst fσ (finst vσ (ffVrn uσ (finst σ f)))
+
+
+
+       
+(*ffVrn_fVinst*)
+fVinst fσ (finst vσ (fVinst (rn2fVmap uσ) (finst σ f))) =
+(*instf_fVinst*)
+fVinst fσ (instf (vinst_fVmap vσ (rn2fVmap uσ)) (finst σ f))=
+
+
+        
+fVinst fσ (finst vσ (instf (rn2fVmap uσ) σ f)) =
+
+ffVrn_fVinst
+
+        
+       (rn2fVmap uσ)
+fVinst (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))
+       (finst vσ (ffVrn uσf f))        
       
 (*        
   
@@ -1701,6 +1915,142 @@ Definition fVar_eff_on_def:
 fVar_eff σ (P,sl) = if (P,sl) ∈ FDOM σ then σ ' (P,sl) else fVar P sl (MAP Bound (REVERSE (COUNT_LIST (LENGTH sl))))
 End
 *)
+
+
+Definition sl2vl:
+sl2vl [] [] = [] ∧
+sl2vl (n :: nl) (s :: sl) =
+(n,s) :: sl2vl nl (specsl 0 (Var n s) sl)
+End
+
+tmatch_def
+Theorem wfabsap_sl2vl:
+wfabsap
+Proof
+        
+Theorem wfabsap_sl2vl:
+wfabsap sl tl ⇒ ∀nl. LENGTH nl = LENGTH sl ⇒
+(∀n s. MEM (n,s) sl2vl ⇒
+Proof
+        
+Definition absvl_def:
+absvl i v [] = [] ∧
+absvl i v ((n:string,s) :: t) = 
+(n,sabs v i s) :: (absvl (i+1) v t)
+End
+
+Definition vl2sl0_def:
+  vl2sl0 [] = [] ∧
+  vl2sl0 (v :: vs) = v :: absvl 0 v (vl2sl0 vs)
+End
+
+Definition vl2sl_def:
+  vl2sl vl = MAP SND (vl2sl0 vl)
+End
+
+Theorem absvl_okabs:
+∀l i. ok_abs
+
+Theorem specsl_absvl:
+∀vl i h.
+ (∀m1 m2. m1 < m2 ∧ m2 < LENGTH vl ⇒
+          ∀n s. (n, s) ∈ sfv (SND (EL m2 vl)) ⇒
+              EL m1 vl ∉ sfv s) ∧
+ (∀v n s. (MEM v vl ∨ v = h) ∧ (n,s) ∈ sfv (SND v) ⇒ sbounds s = {}) ∧
+ (∀v sv. MEM v vl ∧ sv ∈ sfv (SND v) ⇒ h ∉ sfv (SND sv)) ∧
+ ok_abs  ⇒
+ (specsl i (Var' h) (MAP SND (absvl i h vl))) = MAP SND vl
+Proof
+Induct_on ‘vl’ >> gs[absvl_def,specsl_def] >>
+rw[] >> Cases_on ‘h’ >> rw[absvl_def] >>
+Cases_on ‘h'’ >> rw[specsl_def]
+>- (qspecl_then [‘r’,‘i’,‘Var q' r'’,‘q'’,‘r'’] assume_tac
+   (cj 2 trpl_tabs) >>
+   ‘srpl i (Var q' r') (sabs (q',r') i r) =
+    ssubst (q',r') (Var q' r') r’
+    by (first_x_assum irule >> rw[] (* 3 *)
+       >- (first_x_assum $ qspecl_then [‘(q,r)’,‘(n1,s1)’]
+          assume_tac >> gs[])
+       >- (first_x_assum irule >>
+          qexistsl [‘n’,‘(q,r)’] >> simp[]) >>
+       
+
+
+(gs[] >> irule $ cj 2 wft_no_vbound >>
+          first_x_assum $ irule_at Any >>
+          last_x_assum $ qspecl_then [‘(q,r)’] assume_tac>>
+          gs[] >> metis_tac[]) >>
+       gs[] >>
+       last_x_assum $ qspecl_then [‘(q,r)’] assume_tac>>
+       gs[] >> metis_tac[wft_no_bound,MEMBER_NOT_EMPTY]) >>
+    gs[] >> cheat) >>
+first_x_assum $ qspecl_then [‘i+1’,‘(q',r')’] assume_tac >>
+gs[] >> first_x_assum irule >> rw[] >>
+first_x_assum $ qspecl_then [‘SUC m1’,‘SUC m2’] assume_tac >>
+gs[] >> metis_tac[]
+QED
+
+        
+Theorem specsl_absvl:
+∀vl i h.
+ (∀m1 m2. m1 < m2 ∧ m2 < LENGTH vl ⇒
+          ∀n s. (n, s) ∈ sfv (SND (EL m2 vl)) ⇒
+              EL m1 vl ∉ sfv s) ∧
+ (∀v n s. (MEM v vl ∨ v = h) ∧ (n,s) ∈ sfv (SND v) ⇒ sbounds s = {})) ∧
+ (∀v sv. MEM v vl ∧ sv ∈ sfv (SND v) ⇒ h ∉ sfv (SND sv)) ⇒
+ (specsl i (Var' h) (MAP SND (absvl i h vl))) = MAP SND vl
+Proof
+Induct_on ‘vl’ >> gs[absvl_def,specsl_def] >>
+rw[] >> Cases_on ‘h’ >> rw[absvl_def] >>
+Cases_on ‘h'’ >> rw[specsl_def]
+>- (qspecl_then [‘r’,‘i’,‘Var q' r'’,‘q'’,‘r'’] assume_tac
+   (cj 2 trpl_tabs) >>
+   ‘srpl i (Var q' r') (sabs (q',r') i r) =
+    ssubst (q',r') (Var q' r') r’
+    by (first_x_assum irule >> rw[] (* 3 *)
+       >- (first_x_assum $ qspecl_then [‘(q,r)’,‘(n1,s1)’]
+          assume_tac >> gs[])
+       >- (gs[] >> irule $ cj 2 wft_no_vbound >>
+          first_x_assum $ irule_at Any >>
+          last_x_assum $ qspecl_then [‘(q,r)’] assume_tac>>
+          gs[] >> metis_tac[]) >>
+       gs[] >>
+       last_x_assum $ qspecl_then [‘(q,r)’] assume_tac>>
+       gs[] >> metis_tac[wft_no_bound,MEMBER_NOT_EMPTY]) >>
+    gs[] >> cheat) >>
+first_x_assum $ qspecl_then [‘i+1’,‘(q',r')’] assume_tac >>
+gs[] >> first_x_assum irule >> rw[] >>
+first_x_assum $ qspecl_then [‘SUC m1’,‘SUC m2’] assume_tac >>
+gs[] >> metis_tac[]
+QED
+
+Theorem wfabsap_vl2sl:
+ ∀vl. (∀m1 m2. m1 < m2 ∧ m2 < LENGTH vl ⇒
+          ∀n s. n s ∈ sfv (SND (EL m2 vl)) ⇒
+              EL m1 vl ∉ sfv s) ⇒
+ wfabsap Σ (vl2sl vl) (MAP Var' vl)
+Proof
+ Induct_on ‘vl’ >> gs[wfabsap_def,vl2sl_def,vl2sl0_def] >>
+ reverse (rw[])
+ >- ‘(specsl 0 (Var' h) (MAP SND (absvl 0 h (vl2sl0 vl)))) =
+     (MAP SND (vl2sl0 vl))’
+     by irule specsl_absvl >> 
+              
+              
+
+        
+
+EVAL “vl2sl [("A",St "set" []);("B",St "set" []);
+ ("f",St "fun" [Var "A" (St "set" []); Var "B" (St "set" [])])]”        
+            
+fun absvl i v [] = []
+  | absvl i v ((n:string,s) :: t) = 
+    (n,substs (v,Bound i) s) :: (absvl (i+1) v t)
+
+fun vl2sl0 [] = []
+  | vl2sl0 (v :: vs) = v :: absvl 0 v (vl2sl0 vs)
+
+fun vl2sl vl = List.map #2 (vl2sl0 vl)        
              
 
 

@@ -53,6 +53,8 @@ Theorem main:
            Pf0Drv Σ aths (insth fσ vσ (uniqify uσ th))
 Proof         
 Induct_on ‘Pf’ >> rw[] >> TRY (metis_tac[]) (* 15 *)
+[‘(insth fσ' vσ (uniqify uσ (fVinsth fσ th)))’] (* M-h M-p *)
+
 >- (rw[Pf0Drv_def] >> irule_at Any Pf0_AX >>
    gs[Uof_SUBSET,PULL_EXISTS] >>
    first_x_assum $ drule_then assume_tac >>
