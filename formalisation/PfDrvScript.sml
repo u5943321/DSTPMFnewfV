@@ -3,79 +3,6 @@ open HolKernel Parse boolLib bossLib;
 val _ = new_theory "PfDrv";
 
 
-
-(*
-    
-Inductive Pf:
-[~AX:]
-(∀ax. ax ∈ axs ⇒ Pf Σ axs [(ffv ax,{},ax)]) ∧
-[~fVcong:]
-(∀P sl Pfs eqths.
- (∀n. n < LENGTH sl ⇒
-      is_EQ (concl (eqths n)) ∧
-      Pf Σ axs (Pfs n) ∧ MEM (eqths n) (Pfs n)) ∧
- wfabsap (FST Σ) sl (Lofeqthl (map2list (LENGTH sl - 1) eqths)) ⇒
- Pf Σ axs (FLAT (map2list (LENGTH sl - 1) Pfs)  ++
- [fVcong (map2list (LENGTH sl - 1) eqths) P sl])   
- ) ∧
-[~fVinsth:]
-  (∀pf th fσ.
-     Pf Σ axs pf ∧ MEM th pf ∧
-     wffVmap Σ fσ ∧ thfVars th ⊆ FDOM fσ ⇒
-     Pf Σ axs (pf ++ [fVinsth fσ th])) ∧
-[~vinsth:]
-  (∀pf th vσ.
-     Pf Σ axs pf ∧ MEM th pf ∧ wfvmap (FST Σ) vσ ∧
-     cont th ⊆ FDOM vσ ⇒
-     Pf Σ axs (pf ++ [vinsth vσ th])) ∧
-[~ALLI:]
-  (∀Γ A pf x s f.
-     Pf Σ axs pf ∧ MEM (Γ,A,f) pf ∧
-     wfs (FST Σ) s ∧ (sfv s) ⊆ Γ ∧
-     (x,s) ∉ genavds (Γ,A,f) ⇒
-     Pf Σ axs (pf ++ [gen (x,s) (Γ,A,f)])) ∧
-[~ALLE:]
-  (∀Γ A pf s f t.
-     Pf Σ axs pf ∧ MEM (Γ,A,FALL s f) pf ∧
-     wft (FST Σ) t ∧ sort_of t = s ⇒
-     Pf Σ axs (pf ++ [spec t (Γ,A,FALL s f)])) ∧     
-[~double_neg:]
-  (∀Γ A pf f.
-      Pf Σ axs pf ∧ MEM (Γ,A ∪ {NEG f},False) pf ⇒
-      Pf Σ axs (pf ++ [(Γ,A,f)])) ∧
-[~fromBot:]
-  (∀Γ A pf f.
-    Pf Σ axs pf ∧ MEM (Γ,A,False) pf ∧ wff Σ f ⇒
-    Pf Σ axs (pf ++ [(Γ ∪ ffv f,A,f)])) ∧
-[~assume:]
-  (∀c:form. wff Σ c ⇒ Pf Σ axs [assume c]) ∧
-[~mp:]
-  (∀Γ1 Γ2 A1 A2 pf1 f1 pf2 f2.
-     Pf Σ axs pf1 ∧ Pf Σ axs pf2 ∧
-     MEM (Γ1,A1,IMP f1 f2) pf1 ∧
-     MEM (Γ2,A2,f1) pf2 ⇒
-     Pf Σ axs (pf1 ++ pf2 ++ [(Γ1 ∪ Γ2, A1 ∪ A2,f2)])) ∧     
-[~disch:]
-  (∀pf th a.
-     Pf Σ axs pf ∧ MEM th pf ∧ wff Σ a ⇒
-     Pf Σ axs (pf ++ [disch a th])) ∧               
-[~refl:]
-  (∀t.
-     wft (FST Σ) t ⇒ Pf Σ axs [refl t]) ∧
-[~sym:]
-  (∀Γ A pf t1 t2.
-     Pf Σ axs pf ∧ MEM (Γ,A,EQ t1 t2) pf ⇒
-     Pf Σ axs (pf ++ [(Γ,A,EQ t2 t1)])) ∧
-[~trans:]
-  (∀Γ1 Γ2 A1 A2 pf1 pf2 t1 t2 t3.
-     Pf Σ axs pf1 ∧ Pf Σ axs pf2 ∧
-     MEM (Γ1,A1,EQ t1 t2) pf1 ∧ MEM (Γ2,A2,EQ t2 t3) pf2 ⇒
-     Pf Σ axs (pf1 ++ pf2 ++ [(Γ1 ∪ Γ2,A1 ∪ A2,EQ t1 t3)])) 
-End
-*)
-
-
-
 Definition Leq_def:
 Leq = FST o dest_eq
 End
@@ -106,7 +33,6 @@ Inductive Pf:
 [~vinsth:]
   (∀pf th vσ.
      Pf Σ axs pf ∧ MEM th pf ∧ wfvmap (FST Σ) vσ ∧
-     presname vσ ∧
      cont th ⊆ FDOM vσ ⇒
      Pf Σ axs (pf ++ [vinsth vσ th])) ∧
 [~ALLI:]
@@ -810,8 +736,9 @@ gs[cont_def] >>
 >- (Cases_on ‘th’ >> Cases_on ‘r’ >>
     gs[vinsth_def] >>
     irule wff_finst >>
-    gs[wfvmap_def] >> rw[] (* 3 *)
+    gs[wfvmap_def] >> rw[] (* 4 *)
     >- gs[wfsig_def,wffsig_def]
+    >- metis_tac[wfvmap_presname,wfvmap_def]
     >- (gs[cont_def] >> irule SUBSET_TRANS >>
        first_x_assum $ irule_at Any >>
        first_x_assum $ drule_then assume_tac >>
@@ -822,6 +749,7 @@ gs[cont_def] >>
     irule wff_finst >>
     gs[wfvmap_def] >> rw[] (* 3 *)
     >- gs[wfsig_def,wffsig_def]
+    >- metis_tac[wfvmap_presname,wfvmap_def]
     >- (gs[cont_def] >> irule SUBSET_TRANS >>
        first_x_assum $ irule_at Any >>
        first_x_assum $ drule_then assume_tac >>
@@ -1099,19 +1027,6 @@ Proof
 QED 
 *)              
 
-                   
-
-       
-
-(*
-Theorem Pf_wf:
-  Pf Σ axs pf ∧ MEM (Γ,A,f) pf ⇒
-  wff Σ f ∧ (∀a. a ∈ A ⇒ wff Σ a) ∧
-  (∀n s. (n,s) ∈ Γ ⇒ wfs (FST Σ) s)
-Proof
-cheat
-QED  
-*) 
 
 Theorem PfDrv_assume:
   ∀Σ axs c. wff Σ c ⇒ PfDrv Σ axs (assume c)
@@ -1171,12 +1086,6 @@ Proof
   metis_tac[]
 QED  
 
-(*     
-
-Theorem PfDrv_ALLI:
- PfDrv Σ axs th ⇒ 
-*)     
-             
 
 
 Theorem PfDrv_add_cont1:
@@ -1188,55 +1097,7 @@ Proof
  rpt (first_x_assum $ irule_at Any) >> qexists ‘n’ >> simp[]
 QED
          
-(*
-Theorem add_cont1:
-  wfsigaxs Σ axs ∧ PfDrv Σ axs th ⇒
-  ∀n s. wfs (FST Σ) s ⇒ PfDrv Σ axs (add_cont1 (n,s) th)
-Proof
-  rw[PfDrv_def] >>
-  ‘wft (FST Σ) (Var n s)’ by simp[wft_def] >>
-  drule_then assume_tac Pf_refl >>
-  gs[refl_def] >>
-  ‘wff Σ (EQ (Var n s) (Var n s))’
-   by cheat >>
-  drule_all_then assume_tac Pf_disch >>
-  first_x_assum (qspecl_then [‘axs’] assume_tac) >>
-  Cases_on ‘th’ >> Cases_on ‘r’ >>
-  rename [‘MEM (Γ,A,f) pf’] >> 
-  gs[disch_def] >>
-  Cases_on ‘EQ (Var n s) (Var n s) ∈ A’ >> gs[] (*2*)
-  >- (‘PfDrv Σ axs
-      (Γ ∪ ffv (EQ (Var n s) (Var n s)),
-       (A DELETE EQ (Var n s) (Var n s)) ∪
-       {EQ (Var n s) (Var n s)}, f)’
-     by (irule undisch >> simp[PfDrv_def] >>
-     qpat_x_assum ‘Pf _ _ (_ ++ _)’ assume_tac >>
-     first_x_assum $ irule_at Any >> gs[]) >>
-     ‘A DELETE EQ (Var n s) (Var n s) ∪ {EQ (Var n s) (Var n s)} = A’ by (rw[EXTENSION] >> metis_tac[]) >>
-     gs[] >> simp[add_cont1_def]  >>
-     gs[ffv_EQ] >>
-     ‘Γ ∪ ({(n,s)} ∪ sfv s) = {(n,s)} ∪ sfv s ∪ Γ’
-      by metis_tac[UNION_COMM] >> gs[] >>
-     gs[PfDrv_def] >> first_x_assum $ irule_at Any >>
-     simp[]) >>
-  qpat_x_assum ‘Pf _ _ (_ ++ _)’ assume_tac >>
-  drule_then assume_tac Pf_mp >>
-  qpat_x_assum ‘Pf _ _ [(_,{},_)]’ assume_tac >>
-  first_x_assum $ drule_then assume_tac >>
-  gs[ffv_EQ] >>
-  first_x_assum
-  (qspecl_then [‘Γ ∪ ({(n,s)} ∪ sfv s)’,
-                ‘A DELETE EQ (Var n s) (Var n s)’,
-                ‘f’] assume_tac) >>
-  gs[] >>
-  ‘A DELETE EQ (Var n s) (Var n s) = A’
-    by (rw[EXTENSION] >> metis_tac[]) >>
-  gs[] >>
-  first_x_assum $ irule_at Any >>
-  simp[add_cont1_def] >> disj2_tac >>
-  rw[Once EXTENSION] >> metis_tac[]
-QED
-*)
+
 
         
 Theorem PfDrv_add_cont0:          
@@ -1383,7 +1244,7 @@ wfsigaxs Σ axs ∧ PfDrv Σ axs (Γ1,A1,IMP ϕ ψ) ⇒
 PfDrv Σ axs (Γ1,A1,IMP (NEG ψ) (NEG ϕ))
 Proof
 rw[] >>
-drule_then assume_tac contrapos0 >>
+drule_then assume_tac PfDrv_contrapos0 >>
 Cases_on ‘ϕ ∈ A1’ >> Cases_on ‘NEG ψ ∈ A1’ (* 4 *)
 >- (first_x_assum $ drule_then assume_tac >>
    ‘(Γ1,A1,IMP (NEG ψ) (NEG ϕ)) =
@@ -1478,6 +1339,23 @@ Proof
   gs[]
 QED
 
+
+
+
+Theorem PfDrv_assum_SUBSET:
+  wfsigaxs Σ axs ∧
+  PfDrv Σ axs (Γ,A0,f) ∧ FINITE A ∧ A0 ⊆ A ∧
+  (∀a. a ∈ A ⇒ wff Σ a) ⇒
+  PfDrv Σ axs (Γ ∪ Uof ffv A,A,f)
+Proof
+  rw[] >> drule_then assume_tac PfDrv_add_assum >> gs[] >>
+  first_x_assum $ drule_all_then assume_tac >>
+  gs[add_assum_def] >>
+  ‘A0 ∪ A = A’
+   by (gs[SUBSET_DEF,EXTENSION] >> metis_tac[])>>
+  gs[]
+QED
+        
    
 Theorem PfDrv_gen:
 PfDrv Σ axs (Γ,A,f) ∧ wfs (FST Σ) s ∧ sfv s ⊆ Γ ∧
@@ -1490,8 +1368,50 @@ first_x_assum $ drule_all_then assume_tac >>
 first_x_assum $ irule_at Any >> simp[]
 QED
 
-   
-Theorem EX_E:
+Theorem ffv_EX:
+ffv (EX s b) = sfv s ∪ ffv b
+Proof
+rw[EX_def,ffv_NEG,ffv_def]
+QED
+
+Theorem PfDrv_cont_wf':
+  (∀ax. ax ∈ axs ⇒ wff (Σf,Σp,Σe) ax) ⇒
+  ∀Γ A f. PfDrv (Σf,Σp,Σe) axs (Γ,A,f) ⇒
+  ∀n s. (n,s) ∈ Γ ⇒ wfs Σf s
+Proof
+  rw[] >> irule PfDrv_cont_wf >>
+  gs[PfDrv_def] >> metis_tac[]
+QED  
+  
+Theorem fVars_NEG:
+∀f.(fVars (NEG f)) = fVars f
+Proof
+Induct_on ‘f’ >> gs[NEG_def,fVars_def]
+QED
+
+Theorem fVars_frpl:
+∀f i. fVars (frpl i v f) = fVars f
+Proof
+Induct_on ‘f’ >> gs[frpl_def,fVars_def]
+QED
+
+
+        
+
+
+ 
+        
+Theorem Uof_sfv_SUBSET_cont:
+∀ct. is_cont ct ⇒ Uof (sfv ∘ SND) ct ⊆ ct
+Proof
+rw[Uof_SUBSET]  >> Cases_on ‘a’ >> simp[] >>
+metis_tac[is_cont_def]
+QED
+
+
+
+        
+Theorem PfDrv_EX_E:
   wfsigaxs Σ axs ∧ 
   PfDrv Σ axs (G1,A1,EX s b) ∧
   (a,s) ∉ ffv b ∧
@@ -1502,7 +1422,11 @@ Theorem EX_E:
   PfDrv Σ axs (G1 ∪ G2,A1 ∪ A2,f)
 Proof
   rw[] >> irule PfDrv_double_neg >> rw[GSYM UNION_ASSOC] >>
-  ‘G1 ∪ G2 = G1 ∪ (G2 ∪ sfv s)’ by cheat >>gs[] >> 
+  rev_drule_then assume_tac PfDrv_concl_ffv_SUBSET >>
+  first_x_assum $ rev_drule_then assume_tac >>
+  gs[ffv_EX] >> 
+  ‘G1 ∪ G2 = G1 ∪ (G2 ∪ sfv s)’
+   by (gs[SUBSET_DEF,EXTENSION] >> metis_tac[]) >>gs[] >> 
   irule PfDrv_mp >>
   qexists ‘FALL s (NEG b)’ >>
   rw[] (* 2 *)
@@ -1537,7 +1461,19 @@ Proof
    first_x_assum $ drule_then assume_tac >>
    ‘PfDrv (Σf,Σp,Σe) axs
           (G2 ∪ sfv s ∪ {(a,s)},A2 ∪ {NEG f},NEG (substb (Var a s) b))’
-     by cheat >>
+     by (‘FINITE (sfv s)’ by simp[tfv_FINITE] >>
+        drule_then assume_tac PfDrv_add_cont >>
+        gs[tfv_is_cont] >>
+        first_x_assum $ drule_at_then Any assume_tac >>
+        gs[add_cont_def]>>
+        ‘sfv s ∪ (G2 ∪ {(a,s)}) = G2 ∪ sfv s ∪ {(a,s)}’
+        by (rw[EXTENSION] >> metis_tac[]) >>
+        gs[] >> first_x_assum irule >>
+        rw[] >> irule PfDrv_cont_wf' >>
+        gs[SUBSET_DEF] >>
+        first_x_assum $ drule_then assume_tac >>
+        rpt (first_x_assum $ irule_at Any) >>
+        gs[wfsigaxs_def]) >>
    drule_then assume_tac PfDrv_gen >>
    gs[] >>
    first_x_assum $ qspecl_then [‘a’,‘s’] assume_tac >> gs[] >>
@@ -1545,41 +1481,54 @@ Proof
    ‘PfDrv (Σf,Σp,Σe) axs
           (gen (a,s)
              (G2 ∪ sfv s ∪ {(a,s)},A2 ∪ {NEG f},NEG (substb (Var a s) b)))’
-     by cheat >>
+     by (first_x_assum irule >>
+        simp[genavds_def,cont_def,assum_def,concl_def] >>
+        gs[Uof_UNION,Uof_Sing,ffv_NEG,fVars_NEG] >>
+        simp[substb_def,fVars_frpl]  >>
+        gs[GSYM fVslfv_def] >>
+        ‘Uof (sfv ∘ SND) (sfv s) ⊆ sfv s’
+         by metis_tac[Uof_sfv_SUBSET_cont,tfv_is_cont] >>
+        ‘fVslfv b ⊆ ffv b’ by metis_tac[fVslfv_SUBSET_ffv] >>
+        gs[SUBSET_DEF] >> metis_tac[tm_tree_WF]) >>
    gs[gen_def] >>
    ‘G2 ∪ sfv s ∪ {(a,s)} DELETE (a,s) = G2 ∪ sfv s’
     by (gs[EXTENSION,EQ_IMP_THM] >> metis_tac[tm_tree_WF]) >>
    gs[] >>
-   ‘wff (Σf,Σp,Σe) (NEG f)’ by cheat >>
+   ‘wff (Σf,Σp,Σe) (NEG f)’
+    by (simp[wff_NEG] >> irule $ cj 1 PfDrv_wff1 >>
+       metis_tac[]) >>
    drule_then assume_tac PfDrv_disch >>
    first_x_assum $ drule_then assume_tac >>
    gs[disch_def] >>
    ‘(mk_FALL a s (NEG (substb (Var a s) b))) =
     (FALL s (NEG b))’
-    rw[mk_FALL_def,abst_def,NEG_def,fabs_def,substb_def,frpl_def] >>
-    fabs_frpl
-   ‘A2 ∪ {NEG f} DELETE f ’ 
-   
-   
-   gs[genavds_def]
-   Pf_ALLI
-   irule PfDrv_disch
-   cheat (*fabs_frpl*)
+    by (rw[mk_FALL_def,abst_def,NEG_def,fabs_def,substb_def,frpl_def] >>
+       irule fabs_frpl >> simp[]) >> gs[] >>
+   gs[ffv_NEG] >> 
+   ‘ffv f ⊆ G2’
+     by (qpat_x_assum ‘ PfDrv (Σf,Σp,Σe) axs (G2 ∪ {(a,s)},A2 ∪ {substb (Var a s) b},f)’ assume_tac >>
+        drule_all_then assume_tac PfDrv_concl_ffv_SUBSET >>
+        ‘(a,s) ∉ ffv f’ by gs[Uof_UNION,Uof_Sing] >>
+        gs[SUBSET_DEF] >> metis_tac[]) >>
+   ‘G2 ∪ sfv s ∪ ffv f = G2 ∪ sfv s’
+     by (gs[EXTENSION,SUBSET_DEF] >> metis_tac[]) >>
+   gs[] >>
+   Cases_on ‘NEG f ∈ A2’ >- 
+   (‘FINITE {NEG f}’ by simp[] >>
+   drule_then assume_tac PfDrv_add_assum >>
+   gs[] >>
+   first_x_assum $ drule_all_then assume_tac >>
+   gs[add_assum_def,Uof_Sing] >>
+   ‘A2 ∪ {NEG f} DELETE NEG f ∪ {NEG f} = A2’
+    by (gs[EXTENSION] >> metis_tac[]) >>
+   gs[] >> gs[ffv_NEG]) >>
+   ‘A2 ∪ {NEG f} DELETE NEG f = A2’
+    by (gs[EXTENSION] >> metis_tac[]) >>
+   gs[]
 QED   
 
 
 
-Theorem PfDrv_cont_SUBSET:
-  PfDrv Σ axs (Γ0,A,f) ∧ FINITE Γ ∧ Γ0 ⊆ Γ ∧ is_cont Γ ∧
-  (∀n s. (n,s) ∈ Γ ⇒ wfs (FST Σ) s) ⇒
-  PfDrv Σ axs (Γ,A,f)
-Proof
-  rw[] >> drule_then assume_tac add_cont >> gs[] >>
-  first_x_assum $ drule_all_then assume_tac >>
-  gs[add_cont_def] >>
-  ‘Γ ∪ Γ0 = Γ’ by (gs[SUBSET_DEF,EXTENSION] >> metis_tac[])>>
-  gs[]
-QED
 
 
         

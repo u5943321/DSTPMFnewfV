@@ -197,7 +197,7 @@ End
 
 Definition fcong_def:
 fcong eqthl sl b =
-(Uof cont (set eqthl),Uof assum (set eqthl),
+(Uof cont (set eqthl) ∪ ffv b,Uof assum (set eqthl),
  IFF (fprpl (mk_bmap (REVERSE (Lofeqthl eqthl))) b)
      (fprpl (mk_bmap (REVERSE (Rofeqthl eqthl))) b))
 End        
@@ -1963,10 +1963,24 @@ sl2vl (n :: nl) (s :: sl) =
 (n,s) :: sl2vl nl (specsl 0 (Var n s) sl)
 End
 
-tmatch_def
+
+(*redefine using inductive relation?*)        
+
+Theorem wfabsap_CONS:
+  wfabsap Σ sl tl ⇒
+  ∀n s. (∀st n0 s0. MEM st sl ∧ (n0,s0) ∈ sfv s0 ⇒ (n,s) ∉ sfv s0) ∧
+  
 Theorem wfabsap_sl2vl:
-wfabsap
+∀tl sl.
+wfabsap Σ sl tl ⇒
+wfabsap Σ sl (MAP Var' (sl2vl [] sl)) ∧
+∃σ. tl = MAP (tinst σ) (MAP Var' (sl2vl [] sl))
 Proof
+Induct_on ‘tl’ >- cheat >>
+Cases_on ‘sl’ >- cheat >> gs[wfabsap_def] >> rw[] >>
+first_x_assum $ drule_all_then assume_tac >> gs[] >>
+
+
         
 Theorem wfabsap_sl2vl:
 wfabsap sl tl ⇒ ∀nl. LENGTH nl = LENGTH sl ⇒
