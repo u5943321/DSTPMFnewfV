@@ -356,6 +356,7 @@ in
 fun existsE (a,s0) (thm(G1,A1,C1)) (thm(G2,A2,C2)) =
     let 
         val ((n,s),b) = dest_exists C1
+        val _ = HOLset.member(fvf C1,(a,s0)) = false orelse raise simple_fail "the given variable is free in the existential formula"
         val _ = fmem (substf ((n,s),mk_var(a,s0)) b) A2
         val _ = s = s0 orelse 
                 raise ERR ("the given variable has unexpected sort, should have another sort",[s,s0],[],[])

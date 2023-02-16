@@ -79,7 +79,7 @@ Definition IFF_def:
 End               
 
 Definition EX_def:
-  EX n s b = NEG (FALL s (NEG b))
+  EX s b = NEG (FALL s (NEG b))
 End
 
 
@@ -229,6 +229,14 @@ Definition undisch_def:
 undisch (Γ,A,IMP f1 f2) = (Γ,A ∪ {f1},f2)
 End
 
+
+Theorem is_cont_DELETE:
+    is_cont ct ∧ (∀n s. (n,s) ∈ ct ⇒ v ∉ sfv s) ⇒
+    is_cont (ct DELETE v)
+Proof    
+  rw[is_cont_def] >> gs[SUBSET_DEF] >> metis_tac[]
+QED  
+        
 
 Theorem EMPTY_is_cont:
 is_cont {}
@@ -1555,6 +1563,38 @@ rw[fVrn_def,plainfV_def] >>
 simp[fprpl_def] >> rw[MAP_MAP_o] >>
 simp[MAP_tprpl_mk_bmap_REVERSE]
 QED
+
+
+Theorem wfvmap_presname:
+ wfvmap Σ vσ ⇒ presname vσ
+Proof
+simp[wfvmap_def,presname_def] >> strip_tac >>
+strip_tac >> strip_tac >>
+‘¬is_bound (vσ ' v)’
+ by (Cases_on ‘v’ >>
+    metis_tac[wfcod_def,wft_not_bound]) >>
+gs[] >> gs[cstt_def] >>
+Cases_on ‘v’ >> gs[vsname_def] >>
+Cases_on ‘r’ >> gs[sname_def] >>
+first_x_assum $ drule_then assume_tac >>
+gs[tsname_def,sname_def]
+QED
+
+
+(*here *)        
+
+Theorem wfabsap_vl_ex:
+∀n tl sl. LENGTH tl = n ∧ wfabsap Σ sl tl ⇒
+     ∃vl σ. wfabsap Σ sl vl ∧ tl = MAP (tinst σ) vl
+Proof
+ Induct_on ‘n’ >- cheat >>
+ rw[] >>
+ Cases_on ‘sl’ >> Cases_on ‘tl’ >>
+ gs[wfabsap_def] >>
+ first_x_assum $ drule_all_then assume_tac >>
+ gs[] >>
+ qexistsl [‘(Var "" h) :: vl’,‘σ |+ (("",h),h')’] >>
+ rw[wfabsap_def]
 
 
 Theorem ok_abs_wff_fVar:
