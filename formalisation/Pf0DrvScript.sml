@@ -131,7 +131,7 @@ QED
 
 
 
-Theorem PfDrv_cont_wf:
+Theorem Pf0Drv_cont_wf:
 (∀Γ A f. (Γ,A,f) ∈ aths ⇒ ∀n s. (n,s) ∈ Γ ⇒ wfs Σf s) ⇒
 ∀pf. Pf0 (Σf,Σp,Σe) aths pf ⇒
  ∀Γ A f. MEM (Γ,A,f) pf ⇒
@@ -182,6 +182,40 @@ Definition wfaths_def:
            Uof ffv ({f} ∪ A) ⊆ Γ)
 End
            
+Theorem mk_bmap_BIGUNION:
+∀l ϕ.BIGUNION {tfv (mk_bmap l ' i) | i | i ∈ count (LENGTH l) ∩ fbounds ϕ} ⊆
+Uof tfv (set l)
+Proof
+rw[SUBSET_DEF,IN_Uof] >>
+drule_then assume_tac FAPPLY_mk_bmap >> gs[MEM_EL,PULL_EXISTS] >>
+metis_tac[]
+QED
+
+Theorem FAPP_mk_bmap_REVERSE_Lofeqthl:
+i ≤ n ⇒
+(mk_bmap (REVERSE (Lofeqthl (map2list n eqths))) ' i) = Leq (concl (eqths (n - i)))
+Proof
+rw[] >>
+‘LENGTH (REVERSE (Lofeqthl (map2list n eqths))) = n + 1’
+ by rw[LENGTH_LRofeqthl,LENGTH_map2list] >>
+‘i < LENGTH (REVERSE (Lofeqthl (map2list n eqths)))’
+ by simp[] >>
+drule_then assume_tac FAPPLY_mk_bmap  >> gs[] >>
+‘i < LENGTH (Lofeqthl (map2list n eqths))’ by simp[] >>
+drule_then assume_tac EL_REVERSE >> gs[] >>
+Cases_on ‘n + 1 -i’ >> gs[] >>
+‘n' < LENGTH (map2list n eqths)’
+ by simp[LENGTH_map2list] >>
+rw[Lofeqths_def,EL_MAP] >>
+‘n' ≤ n’ by simp[] >> gs[EL_map2list] >>
+rw[Leq_def] >> 
+gs[arithmeticTheory.ADD1] >> rpt AP_TERM_TAC  >>
+CCONTR_TAC >> gs[]
+QED 
+
+
+        
+
 Theorem Pf0_ffv_SUBSET_wff:
  wfsig (Σf,Σp,Σe) ∧ wfaths (Σf,Σp,Σe) aths ⇒
 ∀pf. Pf0 (Σf,Σp,Σe) aths pf ⇒
@@ -193,7 +227,7 @@ Proof
 strip_tac >> 
 Induct_on ‘Pf0’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*42*)
 >~ [‘(Γ,A,f) = fcong (map2list (LENGTH sl − 1) eqths) sl b’]
-   >- cheat
+   >- rw[]
 >~ [‘(Γ,A,f) = fcong (map2list (LENGTH sl − 1) eqths) sl b’]
    >- cheat
 >~ [‘(Γ,A,f) = fcong (map2list (LENGTH sl − 1) eqths) sl b’]
@@ -218,7 +252,6 @@ Induct_on ‘Pf0’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*42*)
 >- (simp[Uof_UNION,Uof_SUBSET,Uof_Sing] >>
    rw[] (* 2 *)
    >- (gs[fcong_def] >> simp[ffv_IFF] >>
-       ffv_fprpl cheat
       ‘BIGUNION {tfv t | MEM t (Lofeqthl (map2list (LENGTH sl − 1) eqths))} ⊆
          Uof cont (set (map2list (LENGTH sl − 1) eqths)) ∧
       BIGUNION {tfv t | MEM t (Rofeqthl (map2list (LENGTH sl − 1) eqths))} ⊆
@@ -228,7 +261,24 @@ Induct_on ‘Pf0’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*42*)
         simp[SUBSET_DEF,PULL_EXISTS] >>
         simp[IN_Uof,MEM_map2list,PULL_EXISTS] >>
         simp[MEM_EL,PULL_EXISTS] >>
-        rw[] >>
+        rw[] (* 2 *)
+        >- qspecl_then [‘b’,‘(mk_bmap (REVERSE (Lofeqthl (map2list (LENGTH sl − 1) eqths))))’] assume_tac ffv_fprpl >>
+           ‘(∀n s. (n,s) ∈ ffv b ⇒ sbounds s = ∅)’
+             by (drule_then assume_tac wff_no_vbound >> gs[ffv_FALLL] >>
+                metis_tac[]) >>
+           first_x_assum $ drule_then assume_tac >>
+           qspecl_then [‘(REVERSE (Lofeqthl (map2list (LENGTH sl − 1) eqths)))’,‘b’] assume_tac mk_bmap_BIGUNION >>
+           gs[] >>
+           ‘x ∈ Uof tfv (set (Lofeqthl (map2list (LENGTH sl − 1) eqths)))’
+             by (gs[SUBSET_DEF] >> first_x_assum irule >>
+                simp[PULL_EXISTS] >> qexists ‘i’ >>
+                gs[LENGTH_LRofeqthl,FDOM_mk_bmap]) >>
+            gs[FDOM_mk_bmap,LENGTH_LRofeqthl,LENGTH_map2list] >>
+            ‘LENGTH sl ≠ 0’ by simp[] >>
+            ‘i < LENGTH sl’ by simp[] >>
+            disj1_tac >> qexists ‘i’ >> simp[] >>
+            first_x_assum $ drule_then assume_tac >>
+            
         qexists ‘n’ >> simp[] >>
         first_x_assum $
                       drule_then strip_assume_tac >>
@@ -362,67 +412,10 @@ Induct_on ‘Pf0’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*42*)
     first_x_assum $ drule_then strip_assume_tac >>
     Cases_on ‘eqths n0’ >> Cases_on ‘r’ >>
     gs[assum_def] >> metis_tac[])    (* 33 *)
->- (Cases_on ‘th’ >> Cases_on ‘r’ >>
-   rename [‘MEM (Γ1,A1,f1) _’] >>
-   gs[fVinsth_def] >>
-   first_x_assum $ drule_then assume_tac >>
-   gs[Uof_Sing,Uof_UNION] >> rw[]
-   >- (qspecl_then [‘f1’,‘fσ’] assume_tac
-      ffv_fVinst >>
-      ‘ffv f1 ∪ ffv (fVinst fσ f1) =
-        ffv f1 ∪ ofFMAP ffv fσ (FDOM fσ ∩ fVars f1)’
-      suffices_by
-        (rw[] >>
-        ‘ffv f1 ∪ ffv (fVinst fσ f1) ⊆ Γ1 ∪ ofFMAP ffv fσ (fVars f1 ∪ Uof fVars A1)’
-         suffices_by
-          (gs[SUBSET_DEF] >> metis_tac[]) >>
-        pop_assum SUBST_ALL_TAC >>
-        gs[] >> rw[] (* 2 *)
-        >- gs[SUBSET_DEF] >>
-        gs[ofFMAP_FDOM] >>
-        ‘ofFMAP ffv fσ (fVars f1) ⊆
-        ofFMAP ffv fσ (fVars f1 ∪ Uof fVars A1)’
-         suffices_by
-          (gs[SUBSET_DEF] >> metis_tac[]) >>
-        irule ofFMAP_SUBSET_MONO >>
-        gs[SUBSET_DEF]) >>
-     first_x_assum irule >> rw[] >>
-     irule wffVmap_no_vbound >>
-     metis_tac[]) >>
-    simp[Uof_SUBSET,PULL_EXISTS] >>
-    rw[] >>
-    ‘ffv x ∪ ffv (fVinst fσ x) =
-        ffv x ∪ ofFMAP ffv fσ (FDOM fσ ∩ fVars x)’
-     by (irule ffv_fVinst >> rw[] >>
-     irule wffVmap_no_vbound >> 
-     metis_tac[]) >>
-    ‘ffv x ∪ ffv (fVinst fσ x) ⊆ Γ1 ∪ ofFMAP ffv fσ (fVars f1 ∪ Uof fVars A1)’
-         suffices_by
-          (gs[Uof_SUBSET,SUBSET_DEF] >>
-           metis_tac[]) >>
-        pop_assum SUBST_ALL_TAC >>
-        gs[] >> rw[] (* 2 *)
-        >- (gs[SUBSET_DEF,Uof_SUBSET] >>
-           metis_tac[]) >> 
-        gs[ofFMAP_FDOM] >>
-        ‘ofFMAP ffv fσ (fVars x) ⊆
-        ofFMAP ffv fσ (fVars f1 ∪ Uof fVars A1)’
-         suffices_by
-          (gs[SUBSET_DEF] >> metis_tac[]) >>
-        irule ofFMAP_SUBSET_MONO >>
-        gs[SUBSET_DEF,Uof_def] >> metis_tac[])
->- (Cases_on ‘th’ >> Cases_on ‘r’ >>
-     gs[fVinsth_def] >> 
-     irule wff_fVinst >> simp[] >>
-     rw[] (* 2 *)
-     >- gs[wfsig_def,wffsig_def] >>
-     metis_tac[])
->- (Cases_on ‘th’ >> Cases_on ‘r’ >>
-     gs[fVinsth_def] >> 
-     irule wff_fVinst >> simp[] >>
-     rw[] (* 2 *)
-     >- gs[wfsig_def,wffsig_def] >>
-     metis_tac[])     
+
+
+    
+
 >- (Cases_on ‘th’ >> Cases_on ‘r’ >>
 rename [‘MEM (Γ1,A1,f1) _’] >>
 gs[Uof_Sing,Uof_UNION,vinsth_def] >>
@@ -457,6 +450,7 @@ gs[cont_def] >>
     irule wff_finst >>
     gs[wfvmap_def] >> rw[] (* 3 *)
     >- gs[wfsig_def,wffsig_def]
+    >- metis_tac[wfvmap_def,wfvmap_presname]
     >- (gs[cont_def] >> irule SUBSET_TRANS >>
        first_x_assum $ irule_at Any >>
        first_x_assum $ drule_then assume_tac >>
@@ -467,6 +461,7 @@ gs[cont_def] >>
     irule wff_finst >>
     gs[wfvmap_def] >> rw[] (* 3 *)
     >- gs[wfsig_def,wffsig_def]
+    >- metis_tac[wfvmap_def,wfvmap_presname]
     >- (gs[cont_def] >> irule SUBSET_TRANS >>
        first_x_assum $ irule_at Any >>
        first_x_assum $ drule_then assume_tac >>
@@ -501,7 +496,9 @@ gs[cont_def] >>
            rw[] (* 2 *)
            >- (‘(n,s) ∈ Γ’ by metis_tac[SUBSET_DEF]>>
               irule $ cj 2 wft_no_bound >>
-              metis_tac[PfDrv_cont_wf]) >> 
+              irule_at Any Pf0Drv_cont_wf >>
+              rpt (first_x_assum $ irule_at Any) >>
+              gs[wfaths_def] >> metis_tac[]) >> 
            metis_tac[wft_no_bound]) >>
       gs[SUBSET_DEF] >> metis_tac[] (*ffv_fprpl *))
    >- gs[SUBSET_DEF]) 
