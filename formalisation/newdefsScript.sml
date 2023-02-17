@@ -2104,8 +2104,49 @@ fun absvl i v [] = []
 fun vl2sl0 [] = []
   | vl2sl0 (v :: vs) = v :: absvl 0 v (vl2sl0 vs)
 
-fun vl2sl vl = List.map #2 (vl2sl0 vl)        
-             
+fun vl2sl vl = List.map #2 (vl2sl0 vl)
+
+         
+
+Theorem wfabsap_alt:
+∀n tl sl.
+LENGTH tl = n ⇒ 
+(wfabsap Σ sl tl ⇔
+  let nl = 
+  vl = sl2vl (REPLICATE (LENGTH sl) "") sl
+  σ = TO_FMAP (ZIP )
+  in wfabsap Σ sl (MAP Var' vl) ∧
+     tl = MAP (tinst σ) (MAP Var' vl))
+Proof
+Induct_on ‘n’ >- cheat >>
+reverse (Cases_on ‘sl’ >> Cases_on ‘tl’ ) >>
+rw[wfabsap_def] >> rw[MAP_MAP_o,sl2vl,wfabsap_def] >- cheat >>
+simp[sort_of_def]>>
+Cases_on ‘wfs Σ h’ >> simp[] >> simp[LENGTH_specsl] >>
+Cases_on ‘        (∀n0 s0 st. MEM st t ∧ (n0,s0) ∈ sfv st ⇒ sbounds s0 = ∅)’ >>
+simp[] >>
+‘ 
+        wft Σ h' ∧ h = sort_of h' ∧
+        wfabsap Σ (specsl 0 h' t)
+          (MAP Var' (sl2vl (REPLICATE (LENGTH t) "") (specsl 0 h' t))) ∧
+        t' =
+        MAP (tinst σ ∘ Var')
+          (sl2vl (REPLICATE (LENGTH t) "") (specsl 0 h' t)) ⇔
+        (
+         wft Σ (Var "" h) ∧
+         wfabsap Σ (specsl 0 (Var "" h) t)
+           (MAP Var'
+              (sl2vl (REPLICATE (LENGTH t) "") (specsl 0 (Var "" h) t)))) ∧
+        h' = σ ' ("",h) ∧
+        t' =
+        MAP (tinst σ ∘ Var')
+          (sl2vl (REPLICATE (LENGTH t) "") (specsl 0 (Var "" h) t))’
+suffices_by metis_tac[] >>
+simp[wft_def] >> 
+
+Induct_on ‘tl’ >- cheat >>
+Cases_on ‘sl’ >- cheat >>
+rw[wfabsap_def,MAP_MAP_o,sl2vl] >- cheat >>
 
 
              

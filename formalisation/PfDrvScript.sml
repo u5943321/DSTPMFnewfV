@@ -700,6 +700,24 @@ QED
 
 
 
+Theorem PfDrv_concl_ffv_SUBSET:
+wfsigaxs Σ axs ⇒ ∀Γ A f. PfDrv Σ axs (Γ,A,f) ⇒
+ ffv f ⊆ Γ
+Proof 
+rw[] >> drule_all_then assume_tac PfDrv_ffv_SUBSET_cont >>
+gs[Uof_SUBSET,Uof_Sing,Uof_UNION]
+QED
+
+
+Theorem PfDrv_assum_ffv_SUBSET:
+wfsigaxs Σ axs ⇒ ∀Γ A f. PfDrv Σ axs (Γ,A,f) ⇒
+∀a. a ∈ A ⇒ ffv a ⊆ Γ 
+Proof 
+rw[] >> drule_all_then assume_tac PfDrv_ffv_SUBSET_cont >>
+gs[Uof_SUBSET,Uof_Sing,Uof_UNION]
+QED
+
+        
 Theorem PfDrv_assume:
   ∀Σ axs c. wff Σ c ⇒ PfDrv Σ axs (assume c)
 Proof
@@ -721,23 +739,6 @@ QED
   
           
 
-Theorem PfDrv_concl_ffv_SUBSET:
-wfsigaxs Σ axs ⇒ ∀Γ A f. PfDrv Σ axs (Γ,A,f) ⇒
- ffv f ⊆ Γ
-Proof 
-rw[] >> drule_all_then assume_tac PfDrv_ffv_SUBSET_cont >>
-gs[Uof_SUBSET,Uof_Sing,Uof_UNION]
-QED
-
-
-Theorem PfDrv_assum_ffv_SUBSET:
-wfsigaxs Σ axs ⇒ ∀Γ A f. PfDrv Σ axs (Γ,A,f) ⇒
-∀a. a ∈ A ⇒ ffv a ⊆ Γ 
-Proof 
-rw[] >> drule_all_then assume_tac PfDrv_ffv_SUBSET_cont >>
-gs[Uof_SUBSET,Uof_Sing,Uof_UNION]
-QED
-                  
 Theorem PfDrv_undisch:
   wfsigaxs Σ axs ⇒
   PfDrv Σ axs (Γ,A,IMP f1 f2) ⇒ PfDrv Σ axs (Γ,A ∪ {f1},f2)
