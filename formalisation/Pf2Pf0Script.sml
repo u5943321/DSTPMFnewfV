@@ -200,7 +200,7 @@ QED
 
 
 Theorem fVinst_subset_lemma0:
-ffv f ⊆ Γ ∧ wffVmap Σ fσ ∧  wffVmap Σ σ ∧ wfvmap (FST Σ) vσ ∧
+wffVmap Σ fσ ∧  wffVmap Σ σ ∧ wfvmap (FST Σ) vσ ∧
 (∀fv. fv ∈ fVars f ⇒ ffv (fσ ' fv) ⊆ FDOM vσ) ∧
  uniqifn uσf (FDOM uσ ∪ FDOM fσ) ∧ fVars f ⊆ FDOM fσ ⇒
 Uof ffv
@@ -275,77 +275,6 @@ qspecl_then [‘fσ’,‘f’] assume_tac
 gs[SUBSET_DEF] >> first_x_assum irule >>
 simp[ofFMAP_def,PULL_EXISTS] >> qexists ‘(P,sl)’ >> simp[]
 QED
-
-
-
-    
-Theorem fVinst_subset_lemma0:
-ffv f ⊆ Γ ∧  uniqifn uσf (FDOM uσ ∪ FDOM fσ) ∧ fVars f ⊆ FDOM fσ ⇒
-Uof ffv
-          (IMAGE
-             (fVinst σ ∘
-              $' (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))
-             (IMAGE (vinst_fVar vσ ∘ fVrn uσf) (fVars f))) ⊆
-        vinst_cont vσ (ffv f) ∪ vinst_cont vσ (ofFMAP ffv fσ (fVars f)) ∪
-        ofFMAP ffv σ (IMAGE (vinst_fVar vσ) (fVars (ffVrn uσ (fVinst fσ f))))
-Proof
-simp[Uof_SUBSET,PULL_EXISTS] >> rw[] >>
-gs[] >> Cases_on ‘x'’ >> rename [‘(P,sl)’] >>
-‘(P,sl) ∈ FDOM (o_fVmap (rn2fVmap uσ) fσ)’
- by (simp[FDOM_o_fVmap] >> gs[SUBSET_DEF]) >>
-drule_then assume_tac FAPPLY_vinst_fVmap_fVmap_fVrn >>
-first_x_assum $ qspecl_then [‘vσ’,‘uσf’] assume_tac >>
-‘(FDOM uσ ∪ FDOM fσ) ⊆ FDOM uσf’ by metis_tac[uniqifn_def] >>
-qpat_x_assum ‘(P,sl) ∈ FDOM (o_fVmap (rn2fVmap uσ) fσ)’ (K all_tac) >>
-gs[] >> gs[FDOM_o_fVmap,FDOM_rn2fVmap] >>
-‘(FDOM fσ ∪ FDOM uσ) = (FDOM uσ ∪ FDOM fσ)’ by simp[UNION_COMM] >> gs[] >>
-‘(P,sl) ∈ FDOM uσf’ by (gs[SUBSET_DEF,uniqifn_def]) >>
-gs[] >>
-simp[SUBSET_DEF] >> rw[] >>
-Cases_on ‘x’ >> rename[‘(n,s) ∈ ffv _’] >> gs[] >>
-‘(P,sl) ∈ FDOM fσ’ by gs[SUBSET_DEF] >>
-drule_then assume_tac FAPPLY_o_fVmap1 >> gs[] >> 
-   ‘(fVinst (rn2fVmap uσ) (fσ ' (P,sl))) = ffVrn uσ (fσ ' (P,sl))’
-     by (*ffVrn_fVinst, need (∀P sl tl. fVar P sl tl ∈ subfm f ⇒ LENGTH sl = LENGTH tl) condition on fσ ' (P,sl), need fσ wf*) cheat >>
-Cases_on ‘(n,s) ∈ ffv (finst vσ (ffVrn uσ (fσ ' (P,sl))))’     
-(* 2 *)
->- (gs[ffv_finst_ffVrn] >> disj1_tac >> disj2_tac >>
-   simp[vinst_cont_def,ofFMAP_def,PULL_EXISTS] >>
-   qspecl_then [‘(fσ ' (P,sl))’,‘vσ’] assume_tac ffv_finst >>
-   ‘cstt vσ ∧ ffv (fσ ' (P,sl)) ⊆ FDOM vσ ∧ no_bound vσ’ by cheat >>
-   gs[]>> qexistsl [‘(n0,st0)’,‘(P,sl)’] >> simp[] >>
-   gs[SUBSET_DEF]) >>
-qspecl_then [‘(finst vσ (ffVrn uσ (fσ ' (P,sl))))’,‘σ’]
-            assume_tac ffv_fVinst >>
-‘(∀P' sl' n s.
-           (P',sl') ∈
-           FDOM σ ⇒
-           (n,s) ∈ ffv (σ ' (P',sl')) ⇒
-           sbounds s = ∅)’  by cheat (* require σ wf *) >>
-gs[] >>           
-‘ffv (finst vσ (ffVrn uσ (fσ ' (P,sl)))) ∪
-        ffv (fVinst σ (finst vσ (ffVrn uσ (fσ ' (P,sl))))) =
-        ffv (finst vσ (ffVrn uσ (fσ ' (P,sl)))) ∪
-        ofFMAP ffv σ (FDOM σ ∩ fVars (finst vσ (ffVrn uσ (fσ ' (P,sl)))))’
- by metis_tac[] >> 
-‘(n,s) ∈
-ofFMAP ffv σ (FDOM σ ∩ fVars (finst vσ (ffVrn uσ (fσ ' (P,sl)))))’         
- by (gs[Once EXTENSION] >> gs[EXTENSION] >> metis_tac[]) >>
-disj2_tac >> gs[fVars_finst] >>
-‘(FDOM σ ∩ IMAGE (vinst_fVar vσ) (fVars (ffVrn uσ (fσ ' (P,sl))))) ⊆
-(IMAGE (vinst_fVar vσ) (fVars (ffVrn uσ (fVinst fσ f))))’
- suffices_by
-   (rw[] >>
-   qspecl_then [‘σ’,‘ffv’] (drule_then assume_tac) (Q.GENL [‘σ’,‘f’] ofFMAP_SUBSET_MONO) >>
-   gs[SUBSET_DEF] >> metis_tac[]) >>
-  simp[SUBSET_DEF,PULL_EXISTS,ffVrn_fVinst,fVars_ffVrn] >> rw[] >>
-  qexists ‘x''’ >> simp[] >>
-qspecl_then [‘fσ’,‘f’] assume_tac
-(Q.GEN ‘σ’ ofFMAP_fVars_SUBSET_fVars_fVinst) >>
-gs[SUBSET_DEF] >> first_x_assum irule >>
-simp[ofFMAP_def,PULL_EXISTS] >> qexists ‘(P,sl)’ >> simp[]
-QED
-              
                               
 Theorem fVinst_subset_lemma:
 ffv f ⊆ Γ ⇒
