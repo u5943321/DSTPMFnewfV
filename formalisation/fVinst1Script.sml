@@ -747,7 +747,7 @@ first_x_assum $ irule_at Any >>
 Cases_on ‘Σ’ >> metis_tac[]
 QED
    
-Theorem fVars_DRESTRICT_fVinst_eq:
+Theorem fVars_DRESTRICT_fVinst_eq0:
 ∀f σ1 σ2.
  FDOM σ1 ∩ fVars f = FDOM σ2 ∩ fVars f ∧
  (∀fv. fv ∈ FDOM σ1 ∩ fVars f ⇒ σ1 ' fv = σ2 ' fv) ⇒
@@ -757,14 +757,27 @@ Proof
   rw[] (* 4 *)
   >>(gs[EXTENSION] >> metis_tac[])
 QED  
+
+
+Theorem fVars_DRESTRICT_fVinst_eq1:
+∀f σ s.
+ fVars f ⊆ s ⇒ 
+ fVinst σ f = fVinst (DRESTRICT σ s) f
+Proof
+  rw[] >>
+  irule fVars_DRESTRICT_fVinst_eq0 >> simp[DRESTRICT_DEF] >>
+  gs[EXTENSION] >> rw[] >> gs[SUBSET_DEF] >>
+  metis_tac[]
+QED  
   
+       
 
 Theorem fVars_DRESTRICT_fVinst_eq:
 ∀f σ.
   fVinst (DRESTRICT σ (fVars f)) f =  fVinst σ f
 Proof
   rw[] >>
-  irule fVars_DRESTRICT_fVinst_eq >> simp[DRESTRICT_DEF] >>
+  irule fVars_DRESTRICT_fVinst_eq0 >> simp[DRESTRICT_DEF] >>
   gs[EXTENSION] >> metis_tac[]
 QED  
 

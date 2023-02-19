@@ -359,9 +359,24 @@ simp[vinst_cont_UNION,SUBSET_UNION] >> rw[] (* 3 *)
              
    
       
+Theorem precise_maps_ex:
+∀th fσ uσ vσ σ. ∃fσ1 uσ1 vσ1 σ1.
+FDOM fσ1 = thfVars th ∧ FDOM uσ1 = thfVars (fVinsth fσ1 th) ∧
+FDOM vσ1 = cont (fVinsth fσ1 th) ∧ FDOM σ1 = thfVars (insth fσ1 vσ1 th) ∧
+(insth σ vσ (uniqify uσ (fVinsth fσ th))) =
+(insth σ1 vσ1 (uniqify uσ1 (fVinsth fσ1 th)))
+Proof
+cheat
+QED
 
 
+Theorem fVinst_lemma:
+∀f fσ uσ vσ σ uσf.
+   uniqifn uσf (fVars f) ∧ fVars f ⊆ FDOM fσ ∧ fVars (fVinst fσ 
+Proof        
+        
 Theorem main:
+ wfsigaxs Σ axs ⇒
  ∀pf. Pf Σ axs pf ⇒
       Uof (UCIth Σ) (IMAGE ax2th axs) ⊆ aths ⇒
       ∀th. MEM th pf ⇒
@@ -369,14 +384,63 @@ Theorem main:
            thfVars (vinsth vσ th) ⊆ FDOM fσ ∧
            cont th ⊆ FDOM vσ ∧ uniqifn uσ (thfVars th) ⇒
            Pf0Drv Σ aths (insth fσ vσ (uniqify uσ th))
-Proof         
+Proof
+strip_tac >>
 Induct_on ‘Pf’ >> rw[] >> TRY (metis_tac[]) (* 16 *)
 >~ [‘(insth fσ' vσ (uniqify uσ (fVinsth fσ th)))’] (* M-h M-p *)
 >- gs[] >> rename [‘wfcfVmap Σ σ’] >>
-   ‘∃uσf:string # sort list |-> string. uniqifn uσf (FDOM fσ ∪ FDOM uσ)’
-     by cheat >> 
+   ‘FDOM fσ = thfVars th ∧ FDOM uσ = thfVars (fVinsth fσ th) ∧
+    FDOM vσ = cont (fVinsth fσ th) ∧
+    FDOM σ = IMAGE ((vinst_fVar vσ) o (fVrn uσ)) (thfVars (fVinsth fσ th))’
+     by cheat >>
+   ‘∃uσf:string # sort list |-> string.
+      uniqifn uσf (FDOM fσ ∪ FDOM uσ)’
+     by cheat >>
+   assume_tac (Pf2Pf0_fVinsth_lemma |> SPEC_ALL |> Q.GEN ‘f’) >>
+   last_x_assum $ drule_then assume_tac >>
+   first_x_assum $ qspecl_then [‘vσ’,‘(o_fVmap σ
+                 (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))’,
+                 ‘uσf’] assume_tac >>
+   ‘wffVmap Σ
+          (o_fVmap σ
+             (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf))) ’
+     by Cases_on ‘Σ’ >> Cases_on ‘r’ >> irule wffVmap_o_fVmap >>
+        gs[] >> gs[wfsigaxs_def,wfcfVmap_def,wffsig_def,wfsig_def] >>
+        irule wffVmap_vinst_fVmap >>
+        simp[wffsig_def,FDOM_fVmap_fVrn,FDOM_o_fVmap,FDOM_rn2fVmap] >>
+        simp[GSYM IMAGE_UNION,Excl "IMAGE_UNION"] >>
+        ‘FDOM uσf = (thfVars th ∪ thfVars (fVinsth fσ th))’ by cheat >>
+        ‘BIGUNION
+          {ffv (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf ' (P,sl)) ∪ slfv sl |
+           (P,sl) |
+           (∃x. (P,sl) = fVrn uσf x ∧ x ∈ FDOM uσf)} ⊆ FDOM vσ’
+         simp[SUBSET_DEF,PULL_EXISTS] >> reverse (rw[]) (* 4 *)
+         >- Cases_on ‘x'’ >> gs[fVrn_def]>>
+            cheat
+         >- Cases_on ‘x'’ >> gs[fVrn_def]>>
+            cheat
+         >- gs[] >>
+            ‘uniqifn uσf (FDOM (o_fVmap (rn2fVmap uσ) fσ))’   by cheat >>
+            drule_then assume_tac FAPPLY_fVmap_fVrn1 >>
+            first_x_assum $ qspecl_then [‘x'’] assume_tac >>
+            gs[FDOM_o_fVmap,FDOM_rn2fVmap] >>
+            Cases_on ‘x' ∈ FDOM fσ’ (* 2 *)
+            >- Cases_on ‘x'’ >> drule_then assume_tac FAPPLY_o_fVmap1 >>
+               gs[] >> ‘(fVinst (rn2fVmap uσ) (fσ ' (q'',r))) =
+                        ffVrn uσ (fσ ' (q'',r))’ by cheat >> gs[] >>
+               gs[ffv_ffVrn] >> cheat >>
+           Cases_on ‘x'’ >> drule_then assume_tac FAPPLY_o_fVmap2 >>
+           ‘x ∈ slfv r’ by cheat >>
+           cheat >>
+        gs[] >>
+        ‘(fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf ' (fVrn uσf x')) = (o_fVmap (rn2fVmap uσ) fσ) ' x'’
+            
+        
+        
+   
    qspecl_then [‘σ’,‘Σp’,‘Σf’,‘Σe’,‘vσ’,‘uσf’,‘fσ’] assume_tac
-    (Pf2Pf0_fVinsth_lemma |> GEN_ALL)   
+    (Pf2Pf0_fVinsth_lemma |> GEN_ALL)  >>
+     
 (* uniqifn_ex *)
    qspecl_then [‘σ’,‘Σp’,‘Σf’,‘Σe’,‘vσ’,‘uσf’,‘fσ’] assume_tac
     (Pf2Pf0_fVinsth_lemma |> GEN_ALL)   
