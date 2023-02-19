@@ -6,13 +6,13 @@ struct
     else ()
   
   open Type Term Thm
-  local open finite_mapTheory finite_setTheory stringTheory in end;
+  local open string_numTheory in end;
   
   structure TDB = struct
     val thydata = 
       TheoryReader.load_thydata "tmsytx"
         (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/tmsytxTheory.dat")
-    fun find s = Redblackmap.find (thydata,s)
+    fun find s = HOLdict.find (thydata,s)
   end
   
   fun op sort_of_def _ = () val op sort_of_def = TDB.find "sort_of_def"

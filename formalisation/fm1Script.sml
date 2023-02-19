@@ -1675,6 +1675,13 @@ QED
 
 
 
+        
+
+
+
+        
+
+
 Theorem sfv_ffv:
 ∀f. (n,s) ∈ ffv f ⇒ sfv s ⊆ ffv f
 Proof

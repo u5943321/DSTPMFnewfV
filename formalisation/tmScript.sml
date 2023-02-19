@@ -5193,6 +5193,11 @@ QED
 
 
 
+
+
+
+
+        
 Theorem tfv_tprpl:
  (∀tm bmap.
  (∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = {}) ⇒

@@ -12,7 +12,7 @@ struct
     val thydata = 
       TheoryReader.load_thydata "fsytx"
         (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/fsytxTheory.dat")
-    fun find s = Redblackmap.find (thydata,s)
+    fun find s = HOLdict.find (thydata,s)
   end
   
   fun op gcont_def _ = () val op gcont_def = TDB.find "gcont_def"

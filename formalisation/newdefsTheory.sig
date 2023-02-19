@@ -28,6 +28,7 @@ sig
     val fVrn_def : thm
     val fcong_def : thm
     val ffVrn_def : thm
+    val freshnl_def : thm
     val gen_def : thm
     val genavds_def : thm
     val instf_def : thm
@@ -35,6 +36,7 @@ sig
     val is_cfm_def : thm
     val is_cth : thm
     val map2list : thm
+    val nameleast_def : thm
     val o_fVmap_def : thm
     val plainfV_def : thm
     val refl_def : thm
@@ -56,6 +58,7 @@ sig
   (*  Theorems  *)
     val BIGUNION_IMAGE_Uof : thm
     val EL_map2list : thm
+    val EL_specslwtl : thm
     val EMPTY_is_cont : thm
     val FALLL_components : thm
     val FALLL_fbounds : thm
@@ -108,16 +111,22 @@ sig
     val ffv_frpl_SUBSET : thm
     val finst_fprpl : thm
     val finst_o_vmap : thm
+    val freshnl_compute0 : thm
     val frpl_fprpl : thm
     val frpl_id : thm
     val instf_fVinst : thm
     val instf_fVinst_finst : thm
     val insth_instf : thm
+    val is_cont_DELETE : thm
     val map2list_compute : thm
     val ofFMAP_SUBSET_MONO : thm
     val shift_bmap_vinst_bmap : thm
+    val sl2vl_def : thm
+    val sl2vl_ind : thm
     val spec_def : thm
     val spec_ind : thm
+    val specslwtl : thm
+    val specslwtl_ind : thm
     val sym_def : thm
     val sym_ind : thm
     val tinst_tprpl : thm
@@ -128,16 +137,19 @@ sig
     val uniqifn_FDOM_SUBSET : thm
     val uniqifn_SUBSET : thm
     val uniqifn_alluniq : thm
+    val uniqifn_alluniq0 : thm
     val uniqifn_ex : thm
     val vinst_bmap_alt : thm
     val vinst_cont_EMPTY : thm
     val vinst_cont_UNION : thm
     val wfabsap_Lofeqthl_sl_NONNIL : thm
+    val wfabsap_specslwtl : thm
     val wff_FALL_alt : thm
     val wff_IMP : thm
     val wff_absapLs_eq : thm
     val wff_subfm_fVar_LENGTH : thm
     val wfvmap_IN_ofMAP_wfs : thm
+    val wfvmap_presname : thm
   
   val newdefs_grammars : type_grammar.grammar * term_grammar.grammar
 (*
@@ -153,7 +165,7 @@ sig
    
    [EX_def]  Definition
       
-      ⊢ ∀n s b. EX n s b = NEG (FALL s (NEG b))
+      ⊢ ∀s b. EX s b = NEG (FALL s (NEG b))
    
    [IFF_def]  Definition
       
@@ -259,7 +271,7 @@ sig
       
       ⊢ ∀eqthl sl b.
           fcong eqthl sl b =
-          (Uof cont (set eqthl),Uof assum (set eqthl),
+          (Uof cont (set eqthl) ∪ ffv b,Uof assum (set eqthl),
            IFF (fprpl (mk_bmap (REVERSE (Lofeqthl eqthl))) b)
              (fprpl (mk_bmap (REVERSE (Rofeqthl eqthl))) b))
    
@@ -273,6 +285,11 @@ sig
         (∀uσ s b. ffVrn uσ (FALL s b) = FALL s (ffVrn uσ b)) ∧
         (∀uσ p tl. ffVrn uσ (Pred p tl) = Pred p tl) ∧
         ∀uσ. ffVrn uσ False = False
+   
+   [freshnl_def]  Definition
+      
+      ⊢ (∀min. freshnl min 0 = []) ∧
+        ∀min n. freshnl min (SUC n) = n2s (min + SUC n)::freshnl min n
    
    [gen_def]  Definition
       
@@ -309,6 +326,12 @@ sig
       
       ⊢ (∀f. map2list 0 f = [f 0]) ∧
         ∀n f. map2list (SUC n) f = map2list n f ⧺ [f (n + 1)]
+   
+   [nameleast_def]  Definition
+      
+      ⊢ ∀vs.
+          nameleast vs =
+          if vs ≠ ∅ then MAX_SET (IMAGE (s2n ∘ FST) vs) else 0
    
    [o_fVmap_def]  Definition
       
@@ -440,6 +463,16 @@ sig
    [EL_map2list]  Theorem
       
       ⊢ ∀n m. m ≤ n ⇒ EL m (map2list n f) = f m
+   
+   [EL_specslwtl]  Theorem
+      
+      [oracles: DISK_THM, cheat] [axioms: ] []
+      ⊢ ∀n1 n tl sl.
+          LENGTH tl = n1 ∧ n < LENGTH sl ∧ LENGTH sl = LENGTH tl ∧
+          ok_abs sl ⇒
+          EL n (specslwtl tl sl) =
+          (EL n tl,
+           sprpl (shift_bmap (n − 1) (mk_bmap (REVERSE tl))) (EL n sl))
    
    [EMPTY_is_cont]  Theorem
       
@@ -702,6 +735,16 @@ sig
           ffv f ⊆ FDOM σ1 ∧ ffv (finst σ1 f) ⊆ FDOM σ2 ⇒
           finst σ2 (finst σ1 f) = finst (o_vmap σ2 σ1) f
    
+   [freshnl_compute0]  Theorem
+      
+      ⊢ (∀min. freshnl min 0 = []) ∧
+        (∀min n.
+           freshnl min (NUMERAL (BIT1 n)) =
+           n2s (min + NUMERAL (BIT1 n))::freshnl min (NUMERAL (BIT1 n) − 1)) ∧
+        ∀min n.
+          freshnl min (NUMERAL (BIT2 n)) =
+          n2s (min + NUMERAL (BIT2 n))::freshnl min (NUMERAL (BIT1 n))
+   
    [frpl_fprpl]  Theorem
       
       ⊢ ∀f i new.
@@ -729,6 +772,10 @@ sig
          ofFMAP ffv fσ (Uof (IMAGE (vinst_fVar vσ) ∘ fVars) ({f} ∪ A)),
          IMAGE (instf fσ vσ) A,instf fσ vσ f)
    
+   [is_cont_DELETE]  Theorem
+      
+      ⊢ is_cont ct ∧ (∀n s. (n,s) ∈ ct ⇒ v ∉ sfv s) ⇒ is_cont (ct DELETE v)
+   
    [map2list_compute]  Theorem
       
       ⊢ (∀f. map2list 0 f = [f 0]) ∧
@@ -749,6 +796,19 @@ sig
       ⊢ (∀n s. (n,s) ∈ FDOM σ ⇒ tbounds (σ ' (n,s)) = ∅) ⇒
         shift_bmap n (vinst_bmap σ bmap) = vinst_bmap σ (shift_bmap n bmap)
    
+   [sl2vl_def]  Theorem
+      
+      ⊢ sl2vl [] [] = [] ∧
+        ∀sl s nl n.
+          sl2vl (n::nl) (s::sl) = (n,s)::sl2vl nl (specsl 0 (Var n s) sl)
+   
+   [sl2vl_ind]  Theorem
+      
+      ⊢ ∀P. P [] [] ∧
+            (∀n nl s sl. P nl (specsl 0 (Var n s) sl) ⇒ P (n::nl) (s::sl)) ∧
+            (∀v6 v7. P [] (v6::v7)) ∧ (∀v10 v11. P (v10::v11) []) ⇒
+            ∀v v1. P v v1
+   
    [spec_def]  Theorem
       
       ⊢ spec t (Γ,A,FALL s b) = (Γ ∪ tfv t,A,substb t b)
@@ -761,6 +821,19 @@ sig
             (∀v30 v29 v28 v12 v13. P v30 (v29,v28,IMP v12 v13)) ∧
             (∀v33 v32 v31 v19 v20 v21. P v33 (v32,v31,fVar v19 v20 v21)) ⇒
             ∀v v1 v2 v3. P v (v1,v2,v3)
+   
+   [specslwtl]  Theorem
+      
+      ⊢ specslwtl [] [] = [] ∧
+        ∀tl t sl s.
+          specslwtl (t::tl) (s::sl) = (t,s)::specslwtl tl (specsl 0 t sl)
+   
+   [specslwtl_ind]  Theorem
+      
+      ⊢ ∀P. P [] [] ∧
+            (∀t tl s sl. P tl (specsl 0 t sl) ⇒ P (t::tl) (s::sl)) ∧
+            (∀v6 v7. P [] (v6::v7)) ∧ (∀v10 v11. P (v10::v11) []) ⇒
+            ∀v v1. P v v1
    
    [sym_def]  Theorem
       
@@ -843,9 +916,13 @@ sig
       
       ⊢ ∀f. uniqifn uσ (fVars f) ⇒ alluniq (fVars (ffVrn uσ f))
    
+   [uniqifn_alluniq0]  Theorem
+      
+      ⊢ ∀s. uniqifn uσ s ⇒ alluniq (IMAGE (fVrn uσ) s)
+   
    [uniqifn_ex]  Theorem
       
-      ⊢ ∀fVs. FINITE fVs ⇒ ∃uσ. uniqifn uσ fVs
+      ⊢ ∀fVs. FINITE fVs ⇒ ∃uσ. uniqifn uσ fVs ∧ FDOM uσ = fVs
    
    [vinst_bmap_alt]  Theorem
       
@@ -862,6 +939,17 @@ sig
    [wfabsap_Lofeqthl_sl_NONNIL]  Theorem
       
       ⊢ wfabsap Σf sl (Lofeqthl (map2list f l)) ⇒ sl ≠ []
+   
+   [wfabsap_specslwtl]  Theorem
+      
+      [oracles: DISK_THM, cheat] [axioms: ] []
+      ⊢ ∀tl sl.
+          wfabsap Σ sl tl ⇔
+          LENGTH sl = LENGTH tl ∧
+          (let
+             sl1 = specslwtl tl sl
+           in
+             ∀t s. MEM (t,s) sl1 ⇒ wft Σ t ∧ wfs Σ s ∧ sort_of t = s)
    
    [wff_FALL_alt]  Theorem
       
@@ -888,6 +976,10 @@ sig
    [wfvmap_IN_ofMAP_wfs]  Theorem
       
       ⊢ wfvmap Σf vσ ∧ (n,s) ∈ ofFMAP tfv vσ vs ⇒ wfs Σf s
+   
+   [wfvmap_presname]  Theorem
+      
+      ⊢ wfvmap Σ vσ ⇒ presname vσ
    
    
 *)

@@ -661,6 +661,9 @@ QED
 
 
 
+        
+
+
 
 Theorem sbounds_frename_EMPTY:
 (∀n s. (n,s) ∈ ffv f ⇒ sbounds s = {}) ⇒

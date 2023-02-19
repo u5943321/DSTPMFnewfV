@@ -12,7 +12,7 @@ struct
     val thydata = 
       TheoryReader.load_thydata "fVinst"
         (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/fVinstTheory.dat")
-    fun find s = Redblackmap.find (thydata,s)
+    fun find s = HOLdict.find (thydata,s)
   end
   
   fun op shift_bmap'_def _ = ()
