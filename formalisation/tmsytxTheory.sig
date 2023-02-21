@@ -336,7 +336,11 @@ sig
   
   val tmsytx_grammars : type_grammar.grammar * term_grammar.grammar
 (*
-   [string_num] Parent theory of "tmsytx"
+   [finite_map] Parent theory of "tmsytx"
+   
+   [finite_set] Parent theory of "tmsytx"
+   
+   [string] Parent theory of "tmsytx"
    
    [FMAP_MAP_DEF]  Definition
       

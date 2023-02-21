@@ -6,7 +6,7 @@ struct
     else ()
   
   open Type Term Thm
-  local open string_numTheory in end;
+  local open finite_mapTheory finite_setTheory stringTheory in end;
   
   structure TDB = struct
     val thydata = 

@@ -21,6 +21,8 @@ sig
     val fVar_prpl_eq_lemma : thm
     val fVar_prpl_fabs1 : thm
     val fVars_DRESTRICT_fVinst_eq : thm
+    val fVars_DRESTRICT_fVinst_eq0 : thm
+    val fVars_DRESTRICT_fVinst_eq1 : thm
     val fVars_fVinst : thm
     val fVars_fabs : thm
     val fVars_fprpl : thm
@@ -143,6 +145,17 @@ sig
    [fVars_DRESTRICT_fVinst_eq]  Theorem
       
       ⊢ ∀f σ. fVinst (DRESTRICT σ (fVars f)) f = fVinst σ f
+   
+   [fVars_DRESTRICT_fVinst_eq0]  Theorem
+      
+      ⊢ ∀f σ1 σ2.
+          FDOM σ1 ∩ fVars f = FDOM σ2 ∩ fVars f ∧
+          (∀fv. fv ∈ FDOM σ1 ∩ fVars f ⇒ σ1 ' fv = σ2 ' fv) ⇒
+          fVinst σ1 f = fVinst σ2 f
+   
+   [fVars_DRESTRICT_fVinst_eq1]  Theorem
+      
+      ⊢ ∀f σ s. fVars f ⊆ s ⇒ fVinst σ f = fVinst (DRESTRICT σ s) f
    
    [fVars_fVinst]  Theorem
       

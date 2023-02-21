@@ -86,6 +86,10 @@ struct
   val op wffVmap_fVmap_rename = TDB.find "wffVmap_fVmap_rename"
   fun op wffVmap_no_vbound _ = ()
   val op wffVmap_no_vbound = TDB.find "wffVmap_no_vbound"
+  fun op fVars_DRESTRICT_fVinst_eq0 _ = ()
+  val op fVars_DRESTRICT_fVinst_eq0 = TDB.find "fVars_DRESTRICT_fVinst_eq0"
+  fun op fVars_DRESTRICT_fVinst_eq1 _ = ()
+  val op fVars_DRESTRICT_fVinst_eq1 = TDB.find "fVars_DRESTRICT_fVinst_eq1"
   fun op fVars_DRESTRICT_fVinst_eq _ = ()
   val op fVars_DRESTRICT_fVinst_eq = TDB.find "fVars_DRESTRICT_fVinst_eq"
   fun op fVars_fprpl _ = () val op fVars_fprpl = TDB.find "fVars_fprpl"

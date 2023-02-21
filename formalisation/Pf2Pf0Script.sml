@@ -359,29 +359,376 @@ simp[vinst_cont_UNION,SUBSET_UNION] >> rw[] (* 3 *)
              
    
       
-Theorem precise_maps_ex:
-∀th fσ uσ vσ σ. ∃fσ1 uσ1 vσ1 σ1.
-FDOM fσ1 = thfVars th ∧ FDOM uσ1 = thfVars (fVinsth fσ1 th) ∧
-FDOM vσ1 = cont (fVinsth fσ1 th) ∧ FDOM σ1 = thfVars (insth fσ1 vσ1 th) ∧
-(insth σ vσ (uniqify uσ (fVinsth fσ th))) =
-(insth σ1 vσ1 (uniqify uσ1 (fVinsth fσ1 th)))
-Proof
-cheat
-QED
 
-
+(*
 Theorem fVinst_lemma:
 ∀f fσ uσ vσ σ uσf.
    uniqifn uσf (fVars f) ∧ fVars f ⊆ FDOM fσ ∧ fVars (fVinst fσ 
 Proof        
+*)
+
+                
+
+Theorem cont_fVinsth:
+cont th ⊆ cont (fVinsth fσ th)
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >> gs[fVinsth_def,cont_def]
+QED
+
+Theorem IMAGE_Uof:
+IMAGE f (Uof g s) = Uof (IMAGE f o g) s
+Proof
+rw[Uof_def,IMAGE_BIGUNION,IMAGE_SING] >>
+‘(IMAGE (IMAGE f) {g e | e ∈ s})  = {IMAGE f (g e) | e ∈ s}’
+ by (simp[Once EXTENSION] >> gs[PULL_EXISTS]) >>
+gs[]
+QED
+
+
+Theorem IMAGE_vinst_fVar_fVars:
+(IMAGE (vinst_fVar vσ) ∘ fVars) = (fVars ∘ finst vσ)
+Proof
+rw[FUN_EQ_THM,fVars_finst]
+QED
+
+
+Theorem thfVars_vinsth:
+thfVars (vinsth vσ th) = IMAGE (vinst_fVar vσ) (thfVars th)
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >> gs[vinsth_def,cont_def,thfVars_def,
+Uof_UNION,Uof_Sing,Uof_IMAGE,fVars_finst,IMAGE_vinst_fVar_fVars] >>
+simp[IMAGE_Uof,IMAGE_vinst_fVar_fVars]
+QED
+
+Theorem IMAGE_fVrn_fVars:
+(IMAGE (fVrn uσf) ∘ fVars) = (fVars ∘ ffVrn uσf)
+Proof
+rw[FUN_EQ_THM,fVars_ffVrn]
+QED
         
+                
+Theorem thfVars_uniqify:
+(thfVars (uniqify uσf th)) = (IMAGE (fVrn uσf) (thfVars th))
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >> gs[thfVars_def,uniqify_def,
+Uof_UNION,Uof_Sing,Uof_IMAGE,fVars_ffVrn] >>
+simp[IMAGE_Uof,IMAGE_fVrn_fVars]
+QED
+
+
+Theorem is_cfm_fprpl:
+∀f bmap. is_cfm (fprpl bmap f) ⇔ is_cfm f
+Proof
+Induct_on ‘f’ >> gs[fprpl_def,is_cfm_def]
+QED
+        
+Theorem fVinst_cfVmap_is_cfm:
+∀f σ. cfVmap σ ∧ fVars f ⊆ FDOM σ ⇒ is_cfm (fVinst σ f)
+Proof
+Induct_on ‘f’ >> gs[cfVmap_def,fVars_def,fVinst_def,is_cfm_def] >>
+rw[is_cfm_fprpl]
+QED
+
+Theorem ofFMAP_SUBSET:
+ofFMAP f σ A ⊆ B ⇔ ∀a. a ∈ A ∧ a ∈ FDOM σ ⇒ f (σ ' a) ⊆ B
+Proof        
+rw[ofFMAP_def,SUBSET_DEF] >> metis_tac[]
+QED
+             
+Theorem cfVmap_o_fVmap:
+  cfVmap cσ ∧ ofFMAP fVars σ (FDOM σ) ⊆ FDOM cσ ⇒
+  cfVmap (o_fVmap cσ σ)
+Proof
+rw[cfVmap_def,FDOM_o_fVmap] (* 2 *)
+>- (drule_then assume_tac FAPPLY_o_fVmap1 >> gs[] >>
+   irule fVinst_cfVmap_is_cfm >> gs[cfVmap_def,ofFMAP_SUBSET]) >>
+Cases_on ‘(P,sl) ∈ FDOM σ’ (* 2 *)
+>- (drule_then assume_tac FAPPLY_o_fVmap1 >> gs[] >>
+   irule fVinst_cfVmap_is_cfm >> gs[cfVmap_def,ofFMAP_SUBSET]) >>
+drule_then assume_tac FAPPLY_o_fVmap2 >> gs[]
+QED
+
+
+Theorem ofFMAP_DRESTRICT:
+s ⊆ A ⇒ ofFMAP f (DRESTRICT σ A) s = ofFMAP f σ s
+Proof
+rw[SUBSET_DEF,ofFMAP_def] >> AP_TERM_TAC >>
+rw[Once EXTENSION,DRESTRICT_DEF] >> rw[EQ_IMP_THM] >> gs[]
+>- metis_tac[EXTENSION] >>
+qexists ‘a’ >> simp[]
+QED
+
+
+Theorem IMAGE_eq_lemma:
+(∀a. a ∈ A ⇒ f1 a = f2 a) ⇒ IMAGE f1 A = IMAGE f2 A
+Proof
+rw[Once EXTENSION] >> metis_tac[]
+QED
+        
+Theorem fVinsth_DRESTRICT:
+(fVinsth (DRESTRICT fσ (thfVars th)) th) =  (fVinsth fσ th)
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >> gs[fVinsth_def] >>
+rw[] (* 3 *)
+>- (AP_TERM_TAC >> irule ofFMAP_DRESTRICT >> rw[thfVars_def])
+>- (irule IMAGE_eq_lemma >> rw[] >>
+   irule $ GSYM fVars_DRESTRICT_fVinst_eq1 >>
+   gs[thfVars_def,Uof_UNION,Uof_Sing] >> rw[Uof_def] >>
+   gs[SUBSET_DEF] >> metis_tac[]) >>
+irule $ GSYM fVars_DRESTRICT_fVinst_eq1 >>
+gs[thfVars_def,Uof_UNION,Uof_Sing]
+QED 
+
+
+
+Theorem uniqifn_DRESTRICT:
+uniqifn uσ A ⇒ uniqifn (DRESTRICT uσ A) A
+Proof
+gs[uniqifn_def,DRESTRICT_DEF,SUBSET_DEF]
+QED
+
+
+
+Theorem ffVrn_eq:
+∀f σ1 σ2.
+ (DRESTRICT σ1 (fVars f)  = DRESTRICT σ2 (fVars f)) ⇒ ffVrn σ1 f = ffVrn σ2 f
+Proof
+Induct_on ‘f’ >> gs[ffVrn_def,fVars_def,INTER_UNION] >> rw[] (* 5 *)
+>- (first_x_assum irule >>
+   drule_then assume_tac DRESTRICT_SUBSET >>
+   first_x_assum $
+   qspecl_then [‘fVars f’] assume_tac >>
+   gs[SUBSET_DEF])
+>- (first_x_assum irule >>
+   drule_then assume_tac DRESTRICT_SUBSET >>
+   first_x_assum $
+   qspecl_then [‘fVars f'’] assume_tac >>
+   gs[SUBSET_DEF])
+>- (qspecl_then [‘σ1’,‘{(s,l)}’,‘(s,l)’] assume_tac
+   (SRULE [PULL_FORALL] DRESTRICT_DEF) >>
+   qspecl_then [‘σ2’,‘{(s,l)}’,‘(s,l)’] assume_tac
+   (SRULE [PULL_FORALL] DRESTRICT_DEF)  >> gs[]) >>
+qspecl_then [‘σ1’,‘{(s,l)}’] assume_tac
+  DRESTRICT_DEF >>
+qspecl_then [‘σ2’,‘{(s,l)}’] assume_tac
+  DRESTRICT_DEF >>
+gs[] >> gs[Once EXTENSION] >> metis_tac[]
+QED
+
+        
+Theorem ffVrn_eq1:
+∀f σ1 σ2.
+ (FDOM σ1 ∩ fVars f = FDOM σ2 ∩ fVars f) ∧
+ (∀fv. fv ∈ fVars f ⇒ σ1 ' fv = σ2 ' fv) ⇒ ffVrn σ1 f = ffVrn σ2 f
+Proof
+rw[] >> irule ffVrn_eq >>
+simp[fmap_EXT,DRESTRICT_DEF] >> rw[] >>
+gs[EXTENSION] >> metis_tac[]
+QED
+ 
+Theorem uniqify_DRESTRICT:
+thfVars th ⊆ s ⇒
+uniqify (DRESTRICT uσ s) th = uniqify uσ th
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >>
+simp[uniqify_def] >> rw[] (* 2 *)
+>- (irule IMAGE_eq_lemma >> rw[] >>
+   irule ffVrn_eq >>
+   rw[DRESTRICT_DRESTRICT] >>
+   gs[SUBSET_DEF,thfVars_def,Uof_UNION,Uof_Sing] >>
+   AP_TERM_TAC >> gs[Once EXTENSION,IN_Uof] >>
+   metis_tac[EXTENSION]) >>
+ irule ffVrn_eq >>
+   rw[DRESTRICT_DRESTRICT] >>
+   gs[SUBSET_DEF,thfVars_def,Uof_UNION,Uof_Sing] >>
+   AP_TERM_TAC >> gs[Once EXTENSION,IN_Uof] >>
+   metis_tac[EXTENSION]   
+QED
+
+Theorem wfvmap_DRESTRICT:
+wfvmap Σ vσ ⇒
+∀s. s ⊆ FDOM vσ ∧ is_cont s ⇒
+ wfvmap Σ (DRESTRICT vσ s)
+Proof
+simp[wfvmap_def,DRESTRICT_DEF] >> gs[] >>
+rw[] (* 2 *)
+>- (irule DRESTRICT_cstt >> simp[]) >>
+simp[DRESTRICT_wfcod]
+QED
+
+Theorem vinst_cont_DRESTRICT:
+Γ ⊆ s ∧ s ⊆ FDOM vσ ⇒
+vinst_cont (DRESTRICT vσ s) Γ = vinst_cont vσ Γ
+Proof
+rw[vinst_cont_def] >> rw[Once EXTENSION] >>
+simp[ofFMAP_def,PULL_EXISTS] >>
+‘∀a. a ∈ Γ ⇒  (DRESTRICT vσ s ' a) = (vσ ' a)’
+ suffices_by (simp[FDOM_DRESTRICT] >>
+             gs[SUBSET_DEF] >>metis_tac[]) >>
+rw[] >> gs[DRESTRICT_DEF] >>
+gs[SUBSET_DEF]
+QED
+
+
+Theorem vinsth_DRESTRICT:
+Uof ffv ({f} ∪ A) ⊆ s ∧ Γ ⊆ s ∧ s ⊆ FDOM vσ ⇒
+vinsth (DRESTRICT vσ s) (Γ,A,f) =
+vinsth vσ (Γ,A,f)
+Proof
+rw[] >> rw[vinsth_def] (* 3 *)
+>- (irule vinst_cont_DRESTRICT >> simp[])
+>- (irule IMAGE_eq_lemma >>
+   rw[] >> irule fmap_ffv_finst_eq1 >>
+   simp[DRESTRICT_DRESTRICT] >>
+   ‘(s ∩ ffv a) = ffv a’ suffices_by metis_tac[] >>
+   gs[Uof_SUBSET] >> simp[INTER_SUBSET_EQN]) >>
+irule fmap_ffv_finst_eq1 >>
+simp[DRESTRICT_DRESTRICT] >>
+‘(s ∩ ffv f) = ffv f’ suffices_by metis_tac[] >>
+gs[Uof_SUBSET] >> simp[INTER_SUBSET_EQN]   
+QED
+
+
+Theorem vinsth_DRESTRICT1:
+Uof ffv ({concl th} ∪ assum th) ⊆ s ∧
+ cont th ⊆ s ∧ s ⊆ FDOM vσ ⇒
+vinsth (DRESTRICT vσ s) th =
+vinsth vσ th
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >>
+gs[assum_def,concl_def,cont_def] >> 
+metis_tac[vinsth_DRESTRICT]   
+QED
+
+        
+        
+
+Theorem cont_uniqify:
+cont (uniqify σ th) = cont th
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >> simp[cont_def,uniqify_def]
+QED
+
+Theorem Uof_ffv_uniqify:
+Uof ffv
+          ({concl (uniqify uσ th)} ∪
+           assum (uniqify uσ th)) =
+Uof ffv ({concl th} ∪ assum th)
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >>
+rename [‘(Γ,A,f)’] >>
+rw[Uof_def,Once EXTENSION,PULL_EXISTS,EQ_IMP_THM] >>
+gs[uniqify_def,concl_def,assum_def,ffv_ffVrn]
+(* 4 *)
+>>metis_tac[ffv_ffVrn]
+QED
+
+Theorem cfVmap_DRESTRICT:
+cfVmap σ ⇒ cfVmap (DRESTRICT σ s)
+Proof
+rw[cfVmap_def,DRESTRICT_DEF]
+QED
+   
+Theorem wfcfVmap_DRESTRICT:
+wfcfVmap Σ σ ⇒ wfcfVmap Σ (DRESTRICT σ s)
+Proof
+gs[wfcfVmap_def,wffVmap_DRESTRICT,cfVmap_DRESTRICT]
+QED
+
+Theorem PfDrv_fVinsth:
+∀th.
+PfDrv Σ axs th ∧
+wffVmap Σ fσ ∧ thfVars th ⊆ FDOM fσ ⇒
+PfDrv Σ axs (fVinsth fσ th)
+Proof
+rw[PfDrv_def] >>
+drule_all_then assume_tac Pf_fVinsth >>
+first_x_assum $ irule_at Any >> simp[]
+QED
+
+
+Theorem PfDrv_cont_is_cont:
+∀th. PfDrv Σ axs th ⇒ is_cont (cont th)
+Proof
+rw[] >> irule Pf_cont_is_cont >>
+gs[PfDrv_def] >> Cases_on ‘th’ >> Cases_on ‘r’ >>
+gs[cont_def] >> metis_tac[]
+QED
+
+
+
+        
+Theorem precise_maps_ex:
+∀th fσ uσ vσ σ.
+PfDrv Σ axs th ∧ wfsigaxs Σ axs ⇒
+wffVmap Σ fσ ∧ thfVars th ⊆ FDOM fσ ∧ wfvmap (FST Σ) vσ ∧
+wfcfVmap Σ σ ∧
+thfVars (vinsth vσ (uniqify uσ (fVinsth fσ th))) ⊆ FDOM σ ∧
+cont (fVinsth fσ th) ⊆ FDOM vσ ∧
+uniqifn uσ (thfVars (fVinsth fσ th)) ⇒
+∃fσ1 uσ1 vσ1 σ1.
+wffVmap Σ fσ1 ∧ thfVars th = FDOM fσ1 ∧ wfvmap (FST Σ) vσ1 ∧
+wfcfVmap Σ σ1 ∧
+thfVars (vinsth vσ1 (uniqify uσ1 (fVinsth fσ1 th))) = FDOM σ1 ∧
+cont (fVinsth fσ1 th) = FDOM vσ1 ∧
+uniqifn uσ1 (thfVars (fVinsth fσ1 th)) ∧
+(thfVars (fVinsth fσ1 th)) = FDOM uσ1 ∧
+(insth σ vσ (uniqify uσ (fVinsth fσ th))) =
+(insth σ1 vσ1 (uniqify uσ1 (fVinsth fσ1 th)))
+Proof
+rw[] >>
+qexists ‘DRESTRICT fσ (thfVars th)’ >>
+‘ wffVmap Σ (DRESTRICT fσ (thfVars th)) ∧
+          thfVars th = FDOM (DRESTRICT fσ (thfVars th))’
+ by (gs[wffVmap_DRESTRICT,FDOM_DRESTRICT] >>
+    gs[SUBSET_DEF,Once EXTENSION] >> metis_tac[]) >> gs[] >>
+‘(fVinsth (DRESTRICT fσ (thfVars th)) th) = (fVinsth fσ th)’
+ by simp[fVinsth_DRESTRICT] >> gs[] >>
+qexists ‘DRESTRICT uσ (thfVars (fVinsth fσ th))’ >>
+simp[uniqifn_DRESTRICT] >> simp[FDOM_DRESTRICT]  >>
+‘(thfVars (fVinsth fσ th)) ⊆ FDOM uσ’ by metis_tac[uniqifn_def] >>
+simp[INTER_SUBSET_EQN] >>
+‘(uniqify (DRESTRICT uσ (thfVars (fVinsth fσ th)))
+                  (fVinsth fσ th)) =
+(uniqify uσ (fVinsth fσ th))’
+ by (irule uniqify_DRESTRICT >> simp[SUBSET_DEF]) >>
+simp[] >>
+qexists ‘DRESTRICT vσ (cont (fVinsth fσ th))’ >>
+simp[FDOM_DRESTRICT] >>
+‘wfvmap (FST Σ)
+ (DRESTRICT vσ (cont (fVinsth fσ th)))’
+ by (irule wfvmap_DRESTRICT >>
+    simp[] >> irule PfDrv_cont_is_cont >>
+    irule_at Any PfDrv_fVinsth >> metis_tac[]) >>
+simp[INTER_SUBSET_EQN] >>
+simp[insth_def]>>
+‘(vinsth (DRESTRICT vσ (cont (fVinsth fσ th)))
+               (uniqify uσ (fVinsth fσ th))) =
+ (vinsth vσ (uniqify uσ (fVinsth fσ th)))’
+ by (irule vinsth_DRESTRICT1 >>
+    simp[] >> simp[cont_uniqify] >>
+    simp[Uof_ffv_uniqify] >>
+    drule_all_then assume_tac PfDrv_fVinsth >>
+    irule PfDrv_ffv_SUBSET_cont >>
+    Cases_on ‘(fVinsth fσ th)’ >> Cases_on ‘r’ >>
+    gs[cont_def,assum_def,concl_def] >>
+    metis_tac[]) >>
+simp[] >>
+qexists ‘DRESTRICT σ
+(thfVars (vinsth vσ (uniqify uσ (fVinsth fσ th))))’>>
+simp[FDOM_DRESTRICT,INTER_SUBSET_EQN] >>
+simp[wfcfVmap_DRESTRICT] >>
+rw[fVinsth_DRESTRICT]
+QED
+
+                        
 Theorem main:
  wfsigaxs Σ axs ⇒
  ∀pf. Pf Σ axs pf ⇒
       Uof (UCIth Σ) (IMAGE ax2th axs) ⊆ aths ⇒
       ∀th. MEM th pf ⇒
  ∀vσ fσ uσ. wfvmap (FST Σ) vσ ∧ wfcfVmap Σ fσ ∧
-           thfVars (vinsth vσ th) ⊆ FDOM fσ ∧
+           thfVars (vinsth vσ (uniqify uσ th)) ⊆ FDOM fσ ∧
            cont th ⊆ FDOM vσ ∧ uniqifn uσ (thfVars th) ⇒
            Pf0Drv Σ aths (insth fσ vσ (uniqify uσ th))
 Proof
@@ -389,18 +736,91 @@ strip_tac >>
 Induct_on ‘Pf’ >> rw[] >> TRY (metis_tac[]) (* 16 *)
 >~ [‘(insth fσ' vσ (uniqify uσ (fVinsth fσ th)))’] (* M-h M-p *)
 >- gs[] >> rename [‘wfcfVmap Σ σ’] >>
-   ‘FDOM fσ = thfVars th ∧ FDOM uσ = thfVars (fVinsth fσ th) ∧
-    FDOM vσ = cont (fVinsth fσ th) ∧
-    FDOM σ = IMAGE ((vinst_fVar vσ) o (fVrn uσ)) (thfVars (fVinsth fσ th))’
-     by cheat >>
+    Cases_on ‘Σ’ >> Cases_on ‘r’ >> rename [‘(Σf,Σp,Σe)’] >>
    ‘∃uσf:string # sort list |-> string.
-      uniqifn uσf (FDOM fσ ∪ FDOM uσ)’
+      uniqifn uσf (thfVars th)’
      by cheat >>
    assume_tac (Pf2Pf0_fVinsth_lemma |> SPEC_ALL |> Q.GEN ‘f’) >>
    last_x_assum $ drule_then assume_tac >>
    first_x_assum $ qspecl_then [‘vσ’,‘(o_fVmap σ
-                 (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))’,
-                 ‘uσf’] assume_tac >>
+                 (vinst_fVmap vσ (fVmap_fVrn (DRESTRICT
+                 (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)))’,
+                 ‘uσf’] assume_tac >> gs[] >>
+   ‘cont th ⊆ cont (fVinsth fσ th)’ by cheat >>
+   ‘Pf0Drv (Σf,Σp,Σe)  aths
+          (insth
+             (o_fVmap σ
+                (vinst_fVmap vσ
+                   (fVmap_fVrn
+                      (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)))
+             vσ (uniqify uσf th))’
+     by first_x_assum irule >>
+        simp[FDOM_o_fVmap,FDOM_vinst_fVmap,FDOM_fVmap_fVrn,FDOM_DRESTRICT,
+             INTER_UNION]   >>
+        simp[thfVars_vinsth,thfVars_uniqify] >> rw[] (* 3 *)
+        >- (gs[SUBSET_DEF] >> metis_tac[])
+        >- (gs[SUBSET_DEF] >> metis_tac[]) >>
+        rw[wfcfVmap_def] (* 2 *)
+        >- irule wffVmap_o_fVmap >>
+           gs[wfcfVmap_def,wfsigaxs_def,wffsig_def,wfsig_def] >>
+           irule wffVmap_vinst_fVmap >>
+           gs[wffsig_def] >>
+           drule_then assume_tac wfvmap_presname >> gs[] >>
+           simp[FDOM_fVmap_fVrn,FDOM_DRESTRICT,FDOM_o_fVmap,
+                INTER_UNION,FDOM_rn2fVmap]
+           ‘alluniq (IMAGE (fVrn uσf) (FDOM fσ))’
+            by (irule uniqifn_alluniq0 >> cheat)
+            (*choose uσf uniqify whole dom*) >>
+           simp[] >> 
+           ‘wffVmap (Σf,Σp,Σe)
+          (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)’
+           by cheat (*lemma*) >> simp[] >>
+           simp[BIGUNION_SUBSET,PULL_EXISTS] >> rw[] (* 2 *)
+           ‘uniqifn uσf (FDOM fσ)’ by cheat >>
+          qspecl_then [‘uσf’,‘(DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ))’]
+          assume_tac FAPPLY_fVmap_fVrn1 >>
+          gs[FDOM_DRESTRICT,FDOM_o_fVmap,FDOM_rn2fVmap,INTER_UNION] >>
+          simp[DRESTRICT_DEF,FDOM_o_fVmap,FDOM_rn2fVmap,FDOM_rn2fVmap] >>
+          Cases_on ‘x’ >> drule_then assume_tac FAPPLY_o_fVmap1 >>
+          gs[] >>
+          ‘(fVinst (rn2fVmap uσ) (fσ ' (q,r))) = ffVrn uσ (fσ ' (q,r))’
+           by (irule $ GSYM ffVrn_fVinst >> cheat) >>
+          gs[ffv_ffVrn] >> cheat (*need eq thfVars th = FDOM fσ*)
+          cheat
+          irule cfVmap_o_fVmap >> gs[wfcfVmap_def] >>
+          simp[FDOM_vinst_fVmap,FDOM_fVmap_fVrn,FDOM_DRESTRICT,FDOM_o_fVmap,
+          FDOM_rn2fVmap,INTER_UNION] >>
+          simp[ofFMAP_SUBSET,PULL_EXISTS,FDOM_vinst_fVmap,
+          FDOM_fVmap_fVrn,FDOM_DRESTRICT,FDOM_o_fVmap,
+          FDOM_rn2fVmap,INTER_UNION] >> rw[] >>
+          ‘x'' = x'’ by cheat >> gs[] >>
+          Cases_on ‘x'’  >>
+          qspecl_then [‘(q,r)’,‘uσf’,‘vσ’,‘(DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ))’] assume_tac (FAPPLY_vinst_fVmap_fVmap_fVrn1 |> Q.GEN ‘fv’) >>
+          gs[ofFMAP_SUBSET,PULL_EXISTS,FDOM_vinst_fVmap,
+          FDOM_fVmap_fVrn,FDOM_DRESTRICT,FDOM_o_fVmap,
+          FDOM_rn2fVmap,INTER_UNION] >>
+          ‘(q,r) ∈ FDOM uσf ∧ uniqifn uσf (FDOM fσ)’ by cheat >>
+          gs[] >>
+          simp[fVars_finst] >>
+          ‘(DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ) ' (q,r)) =
+           (o_fVmap (rn2fVmap uσ) fσ) ' (q,r)’ by cheat >>
+          gs[] >>
+          ‘(o_fVmap (rn2fVmap uσ) fσ ' (q,r)) = ffVrn uσ (fσ ' (q,r))’
+           by cheat >>
+          gs[fVars_ffVrn] >> cheat
+          
+          
+ffVrn_fVinst 
+          fVinst_ffVrn
+          drule_then assume_tac FAPPLY_fVmap_fVrn1 >>
+          
+
+        
+
+        
+        rename [‘(Σf,Σp,Σe)’] 
+        ‘thfVars (vinsth vσ (fVinsth fσ th))  ’             
+               
    ‘wffVmap Σ
           (o_fVmap σ
              (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf))) ’
