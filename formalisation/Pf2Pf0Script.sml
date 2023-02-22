@@ -1078,6 +1078,167 @@ gs[Uof_SUBSET] >>
 simp[cont_def]
 QED
 
+Theorem wffVmap_ofFMAP_var_wf:
+  wffVmap (Σf,Σp,Σe) σ ⇒
+  ∀n s A. (n,s) ∈ ofFMAP ffv σ A ⇒ wfs Σf s
+Proof
+ rw[ofFMAP_def,PULL_EXISTS] >>
+ gs[wffVmap_def] >>
+ Cases_on ‘a’ >>
+ first_x_assum $ drule_then assume_tac >>
+ irule wff_wfs >>
+ first_x_assum $ irule_at Any >>
+ simp[ffv_FALLL] >>
+ metis_tac[]
+QED
+
+
+Theorem vinst_cont_wf:
+(∀n:string s. (n,s) ∈ ct ⇒ wfs Σf s) ∧
+wfcod Σf vσ ⇒
+(∀n s. (n,s) ∈ vinst_cont vσ ct ⇒ wfs Σf s)
+Proof
+rw[vinst_cont_def] >>
+gs[ofFMAP_def] >> gs[wfvmap_def] >>
+irule $ cj 1 wft_wfs >>
+gs[wfcod_def] >>
+Cases_on ‘a’ >> metis_tac[]
+QED
+
+Theorem ofFMAP_as_IMAGE:
+ofFMAP f σ s =
+BIGUNION (IMAGE (f o ($' σ)) (FDOM σ ∩ s))
+Proof
+rw[ofFMAP_def,Once EXTENSION]
+QED 
+        
+Theorem ofFMAP_FINITE:
+FINITE A ∧
+(∀a. a ∈ A ∧ a ∈ FDOM σ ⇒ FINITE (f (σ ' a))) ⇒
+FINITE (ofFMAP f σ A)
+Proof
+rw[ofFMAP_as_IMAGE] >> metis_tac[]
+QED 
+
+Theorem fVars_FINITE:
+∀f. FINITE (fVars f)
+Proof
+Induct_on ‘f’ >> gs[fVars_def]
+QED
+        
+Theorem PfDrv_cont_FINITE:
+∀pf. Pf Σ axs pf ⇒
+     ∀th. MEM th pf ⇒ FINITE (cont th)
+Proof
+Induct_on ‘Pf’ >> rw[] >>
+TRY (gs[cont_def] >> metis_tac[]) (* 15 *)
+>- (gs[MEM_FLAT,MEM_map2list] >>
+   ‘LENGTH sl ≠ 0’ by simp[] >>
+   ‘n0 < LENGTH sl’ by simp[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[] >> metis_tac[])
+>- (gs[fVcong_def,cont_def] >>
+   irule Uof_FINITE_lemma >>
+   simp[] >> simp[MEM_map2list,PULL_EXISTS] >>
+   rw[] >>
+   ‘LENGTH sl ≠ 0’ by simp[] >>
+   ‘n0 < LENGTH sl’ by simp[] >>
+   first_x_assum $ drule_then assume_tac >>
+   Cases_on ‘eqths n0’ >> Cases_on ‘r’ >>
+   gs[assum_def] >> metis_tac[])
+>- (Cases_on ‘th’ >> Cases_on ‘r’ >>
+   gs[fVinsth_def,cont_def] >> rw[] (* 2 *)
+   >- metis_tac[cont_def] >>
+   irule ofFMAP_FINITE >> simp[ffv_FINITE] >>
+   irule Uof_FINITE_lemma >>
+   simp[fVars_FINITE] >>
+   metis_tac[Pf_assum_FINITE])   
+>- (Cases_on ‘th’ >> Cases_on ‘r’ >>
+   gs[vinsth_def,cont_def] >>
+   simp[vinst_cont_def,ofFMAP_as_IMAGE] >>
+   rw[] >> simp[tfv_FINITE])
+>- (gs[gen_def,cont_def] >> metis_tac[cont_def])
+>- (gs[spec_def,cont_def] >> metis_tac[cont_def])
+>- (first_x_assum $ drule_then assume_tac >>
+   gs[cont_def])
+>- (gs[cont_def] >> metis_tac[cont_def])
+>- gs[assume_def,cont_def]
+>- (gs[cont_def] >> metis_tac[cont_def])
+>- (Cases_on ‘th’ >> Cases_on ‘r’ >>
+    gs[disch_def,cont_def] >> metis_tac[cont_def])
+>- gs[refl_def,cont_def,tfv_FINITE] 
+>- (gs[cont_def] >> metis_tac[cont_def])
+>- (gs[cont_def] >> metis_tac[cont_def]) >>
+Cases_on ‘th’ >> Cases_on ‘r’ >>
+gs[add_cont1_def,cont_def,tfv_FINITE] >>
+metis_tac[cont_def]
+QED
+
+Theorem ofFMAP_ffv_is_cont:
+is_cont (ofFMAP ffv σ A)
+Proof
+rw[ofFMAP_def] >> irule BIGUNION_is_cont >>
+gs[] >> metis_tac[ffv_is_cont]
+QED
+
+
+Theorem ofFMAP_tfv_is_cont:
+is_cont (ofFMAP tfv σ A)
+Proof
+rw[ofFMAP_def] >> irule BIGUNION_is_cont >>
+gs[] >> metis_tac[tfv_is_cont]
+QED
+
+        
+
+Theorem vinst_cont_is_cont:
+is_cont (vinst_cont vσ ct)
+Proof
+rw[vinst_cont_def,ofFMAP_tfv_is_cont]
+QED     
+
+Theorem SUBSET_thfVars:
+fVars f ⊆ thfVars (Γ,A,f) ∧
+∀a. a ∈ A ⇒ fVars a ⊆ thfVars (Γ,A,f)
+Proof
+simp[thfVars_def,Uof_def,SUBSET_DEF] >>
+metis_tac[]
+QED
+
+Theorem ffv_SUBSET_cont_fVinsth:
+wfsigaxs Σ axs ∧
+PfDrv Σ axs (Γ,A,f) ⇒ ffv f ⊆ cont (fVinsth fσ (Γ,A,f))
+Proof
+rw[] >> irule SUBSET_TRANS >>
+qexists ‘cont (Γ,A,f)’ >> simp[cont_fVinsth] >>
+gs[cont_def] >>
+metis_tac[PfDrv_concl_ffv_SUBSET]
+QED
+
+Theorem cont_assum_concl:
+(cont th,assum th,concl th) = th
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >>
+gs[cont_def,assum_def,concl_def]
+QED
+        
+
+Theorem PfDrv_concl_wff:
+wfsigaxs Σ axs ⇒
+∀th. PfDrv Σ axs (Γ,A,f) ⇒ wff Σ f
+Proof
+metis_tac[PfDrv_wff,concl_def]
+QED
+
+
+Theorem PfDrv_assum_wff:
+wfsigaxs Σ axs ⇒
+∀th. PfDrv Σ axs (Γ,A,f) ⇒
+∀a. a ∈ A ⇒ wff Σ a
+Proof
+metis_tac[PfDrv_wff,assum_def]
+QED
+        
 Theorem main_fVinst_case:
      wfsigaxs Σ axs ∧
      Pf Σ axs pf ∧
@@ -1228,6 +1389,98 @@ Proof
  gs[fVinst_o_Vmap_finst_ffVrn] >>
 drule_then assume_tac Pf0Drv_cont_SUBSET_cong >>
 first_x_assum irule >>
+‘vinst_cont vσ Γ ∪
+        (ofFMAP ffv
+           (o_fVmap σ
+              (vinst_fVmap vσ
+                 (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ))
+                    uσf))) (IMAGE (vinst_fVar vσ ∘ fVrn uσf) (fVars f)) ∪
+         ofFMAP ffv
+           (o_fVmap σ
+              (vinst_fVmap vσ
+                 (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ))
+                    uσf))) (Uof (IMAGE (vinst_fVar vσ ∘ fVrn uσf) ∘ fVars) A)) ⊆
+        vinst_cont vσ
+          (Γ ∪ (ofFMAP ffv fσ (fVars f) ∪ ofFMAP ffv fσ (Uof fVars A))) ∪
+        (ofFMAP ffv σ
+           (IMAGE (vinst_fVar vσ) (fVars (ffVrn uσ (fVinst fσ f)))) ∪
+         ofFMAP ffv σ
+           (Uof (IMAGE (vinst_fVar vσ) ∘ fVars)
+              (IMAGE (ffVrn uσ ∘ fVinst fσ) A)))’
+by
+(irule fVinst_subset_lemma >> simp[] >>
+last_x_assum $ irule_at Any >> simp[] >>
+gs[wfcfVmap_def] >> rw[] (* 2 *)
+>- (‘ffv (fσ ' fv) ⊆ cont (fVinsth fσ (Γ,A,f)) ’
+    suffices_by metis_tac[] >>
+   irule thfVars_FAPPLY_IN_cont >>
+   qpat_x_assum ‘thfVars (Γ,A,f) = FDOM fσ’
+   (assume_tac o GSYM) >> 
+   simp[thfVars_def]) >>
+qpat_x_assum ‘thfVars (Γ,A,f) = FDOM fσ’
+   (assume_tac o GSYM) >> 
+   simp[thfVars_def]) >>
+simp[] >> rw[] (* 9 *)
+>- (irule vinst_cont_wf >>
+  first_x_assum $ irule_at Any >>
+   gs[wfvmap_def] >> rw[] (* 3 *)
+   >- (irule PfDrv_cont_wf >>
+      metis_tac[wfsigaxs_def])
+   >> (irule wffVmap_ofFMAP_var_wf >>
+      metis_tac[]))
+>- (irule wffVmap_ofFMAP_var_wf >>
+      metis_tac[wfcfVmap_def])
+>- (irule wffVmap_ofFMAP_var_wf >>
+    metis_tac[wfcfVmap_def])
+>- (simp[vinst_cont_def] >>
+   irule ofFMAP_FINITE >>
+   simp[tfv_FINITE] >>
+   rw[] (* 3 *)
+   >- (‘FINITE (cont (Γ,A,f))’
+       suffices_by simp[cont_def] >>
+      irule PfDrv_cont_FINITE >> metis_tac[])
+   >- (irule ofFMAP_FINITE >>
+      simp[ffv_FINITE,fVars_FINITE]) >>
+   irule ofFMAP_FINITE >>
+  simp[ffv_FINITE,fVars_FINITE] >>
+  irule Uof_FINITE_lemma >>
+  simp[fVars_FINITE] >>
+  metis_tac[Pf_assum_FINITE]) (* 5 *)
+>- (irule ofFMAP_FINITE >>
+   simp[ffv_FINITE] >>
+   irule IMAGE_FINITE >>
+   simp[fVars_FINITE])
+>- (irule ofFMAP_FINITE >>  simp[ffv_FINITE] >>
+    irule Uof_FINITE_lemma >>
+    rw[] (* 2 *)
+    >- (irule IMAGE_FINITE >> simp[fVars_FINITE]) >>
+   irule IMAGE_FINITE >> metis_tac[Pf_assum_FINITE])
+>- (rpt $ irule_at Any UNION_is_cont >>
+   simp[ofFMAP_ffv_is_cont,vinst_cont_is_cont]) (*2*)
+>- (irule $ GSYM Pf2Pf0_fVinsth_lemma >>
+   last_assum $ irule_at Any >>
+   gs[] >> rw[] (* 5 *)
+   >- metis_tac[SUBSET_thfVars]
+   >- metis_tac[ffv_SUBSET_cont_fVinsth]
+   >- (qpat_x_assum ‘cont (fVinsth fσ (Γ,A,f)) = FDOM vσ’ (assume_tac o GSYM) >> simp[] >>
+      irule PfDrv_concl_ffv_SUBSET >>
+      last_x_assum $ irule_at Any >>
+      qexists ‘assum (fVinsth fσ (Γ,A,f))’ >>
+      ‘fVinst fσ f = concl (fVinsth fσ (Γ,A,f))’
+       by simp[fVinsth_def,concl_def] >>
+      ‘PfDrv (Σf,Σp,Σe) axs (fVinsth fσ (Γ,A,f))’
+       suffices_by metis_tac[cont_assum_concl] >>
+       irule PfDrv_fVinsth >> simp[])
+   >- (gs[wfsigaxs_def,wffsig_def,wfsig_def] >>
+      metis_tac[PfDrv_concl_wff])) 
+              
+      fVinsth_def
+      
+   
+      
+
+
+   
 simp[fVinst_subset_lemma]
 ‘fVinst
           (o_fVmap σ
