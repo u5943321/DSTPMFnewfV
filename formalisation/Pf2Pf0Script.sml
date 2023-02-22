@@ -1215,6 +1215,32 @@ gs[cont_def] >>
 metis_tac[PfDrv_concl_ffv_SUBSET]
 QED
 
+
+
+Theorem ffv_SUBSET_cont_fVinsth:
+wfsigaxs Σ axs ∧
+PfDrv Σ axs (Γ,A,f) ⇒ ffv f ⊆ cont (fVinsth fσ (Γ,A,f)) 
+Proof
+rw[] >> irule SUBSET_TRANS >>
+qexists ‘cont (Γ,A,f)’ >> simp[cont_fVinsth] >>
+gs[cont_def] >>
+metis_tac[PfDrv_concl_ffv_SUBSET]
+QED
+
+
+
+Theorem ffv_assum_SUBSET_cont_fVinsth:
+wfsigaxs Σ axs ∧
+PfDrv Σ axs (Γ,A,f) ⇒
+∀a. a ∈ A ⇒ ffv a ⊆ cont (fVinsth fσ (Γ,A,f)) 
+Proof
+rw[] >> irule SUBSET_TRANS >>
+qexists ‘cont (Γ,A,f)’ >> simp[cont_fVinsth] >>
+gs[cont_def] >>
+metis_tac[PfDrv_assum_ffv_SUBSET]
+QED
+
+                        
 Theorem cont_assum_concl:
 (cont th,assum th,concl th) = th
 Proof
@@ -1471,10 +1497,31 @@ simp[] >> rw[] (* 9 *)
       ‘PfDrv (Σf,Σp,Σe) axs (fVinsth fσ (Γ,A,f))’
        suffices_by metis_tac[cont_assum_concl] >>
        irule PfDrv_fVinsth >> simp[])
-   >- (gs[wfsigaxs_def,wffsig_def,wfsig_def] >>
-      metis_tac[PfDrv_concl_wff])) 
-              
-      fVinsth_def
+   >- gs[wfsigaxs_def,wffsig_def,wfsig_def] >>
+   metis_tac[PfDrv_concl_wff]) >>
+irule IMAGE_eq_lemma >>
+  rw[] >> simp[instf_def] >>
+  irule $ GSYM Pf2Pf0_fVinsth_lemma >>
+  last_assum $ irule_at Any >>
+  gs[] >> rw[] (* 5 *)
+  >- metis_tac[SUBSET_thfVars]
+  >- metis_tac[ffv_assum_SUBSET_cont_fVinsth]
+  >- (qpat_x_assum ‘cont (fVinsth fσ (Γ,A,f)) = FDOM vσ’ (assume_tac o GSYM) >> simp[] >>
+      irule PfDrv_assum_ffv_SUBSET >>
+      last_x_assum $ irule_at Any >>
+      qexistsl
+      [‘fVinst fσ f’,‘assum (fVinsth fσ (Γ,A,f))’] >>
+      ‘fVinst fσ f = concl (fVinsth fσ (Γ,A,f))’
+        by simp[fVinsth_def,concl_def] >>
+      rw[] (* 2 *)
+      >- (pop_assum (K all_tac) >>
+         simp[fVinsth_def,assum_def]) >>
+      ‘PfDrv (Σf,Σp,Σe) axs (fVinsth fσ (Γ,A,f))’
+        suffices_by metis_tac[cont_assum_concl] >>
+      irule PfDrv_fVinsth >> simp[])
+  >- gs[wfsigaxs_def,wffsig_def,wfsig_def] >>
+  metis_tac[PfDrv_assum_wff]
+QED  
       
    
       
