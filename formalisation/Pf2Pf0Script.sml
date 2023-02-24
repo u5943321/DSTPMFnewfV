@@ -1350,7 +1350,14 @@ Proof
       simp[] >> 
       ‘wffVmap (Σf,Σp,Σe)
        (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)’
-        by cheat (*lemma*) >> simp[] >>
+        by (irule wffVmap_fVmap_fVrn >>
+           simp[FDOM_DRESTRICT,FDOM_o_fVmap,
+                FDOM_rn2fVmap,INTER_UNION] >>
+           irule wffVmap_DRESTRICT >>
+           irule wffVmap_o_fVmap >> simp[] >>
+           gs[wffsig_def] >>
+           cheat (*  wffVmap (Σf,Σp,Σe) (rn2fVmap uσ)
+           *)) >> simp[] >>
       simp[BIGUNION_SUBSET,PULL_EXISTS] >>
       rw[] (* 2 *)
       >- (qspecl_then [‘uσf’,‘(DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ))’] 
@@ -1383,7 +1390,11 @@ Proof
   simp[ofFMAP_SUBSET,PULL_EXISTS,FDOM_vinst_fVmap,
        FDOM_fVmap_fVrn,FDOM_DRESTRICT,FDOM_o_fVmap,
        FDOM_rn2fVmap,INTER_UNION] >> rw[] >>
-  ‘x'' = x'’ by cheat >> gs[] >>
+  ‘x'' = x'’
+    by (irule uniqifn_INJ >>
+       qexistsl [‘FDOM fσ’,‘uσf’] >>
+       simp[] >> Cases_on ‘x'’ >> Cases_on ‘x''’ >>
+       gs[fVrn_def,vinst_fVar_def]) >> gs[] >>
   Cases_on ‘x'’  >>
   qspecl_then [‘(q,r)’,‘uσf’,‘vσ’,‘(DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ))’] assume_tac (FAPPLY_vinst_fVmap_fVmap_fVrn1 |> Q.GEN ‘fv’) >>
   gs[ofFMAP_SUBSET,PULL_EXISTS,FDOM_vinst_fVmap,
@@ -1394,10 +1405,15 @@ Proof
   gs[] >>
   simp[fVars_finst] >>
   ‘(DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ) ' (q,r)) =
-   (o_fVmap (rn2fVmap uσ) fσ) ' (q,r)’ by cheat >>
+   (o_fVmap (rn2fVmap uσ) fσ) ' (q,r)’
+   by gs[DRESTRICT_DEF,FDOM_o_fVmap,FDOM_rn2fVmap]>>
   gs[] >>
   ‘(o_fVmap (rn2fVmap uσ) fσ ' (q,r)) = ffVrn uσ (fσ ' (q,r))’
-    by cheat >>
+    by (drule_then assume_tac FAPPLY_o_fVmap1 >>
+       gs[] >>
+       irule $ GSYM ffVrn_fVinst >> rw[] >>
+       irule $ GSYM wffVmap_fVar_subfm_LENGTH >>
+       metis_tac[]) >>
   gs[fVars_ffVrn] >>
   gs[thfVars_vinsth,thfVars_uniqify] >>
   ‘IMAGE (vinst_fVar vσ) (IMAGE (fVrn uσ) (fVars (fσ ' (q,r)))) ⊆
