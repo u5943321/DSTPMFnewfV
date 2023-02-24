@@ -161,7 +161,7 @@ Cases_on ‘x' ∈ FDOM σ1’ >> Cases_on ‘x'’ (* 2 *)
 drule_all_then assume_tac FAPPLY_o_fVmap2 >> metis_tac[]
 QED
 
-
+(*
 Theorem  FAPPLY_vinst_fVmap1:
  ∀fv fσ vσ.fv ∈ FDOM fσ ∧ alluniq (FDOM fσ) ⇒
        vinst_fVmap vσ fσ ' (vinst_fVar vσ fv) = finst vσ (fσ ' fv)
@@ -198,7 +198,7 @@ finst vσ (σ ' fv)
 Proof
 Cases_on ‘fv’ >> metis_tac[FAPPLY_vinst_fVmap_fVmap_fVrn]
 QED
-
+*)
         
 
 (*need uniqifn uσf (FDOM fσ ∪ FDOM uσ), x' ∈ FDOM uσf (fσ ⊆ uσf)*)

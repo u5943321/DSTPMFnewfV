@@ -12,6 +12,7 @@ sig
     val fVinst_def : thm
     val fVslfv_def : thm
     val fabs_def : thm
+    val fabsl_def : thm
     val fbounds_def : thm
     val ffv_def : thm
     val finst_def : thm
@@ -28,6 +29,7 @@ sig
     val ispsym_def : thm
     val mk_FALL_def : thm
     val ofFMAP_def : thm
+    val plainfV_def : thm
     val presname_def : thm
     val psymin_def : thm
     val rnmap_def : thm
@@ -37,7 +39,10 @@ sig
     val substb_def : thm
     val trename_def : thm
     val tsname_def : thm
+    val v2twbmap_def : thm
     val vinst_fVar_def : thm
+    val vl2sl0_def : thm
+    val vl2sl_def : thm
     val vsname_def : thm
     val wffVmap_def : thm
     val wff_def : thm
@@ -47,14 +52,18 @@ sig
     val BIGUNION_IMAGE_sbounds_ffv : thm
     val BIGUNION_IMAGE_sbounds_tfv : thm
     val BIGUNION_is_cont : thm
+    val EL_specslwtl : thm
     val FAPPLY_rnmap : thm
     val FAPPLY_rnmap_SUBSET : thm
+    val FAPPLY_v2twbmap : thm
     val FDOM_rnmap : thm
+    val FDOM_v2twbmap : thm
     val FINITE_BIGUNION_tfv : thm
     val FINITE_lemma : thm
     val IN_fVslfv : thm
     val IN_slfv : thm
     val IN_tfv_trename : thm
+    val LENGTH_specslwtl : thm
     val MEM_fVsl_SUBSET_fVslfv : thm
     val NOTIN_fVslfv : thm
     val NOTIN_frename : thm
@@ -67,6 +76,8 @@ sig
     val Uof_Sing : thm
     val Uof_UNION : thm
     val abssl_MAP_srename : thm
+    val absvl_def : thm
+    val absvl_ind : thm
     val cstt_EXT : thm
     val cstt_rnmap : thm
     val datatype_form : thm
@@ -132,6 +143,8 @@ sig
     val gcont_of_cont : thm
     val ill_formed_fabs_still_in : thm
     val inst_eff_tinst : thm
+    val mk_FALLL_def : thm
+    val mk_FALLL_ind : thm
     val mk_FALL_rename_eq : thm
     val mk_bmap_NIL : thm
     val no_subrename : thm
@@ -142,15 +155,22 @@ sig
     val presname_rnmap : thm
     val sfv_ffv : thm
     val shift_bmap_0_I : thm
+    val shift_bmap_SING : thm
     val slprpl_FMAP_MAP_abssl_IN : thm
     val slprpl_mk_bmap_CONS : thm
     val slprpl_trename : thm
+    val specslwtl : thm
+    val specslwtl_ind : thm
     val tabs_trename : thm
     val tbounds_trename : thm
+    val tfv_tprpl_SUBSET : thm
     val tfv_trename : thm
+    val tfv_trpl_SUBSET1 : thm
     val tinst_cvmap_UPDATE : thm
     val tprpl_FMAP_MAP_tabs_IN : thm
+    val tprpl_FUNION : thm
     val tprpl_mk_bmap_CONS : thm
+    val tprpl_wvar : thm
     val trename_alt : thm
     val trename_back : thm
     val trename_fix : thm
@@ -159,8 +179,14 @@ sig
     val trename_tinst_tfv : thm
     val trename_tprpl : thm
     val trename_tshift : thm
+    val trpl_tprpl : thm
     val tsname_tinst : thm
     val tsname_trename : thm
+    val wfabsap0_def : thm
+    val wfabsap0_ind : thm
+    val wfabsap0_specslwtl : thm
+    val wfabsap0_wft : thm
+    val wfabsap_wfabsap0 : thm
     val wfcod_rnmap_BIGUNION : thm
     val wfcod_rnmap_SUBSET : thm
     val wfcod_rnmap_cont : thm
@@ -263,6 +289,11 @@ sig
         (∀v i f1 f2. fabs v i (IMP f1 f2) = IMP (fabs v i f1) (fabs v i f2)) ∧
         ∀v i s b.
           fabs v i (FALL s b) = FALL (sabs v i s) (fabs v (i + 1) b)
+   
+   [fabsl_def]  Definition
+      
+      ⊢ (∀i b. fabsl [] i b = b) ∧
+        ∀h t i b. fabsl (h::t) i b = fabsl t (i + 1) (fabs h i b)
    
    [fbounds_def]  Definition
       
@@ -414,6 +445,12 @@ sig
       ⊢ ∀f fmap s.
           ofFMAP f fmap s = BIGUNION {f (fmap ' a) | a | a ∈ FDOM fmap ∩ s}
    
+   [plainfV_def]  Definition
+      
+      ⊢ ∀P sl.
+          plainfV (P,sl) =
+          fVar P sl (MAP Bound (REVERSE (COUNT_LIST (LENGTH sl))))
+   
    [presname_def]  Definition
       
       ⊢ ∀σ. presname σ ⇔
@@ -453,9 +490,24 @@ sig
       
       ⊢ tsname = sname ∘ sort_of
    
+   [v2twbmap_def]  Definition
+      
+      ⊢ ∀b2v bmap.
+          v2twbmap b2v bmap =
+          FUN_FMAP (λv. bmap ' (CHOICE {i | i ∈ FDOM b2v ∧ b2v ' i = v}))
+            (FRANGE b2v)
+   
    [vinst_fVar_def]  Definition
       
       ⊢ ∀vσ P sl. vinst_fVar vσ (P,sl) = (P,MAP (sinst vσ) sl)
+   
+   [vl2sl0_def]  Definition
+      
+      ⊢ vl2sl0 [] = [] ∧ ∀v vs. vl2sl0 (v::vs) = v::absvl 0 v (vl2sl0 vs)
+   
+   [vl2sl_def]  Definition
+      
+      ⊢ ∀vl. vl2sl vl = MAP SND (vl2sl0 vl)
    
    [vsname_def]  Definition
       
@@ -522,6 +574,14 @@ sig
       
       ⊢ (∀s. s ∈ ss ⇒ is_cont s) ⇒ is_cont (BIGUNION ss)
    
+   [EL_specslwtl]  Theorem
+      
+      ⊢ ∀n1 n tl sl.
+          LENGTH tl = n1 ∧ n < LENGTH sl ∧ LENGTH sl = LENGTH tl ∧
+          (∀t. MEM t tl ⇒ tbounds t = ∅) ⇒
+          EL n (specslwtl tl sl) =
+          (EL n tl,sprpl (mk_bmap (REVERSE (TAKE n tl))) (EL n sl))
+   
    [FAPPLY_rnmap]  Theorem
       
       ⊢ ∀vs n1 s1.
@@ -535,9 +595,18 @@ sig
           (n1,s1) ∈ ss ⇒
           rnmap (n,s) nn ss ' (n1,s1) = rnmap (n,s) nn vs ' (n1,s1)
    
+   [FAPPLY_v2twbmap]  Theorem
+      
+      ⊢ INJ ($' b2v) (FDOM b2v) (FRANGE b2v) ∧ FDOM b2v = FDOM bmap ⇒
+        ∀i. i ∈ FDOM b2v ⇒ v2twbmap b2v bmap ' (b2v ' i) = bmap ' i
+   
    [FDOM_rnmap]  Theorem
       
       ⊢ ∀vs. FINITE vs ⇒ FDOM (rnmap (n,s) nn vs) = vs
+   
+   [FDOM_v2twbmap]  Theorem
+      
+      ⊢ FDOM (v2twbmap b2v bmap) = FRANGE b2v
    
    [FINITE_BIGUNION_tfv]  Theorem
       
@@ -559,6 +628,11 @@ sig
       
       ⊢ (∀tm n s nn. (n,s) ∈ tfv tm ⇒ (nn,s) ∈ tfv (trename (n,s) nn tm)) ∧
         ∀st n s nn. (n,s) ∈ sfv st ⇒ (nn,s) ∈ sfv (srename (n,s) nn st)
+   
+   [LENGTH_specslwtl]  Theorem
+      
+      ⊢ ∀n tl sl.
+          LENGTH tl = n ∧ LENGTH sl = n ⇒ LENGTH (specslwtl tl sl) = n
    
    [MEM_fVsl_SUBSET_fVslfv]  Theorem
       
@@ -611,6 +685,18 @@ sig
           (∀n1 s1 st. MEM st l ∧ (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧
           (∀st. MEM st l ⇒ (nn,s) ∉ sfv st) ⇒
           abssl (n,s) i l = abssl (nn,s) i (MAP (srename (n,s) nn) l)
+   
+   [absvl_def]  Theorem
+      
+      ⊢ (∀v i. absvl i v [] = []) ∧
+        ∀v t s n i.
+          absvl i v ((n,s)::t) = (n,sabs v i s)::absvl (i + 1) v t
+   
+   [absvl_ind]  Theorem
+      
+      ⊢ ∀P. (∀i v. P i v []) ∧
+            (∀i v n s t. P (i + 1) v t ⇒ P i v ((n,s)::t)) ⇒
+            ∀v v1 v2. P v v1 v2
    
    [cstt_EXT]  Theorem
       
@@ -1026,6 +1112,16 @@ sig
           (∀n s. (n,s) ∈ sfv st ⇒ inst_eff σ1 (n,s) = inst_eff σ2 (n,s)) ⇒
           sinst σ1 st = sinst σ2 st
    
+   [mk_FALLL_def]  Theorem
+      
+      ⊢ (∀b. mk_FALLL [] b = b) ∧
+        ∀vl s n b. mk_FALLL ((n,s)::vl) b = mk_FALL n s (mk_FALLL vl b)
+   
+   [mk_FALLL_ind]  Theorem
+      
+      ⊢ ∀P. (∀b. P [] b) ∧ (∀n s vl b. P vl b ⇒ P ((n,s)::vl) b) ⇒
+            ∀v v1. P v v1
+   
    [mk_FALL_rename_eq]  Theorem
       
       ⊢ ∀f. (∀n1 s1. (n1,s1) ∈ ffv f ⇒ (n,s) ∉ sfv s1) ∧ (n,s) ∉ fVslfv f ∧
@@ -1069,6 +1165,10 @@ sig
       
       ⊢ shift_bmap 0 = I
    
+   [shift_bmap_SING]  Theorem
+      
+      ⊢ tbounds h = ∅ ⇒ shift_bmap n (mk_bmap [h]) ' n = h
+   
    [slprpl_FMAP_MAP_abssl_IN]  Theorem
       
       ⊢ ∀sl i n s nn bmap.
@@ -1096,6 +1196,19 @@ sig
           slprpl (FMAP_MAP (trename (n,s) nn) bmap)
             (MAP (srename (n,s) nn) l)
    
+   [specslwtl]  Theorem
+      
+      ⊢ specslwtl [] [] = [] ∧
+        ∀tl t sl s.
+          specslwtl (t::tl) (s::sl) = (t,s)::specslwtl tl (specsl 0 t sl)
+   
+   [specslwtl_ind]  Theorem
+      
+      ⊢ ∀P. P [] [] ∧
+            (∀t tl s sl. P tl (specsl 0 t sl) ⇒ P (t::tl) (s::sl)) ∧
+            (∀v6 v7. P [] (v6::v7)) ∧ (∀v10 v11. P (v10::v11) []) ⇒
+            ∀v v1. P v v1
+   
    [tabs_trename]  Theorem
       
       ⊢ (∀tm.
@@ -1110,6 +1223,11 @@ sig
       ⊢ (∀tm n s nn. tbounds (trename (n,s) nn tm) = tbounds tm) ∧
         ∀st n s nn. sbounds (srename (n,s) nn st) = sbounds st
    
+   [tfv_tprpl_SUBSET]  Theorem
+      
+      ⊢ (∀t i new. tfv t ⊆ tfv (tprpl bmap t)) ∧
+        ∀s i new. sfv s ⊆ sfv (sprpl bmap s)
+   
    [tfv_trename]  Theorem
       
       ⊢ (∀tm n s nn.
@@ -1118,6 +1236,11 @@ sig
         ∀st n s nn.
           (∀n1 s1. (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧ (n,s) ∈ sfv st ⇒
           sfv (srename (n,s) nn st) = sfv st DELETE (n,s) ∪ {(nn,s)}
+   
+   [tfv_trpl_SUBSET1]  Theorem
+      
+      ⊢ (∀t i new. tfv t ⊆ tfv (trpl i new t)) ∧
+        ∀s i new. sfv s ⊆ sfv (srpl i new s)
    
    [tinst_cvmap_UPDATE]  Theorem
       
@@ -1152,6 +1275,17 @@ sig
           srename (nn,s) n
             (sabs (n,s) i (sprpl bmap (srename (n,s) nn st)))
    
+   [tprpl_FUNION]  Theorem
+      
+      ⊢ (∀tm bmap1 bmap2.
+           (∀i. i ∈ FDOM bmap2 ∩ tbounds tm ⇒ tbounds (bmap2 ' i) = ∅) ∧
+           FDOM bmap1 ∩ FDOM bmap2 = ∅ ⇒
+           tprpl bmap1 (tprpl bmap2 tm) = tprpl (bmap1 ⊌ bmap2) tm) ∧
+        ∀st bmap1 bmap2.
+          (∀i. i ∈ FDOM bmap2 ∩ sbounds st ⇒ tbounds (bmap2 ' i) = ∅) ∧
+          FDOM bmap1 ∩ FDOM bmap2 = ∅ ⇒
+          sprpl bmap1 (sprpl bmap2 st) = sprpl (bmap1 ⊌ bmap2) st
+   
    [tprpl_mk_bmap_CONS]  Theorem
       
       ⊢ (∀t tm tl n.
@@ -1164,6 +1298,19 @@ sig
           sprpl (shift_bmap n (mk_bmap (REVERSE tl ⧺ [tm]))) s =
           sprpl (shift_bmap n (mk_bmap (REVERSE tl)))
             (srpl (LENGTH tl + n) tm s)
+   
+   [tprpl_wvar]  Theorem
+      
+      ⊢ (∀tm bmap b2v.
+           INJ ($' b2v) (FDOM b2v) (FRANGE b2v) ∧ FDOM bmap = FDOM b2v ∧
+           (∀i. i ∈ FDOM b2v ⇒ tfv (Var' (b2v ' i)) ∩ tfv tm = ∅) ⇒
+           tprpl bmap tm =
+           tinst (v2twbmap b2v bmap) (tprpl (FMAP_MAP Var' b2v) tm)) ∧
+        ∀st bmap b2v.
+          INJ ($' b2v) (FDOM b2v) (FRANGE b2v) ∧ FDOM bmap = FDOM b2v ∧
+          (∀i. i ∈ FDOM b2v ⇒ tfv (Var' (b2v ' i)) ∩ sfv st = ∅) ⇒
+          sprpl bmap st =
+          sinst (v2twbmap b2v bmap) (sprpl (FMAP_MAP Var' b2v) st)
    
    [trename_alt]  Theorem
       
@@ -1221,6 +1368,15 @@ sig
         ∀st i n s nn.
           srename (n,s) nn (sshift i st) = sshift i (srename (n,s) nn st)
    
+   [trpl_tprpl]  Theorem
+      
+      ⊢ (∀tm n t.
+           tbounds t = ∅ ⇒
+           trpl n t tm = tprpl (shift_bmap n (mk_bmap [t])) tm) ∧
+        ∀st n t.
+          tbounds t = ∅ ⇒
+          srpl n t st = sprpl (shift_bmap n (mk_bmap [t])) st
+   
    [tsname_tinst]  Theorem
       
       ⊢ (∀t. ¬is_bound t ∧ presname σ ⇒ tsname (tinst σ t) = tsname t) ∧
@@ -1229,6 +1385,41 @@ sig
    [tsname_trename]  Theorem
       
       ⊢ ∀t. ¬is_bound t ⇒ tsname (trename (n,s) nn t) = tsname t
+   
+   [wfabsap0_def]  Theorem
+      
+      ⊢ (∀Σf. wfabsap0 Σf [] [] ⇔ T) ∧
+        (∀Σf tl t sl s.
+           wfabsap0 Σf (s::sl) (t::tl) ⇔
+           wft Σf t ∧ s = sort_of t ∧ wfs Σf s ∧
+           wfabsap0 Σf (specsl 0 t sl) tl) ∧
+        (∀Σf sl s. wfabsap0 Σf (s::sl) [] ⇔ F) ∧
+        ∀Σf tl t. wfabsap0 Σf [] (t::tl) ⇔ F
+   
+   [wfabsap0_ind]  Theorem
+      
+      ⊢ ∀P. (∀Σf. P Σf [] []) ∧
+            (∀Σf s sl t tl. P Σf (specsl 0 t sl) tl ⇒ P Σf (s::sl) (t::tl)) ∧
+            (∀Σf s sl. P Σf (s::sl) []) ∧ (∀Σf t tl. P Σf [] (t::tl)) ⇒
+            ∀v v1 v2. P v v1 v2
+   
+   [wfabsap0_specslwtl]  Theorem
+      
+      ⊢ ∀tl sl.
+          wfabsap0 Σ sl tl ⇔
+          LENGTH sl = LENGTH tl ∧
+          (let
+             sl1 = specslwtl tl sl
+           in
+             ∀t s. MEM (t,s) sl1 ⇒ wft Σ t ∧ wfs Σ s ∧ sort_of t = s)
+   
+   [wfabsap0_wft]  Theorem
+      
+      ⊢ ∀tl sl t. wfabsap0 Σf sl tl ∧ MEM t tl ⇒ wft Σf t
+   
+   [wfabsap_wfabsap0]  Theorem
+      
+      ⊢ ∀n sl tl. LENGTH sl = n ⇒ wfabsap0 Σ sl tl ⇒ wfabsap Σ sl tl
    
    [wfcod_rnmap_BIGUNION]  Theorem
       

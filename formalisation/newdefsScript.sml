@@ -1778,6 +1778,52 @@ Proof
 gs[wffVmap_def,DRESTRICT_DEF]
 QED
 
+
+
+
+
+
+
+Theorem  FAPPLY_vinst_fVmap1:
+ ∀fv fσ vσ.fv ∈ FDOM fσ ∧ alluniq (FDOM fσ) ⇒
+       vinst_fVmap vσ fσ ' (vinst_fVar vσ fv) = finst vσ (fσ ' fv)
+Proof
+Cases_on ‘fv’ >> metis_tac[FAPPLY_vinst_fVmap]
+QED       
+
+Theorem FAPPLY_fVmap_fVrn1:
+∀uσ σ. uniqifn uσ (FDOM σ) ⇒
+     ∀fv. fv ∈ FDOM σ ⇒ fVmap_fVrn σ uσ ' (fVrn uσ fv) = σ ' fv
+Proof     
+rw[] >> Cases_on ‘fv’ >> rw[fVrn_def] (*2 *)
+>- (irule FAPPLY_fVmap_fVrn >> simp[]) >>
+gs[uniqifn_def,SUBSET_DEF] >> metis_tac[]
+QED
+               
+Theorem FAPPLY_vinst_fVmap_fVmap_fVrn:
+(P,sl) ∈ FDOM σ ∧ (P,sl) ∈ FDOM uσf ∧ uniqifn uσf (FDOM σ)  ⇒ 
+vinst_fVmap vσ (fVmap_fVrn σ uσf) ' (vinst_fVar vσ (fVrn uσf (P,sl))) =
+finst vσ (σ ' (P,sl))
+Proof
+rw[] >> 
+qspecl_then [‘(fVrn uσf (P,sl))’,‘(fVmap_fVrn σ uσf)’,‘vσ’] assume_tac
+FAPPLY_vinst_fVmap1 >>
+gs[FDOM_fVmap_fVrn] >> drule_then assume_tac uniqifn_alluniq0 >>
+gs[] >>
+AP_TERM_TAC >> irule FAPPLY_fVmap_fVrn1 >> simp[]
+QED
+
+Theorem FAPPLY_vinst_fVmap_fVmap_fVrn1:
+∀uσf vσ σ.fv ∈ FDOM σ ∧ fv ∈ FDOM uσf ∧ uniqifn uσf (FDOM σ)  ⇒ 
+vinst_fVmap vσ (fVmap_fVrn σ uσf) ' (vinst_fVar vσ (fVrn uσf fv)) =
+finst vσ (σ ' fv)
+Proof
+Cases_on ‘fv’ >> metis_tac[FAPPLY_vinst_fVmap_fVmap_fVrn]
+QED
+
+
+
+        
 Theorem Pf2Pf0_fVinsth_lemma:
 ∀uσ. wffsig Σf ∧ wff (Σf,Σp,Σe) f ∧
      uniqifn uσf (FDOM fσ) ∧
