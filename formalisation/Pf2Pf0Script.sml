@@ -327,6 +327,15 @@ metis_tac[]
 QED
 
         
+
+
+Theorem IMAGE_eq_lemma:
+(∀a. a ∈ A ⇒ f1 a = f2 a) ⇒ IMAGE f1 A = IMAGE f2 A
+Proof
+rw[Once EXTENSION] >> metis_tac[]
+QED
+        
+
 Theorem fVinst_subset_lemma:
 PfDrv Σ axs (Γ,A,f) ∧ wfsigaxs Σ axs ∧
 wffVmap Σ fσ ∧ wffVmap Σ σ ∧ wfvmap (FST Σ) vσ ∧
@@ -637,12 +646,6 @@ qexists ‘a’ >> simp[]
 QED
 
 
-Theorem IMAGE_eq_lemma:
-(∀a. a ∈ A ⇒ f1 a = f2 a) ⇒ IMAGE f1 A = IMAGE f2 A
-Proof
-rw[Once EXTENSION] >> metis_tac[]
-QED
-        
 Theorem fVinsth_DRESTRICT:
 (fVinsth (DRESTRICT fσ (thfVars th)) th) =  (fVinsth fσ th)
 Proof
@@ -1265,6 +1268,16 @@ Proof
 metis_tac[PfDrv_wff,assum_def]
 QED
         
+
+Theorem uniqifn_INJ:
+uniqifn (σ:string # sort list |-> string) s ∧ fv1 ∈ s ∧ fv2 ∈ s ∧
+σ ' fv1 = σ ' fv2 ⇒ fv1 = fv2
+Proof
+rw[uniqifn_def] >>
+Cases_on ‘fv1’ >> Cases_on ‘fv2’ >>
+simp[] >> metis_tac[]
+QED
+
 Theorem main_fVinst_case:
      wfsigaxs Σ axs ∧
      Pf Σ axs pf ∧
@@ -1723,6 +1736,24 @@ first_x_assum $ irule_at Any >> gs[SUBSET_DEF]
 QED   
 
 
+Theorem ffv_vinst_cont_SUBSET_MONO:
+wfvmap Σ vσ ∧ ffv f ⊆ ct ∧ ct ⊆ FDOM vσ ⇒
+ffv (finst vσ f) ⊆ vinst_cont vσ ct
+Proof
+simp[vinst_cont_def] >> rw[] >>
+simp[SUBSET_DEF] >>
+qspecl_then [‘f’,‘vσ’] assume_tac $ ffv_finst >>
+rw[] >>
+‘ cstt vσ ∧ ffv f ⊆ FDOM vσ ∧ no_bound vσ ’
+ by (gs[SUBSET_DEF,wfvmap_def] >>
+    metis_tac[wfcod_no_bound]) >> Cases_on ‘x’ >>
+gs[] >>
+simp[ofFMAP_def,PULL_EXISTS] >>
+first_x_assum $ irule_at Any >> gs[SUBSET_DEF]
+QED   
+
+      
+
 Theorem PfDrv_slfv_SUBSET_cont:
 wfsigaxs Σ axs ∧
 PfDrv Σ axs (Γ,A,f) ⇒ Uof fVslfv ({f} ∪ A) ⊆ Γ
@@ -1870,14 +1901,6 @@ rw[FAPPLY_plainfV_bmap]
 QED
 
 
-Theorem uniqifn_INJ:
-uniqifn (σ:string # sort list |-> string) s ∧ fv1 ∈ s ∧ fv2 ∈ s ∧
-σ ' fv1 = σ ' fv2 ⇒ fv1 = fv2
-Proof
-rw[uniqifn_def] >>
-Cases_on ‘fv1’ >> Cases_on ‘fv2’ >>
-simp[] >> metis_tac[]
-QED
 
 Theorem fVrn_fVrwinst:
 (P:string,sl) ∈ FDOM uσ2 ∧ uniqifn uσ2 (FDOM uσ2) ⇒ 
@@ -2195,9 +2218,6 @@ QED
 
 
 
-
-   
-     
 Theorem main_vinsth_case:
  wfsigaxs Σ axs ∧
    Pf Σ axs pf ∧
@@ -2304,8 +2324,23 @@ rename [‘(Γ,A,f)’] >>
 gs[uniqify_def,insth_def,vinsth_def,fVinsth_def] >>
 drule_then assume_tac Pf0Drv_cont_SUBSET_cong >>
 first_x_assum irule >>
-
-   
+‘vinst_cont (o_vmap hσ vσ) Γ ∪
+        ofFMAP ffv (o_fVmap fσ (rn2fVmap (fVrwinst vσ uσ1 hσ uσ2)))
+          (Uof fVars
+             ({finst (o_vmap hσ vσ) (ffVrn uσ2 f)} ∪
+              IMAGE (finst (o_vmap hσ vσ)) (IMAGE (ffVrn uσ2) A))) ⊆
+        vinst_cont hσ (vinst_cont vσ Γ) ∪
+        ofFMAP ffv fσ
+          (Uof fVars
+             ({finst hσ (ffVrn uσ1 (finst vσ f))} ∪
+              IMAGE (finst hσ) (IMAGE (ffVrn uσ1) (IMAGE (finst vσ) A))))’
+ by (irule vinsth_case_SUBSET >>
+    simp[cont_def] >> metis_tac[PfDrv_def]) >>
+ simp[]  >>
+ ‘fVinst (o_fVmap fσ (rn2fVmap (fVrwinst vσ uσ1 hσ uσ2)))
+          (finst (o_vmap hσ vσ) (ffVrn uσ2 f)) =
+        fVinst fσ (finst hσ (ffVrn uσ1 (finst vσ f)))’
+  by         
    
       ‘ofFMAP fVars (rn2fVmap (fVrwinst vσ uσ1 hσ uσ2))
           (IMAGE (vinst_fVar (o_vmap hσ vσ) ∘ fVrn uσ2) (thfVars th)) ⊆

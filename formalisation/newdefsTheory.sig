@@ -26,6 +26,7 @@ sig
     val fVinsth_def : thm
     val fVmap_fVrn_def : thm
     val fVrn_def : thm
+    val fVrnwinst_def : thm
     val fcong_def : thm
     val ffVrn_def : thm
     val gen_def : thm
@@ -60,13 +61,19 @@ sig
     val FALLL_components : thm
     val FALLL_fbounds : thm
     val FAPPLY_fVmap_fVrn : thm
+    val FAPPLY_fVmap_fVrn1 : thm
+    val FAPPLY_fVrnwinst : thm
     val FAPPLY_o_fVmap : thm
     val FAPPLY_o_fVmap1 : thm
     val FAPPLY_o_fVmap2 : thm
     val FAPPLY_rn2fVmap : thm
     val FAPPLY_vinst_bmap : thm
     val FAPPLY_vinst_fVmap : thm
+    val FAPPLY_vinst_fVmap1 : thm
+    val FAPPLY_vinst_fVmap_fVmap_fVrn : thm
+    val FAPPLY_vinst_fVmap_fVmap_fVrn1 : thm
     val FDOM_fVmap_fVrn : thm
+    val FDOM_fVrnwinst : thm
     val FDOM_o_fVmap : thm
     val FDOM_rn2fVmap : thm
     val FDOM_vinst_bmap : thm
@@ -83,6 +90,8 @@ sig
     val MEM_Rofeqthl_map2list : thm
     val MEM_map2list : thm
     val NOTIN_genavds : thm
+    val Pf2Pf0_fVinsth_lemma : thm
+    val Pf2Pf0_vinst_lemma : thm
     val Uof_lemma_classic : thm
     val absapLs_fabs : thm
     val add_assum_EMPTY : thm
@@ -267,6 +276,21 @@ sig
       ⊢ ∀uσ P sl.
           fVrn uσ (P,sl) =
           if (P,sl) ∈ FDOM uσ then (uσ ' (P,sl),sl) else (P,sl)
+   
+   [fVrnwinst_def]  Definition
+      
+      ⊢ ∀vσ uσ1 hσ uσ2.
+          fVrwinst vσ uσ1 hσ uσ2 =
+          FUN_FMAP
+            (λ(P,sl).
+                 uσ1 '
+                 (vinst_fVar vσ
+                    (CHOICE
+                       {(P0,sl0) |
+                        (P,sl) =
+                        vinst_fVar (o_vmap hσ vσ) (fVrn uσ2 (P0,sl0)) ∧
+                        (P0,sl0) ∈ FDOM uσ2})))
+            (IMAGE (vinst_fVar (o_vmap hσ vσ) ∘ fVrn uσ2) (FDOM uσ2))
    
    [fcong_def]  Definition
       
@@ -476,6 +500,19 @@ sig
         ∀P sl.
           (P,sl) ∈ FDOM σ ⇒ fVmap_fVrn σ uσ ' (uσ ' (P,sl),sl) = σ ' (P,sl)
    
+   [FAPPLY_fVmap_fVrn1]  Theorem
+      
+      ⊢ ∀uσ σ.
+          uniqifn uσ (FDOM σ) ⇒
+          ∀fv. fv ∈ FDOM σ ⇒ fVmap_fVrn σ uσ ' (fVrn uσ fv) = σ ' fv
+   
+   [FAPPLY_fVrnwinst]  Theorem
+      
+      ⊢ uniqifn uσ2 (FDOM uσ2) ∧ (P,sl) ∈ FDOM uσ2 ⇒
+        fVrwinst vσ uσ1 hσ uσ2 '
+        (vinst_fVar (o_vmap hσ vσ) (fVrn uσ2 (P,sl))) =
+        uσ1 ' (vinst_fVar vσ (P,sl))
+   
    [FAPPLY_o_fVmap]  Theorem
       
       ⊢ (P,sl) ∈ FDOM σ1 ∪ FDOM σ2 ⇒
@@ -506,9 +543,34 @@ sig
           vinst_fVmap vσ fσ ' (vinst_fVar vσ (P,sl)) =
           finst vσ (fσ ' (P,sl))
    
+   [FAPPLY_vinst_fVmap1]  Theorem
+      
+      ⊢ ∀fv fσ vσ.
+          fv ∈ FDOM fσ ∧ alluniq (FDOM fσ) ⇒
+          vinst_fVmap vσ fσ ' (vinst_fVar vσ fv) = finst vσ (fσ ' fv)
+   
+   [FAPPLY_vinst_fVmap_fVmap_fVrn]  Theorem
+      
+      ⊢ (P,sl) ∈ FDOM σ ∧ (P,sl) ∈ FDOM uσf ∧ uniqifn uσf (FDOM σ) ⇒
+        vinst_fVmap vσ (fVmap_fVrn σ uσf) '
+        (vinst_fVar vσ (fVrn uσf (P,sl))) =
+        finst vσ (σ ' (P,sl))
+   
+   [FAPPLY_vinst_fVmap_fVmap_fVrn1]  Theorem
+      
+      ⊢ ∀uσf vσ σ.
+          fv ∈ FDOM σ ∧ fv ∈ FDOM uσf ∧ uniqifn uσf (FDOM σ) ⇒
+          vinst_fVmap vσ (fVmap_fVrn σ uσf) ' (vinst_fVar vσ (fVrn uσf fv)) =
+          finst vσ (σ ' fv)
+   
    [FDOM_fVmap_fVrn]  Theorem
       
       ⊢ FDOM (fVmap_fVrn σ uσ) = IMAGE (fVrn uσ) (FDOM σ)
+   
+   [FDOM_fVrnwinst]  Theorem
+      
+      ⊢ FDOM (fVrwinst vσ uσ1 hσ uσ2) =
+        IMAGE (vinst_fVar (o_vmap hσ vσ) ∘ fVrn uσ2) (FDOM uσ2)
    
    [FDOM_o_fVmap]  Theorem
       
@@ -587,6 +649,31 @@ sig
           (∀n s. (n,s) ∈ Γ ⇒ x ∉ sfv s) ∧ (∀a. a ∈ A ⇒ x ∉ ffv a) ∧
           ∀P sl s f0.
             (f0 = f ∨ f0 ∈ A) ∧ (P,sl) ∈ fVars f0 ∧ MEM s sl ⇒ x ∉ sfv s
+   
+   [Pf2Pf0_fVinsth_lemma]  Theorem
+      
+      [oracles: DISK_THM, cheat] [axioms: ] []
+      ⊢ ∀uσ.
+          wffsig Σf ∧ wff (Σf,Σp,Σe) f ∧ uniqifn uσf (FDOM fσ) ∧
+          wffVmap (Σf,Σp,Σe) fσ ∧ fVars f ⊆ FDOM fσ ∧
+          wfcfVmap (Σf,Σp,Σe) σ ∧ wfvmap Σf vσ ∧
+          ffv f ∪ ffv (fVinst fσ f) ⊆ FDOM vσ ⇒
+          fVinst σ (finst vσ (ffVrn uσ (fVinst fσ f))) =
+          fVinst
+            (o_fVmap σ
+               (vinst_fVmap vσ
+                  (fVmap_fVrn
+                     (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)))
+            (finst vσ (ffVrn uσf f))
+   
+   [Pf2Pf0_vinst_lemma]  Theorem
+      
+      ⊢ ∀f. uniqifn uσ2 (FDOM uσ2) ∧ fVars f ⊆ FDOM uσ2 ∧
+            IMAGE (vinst_fVar vσ) (fVars f) ⊆ FDOM uσ1 ∧ ffv f ⊆ FDOM vσ ∧
+            ffv (finst vσ f) ⊆ FDOM hσ ⇒
+            finst hσ (ffVrn uσ1 (finst vσ f)) =
+            ffVrn (fVrwinst vσ uσ1 hσ uσ2)
+              (finst (o_vmap hσ vσ) (ffVrn uσ2 f))
    
    [Uof_lemma_classic]  Theorem
       
