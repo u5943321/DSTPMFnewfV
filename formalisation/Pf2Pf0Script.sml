@@ -2340,14 +2340,53 @@ first_x_assum irule >>
  ‘fVinst (o_fVmap fσ (rn2fVmap (fVrwinst vσ uσ1 hσ uσ2)))
           (finst (o_vmap hσ vσ) (ffVrn uσ2 f)) =
         fVinst fσ (finst hσ (ffVrn uσ1 (finst vσ f)))’
-  by         
+  by (irule $ GSYM Pf2Pf0_vinst_lemma1 >>
+     simp[] >>
+     qexistsl [‘A’,‘axs’,‘f’,‘Γ’,‘Σ’] >> simp[] >>
+     metis_tac[PfDrv_def,wfcfVmap_def]) >> simp[]>>
+ ‘IMAGE (fVinst (o_fVmap fσ (rn2fVmap (fVrwinst vσ uσ1 hσ uσ2))))
+          (IMAGE (finst (o_vmap hσ vσ)) (IMAGE (ffVrn uσ2) A)) =
+        IMAGE (fVinst fσ)
+          (IMAGE (finst hσ) (IMAGE (ffVrn uσ1) (IMAGE (finst vσ) A)))’
+  by (rw[IMAGE_IMAGE]>>
+     irule IMAGE_eq_lemma >>
+     rw[] >> irule $ GSYM Pf2Pf0_vinst_lemma1 >>
+     metis_tac[PfDrv_def,wfcfVmap_def]) >> simp[] >>
+ rw[] (* 5 *)
+ >- (irule vinst_cont_wf >>
+  first_x_assum $ irule_at Any >>
+   gs[wfvmap_def] >> rw[] >>
+   ‘PfDrv Σ axs (Γ,A,f)’ by metis_tac[PfDrv_def] >>
+   drule_then assume_tac PfDrv_vinsth >>
+   first_x_assum $ qspecl_then [‘vσ’] assume_tac>>
+   gs[wfvmap_def] >> irule PfDrv_cont_wf' >>
+   first_assum $ irule_at Any >>
+   Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+   rename [‘(Σf,Σp,Σe)’] >> simp[]>>
+   gs[vinsth_def] >>
+   first_assum $ irule_at Any >>
+   metis_tac[wfsigaxs_def])
+>- (irule wffVmap_ofFMAP_var_wf >>
+    Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+    rename [‘(Σf,Σp,Σe)’] >> simp[]>>
+    metis_tac[wfcfVmap_def])
+>- (simp[vinst_cont_def] >>
+   irule ofFMAP_FINITE >>
+   simp[tfv_FINITE] >>
+   rw[]     >>
+   irule ofFMAP_FINITE >>
+  simp[ffv_FINITE] >>
+  metis_tac[PfDrv_cont_FINITE,cont_def])
+>- (irule ofFMAP_FINITE >>  simp[ffv_FINITE] >>
+    irule Uof_FINITE_lemma >>
+    simp[fVars_FINITE,IMAGE_IMAGE] >>
+    irule IMAGE_FINITE >>
+    metis_tac[Pf_assum_FINITE,assum_def]) >>
+simp[Uof_UNION,Uof_Sing,ofFMAP_UNION] >>
+rpt $ irule_at Any UNION_is_cont >>
+simp[ofFMAP_ffv_is_cont,vinst_cont_is_cont]
+QED   
    
-      ‘ofFMAP fVars (rn2fVmap (fVrwinst vσ uσ1 hσ uσ2))
-          (IMAGE (vinst_fVar (o_vmap hσ vσ) ∘ fVrn uσ2) (thfVars th)) ⊆
-        FDOM fσ’
-      
- 
-   Pf2Pf0_vinst_lemma  >>
    
 Theorem main:
  wfsigaxs Σ axs ⇒
