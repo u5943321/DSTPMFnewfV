@@ -3786,6 +3786,23 @@ Proof
  simp[]     
 QED
 
+
+
+Theorem tfv_trpl_SUBSET1:
+ (∀t i new. 
+            tfv t ⊆ tfv (trpl i new t)) ∧
+ (∀s i new. 
+           sfv s ⊆ sfv (srpl i new s))
+Proof
+ ho_match_mp_tac better_tm_induction >> gs[tfv_thm,trpl_def,MEM_MAP] >>
+ rw[] (* 3 *)
+ >- (rw[SUBSET_DEF,PULL_EXISTS] >>
+    first_x_assum $ drule_all_then assume_tac >> gs[SUBSET_DEF] >> metis_tac[])
+ >- gs[SUBSET_DEF] >>
+ rw[SUBSET_DEF] >> first_x_assum $ drule_then assume_tac >>
+ gs[SUBSET_DEF,PULL_EXISTS] >> metis_tac[]    
+QED
+        
 Theorem wfabsap_sfv_SUBSET:
   ∀tl sl.
     wfabsap Σf sl tl ⇒

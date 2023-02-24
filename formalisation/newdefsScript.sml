@@ -2561,21 +2561,6 @@ Theorem wfabsap_sl2vl:
 wfabsap sl tl ⇒ ∀nl. LENGTH nl = LENGTH sl ⇒
 (∀n s. MEM (n,s) sl2vl ⇒
 Proof
-        
-Definition absvl_def:
-absvl i v [] = [] ∧
-absvl i v ((n:string,s) :: t) = 
-(n,sabs v i s) :: (absvl (i+1) v t)
-End
-
-Definition vl2sl0_def:
-  vl2sl0 [] = [] ∧
-  vl2sl0 (v :: vs) = v :: absvl 0 v (vl2sl0 vs)
-End
-
-Definition vl2sl_def:
-  vl2sl vl = MAP SND (vl2sl0 vl)
-End
 
 Theorem absvl_okabs:
 ∀l i. ok_abs

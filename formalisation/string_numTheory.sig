@@ -26,11 +26,7 @@ sig
   
   val string_num_grammars : type_grammar.grammar * term_grammar.grammar
 (*
-   [finite_map] Parent theory of "string_num"
-   
-   [finite_set] Parent theory of "string_num"
-   
-   [string] Parent theory of "string_num"
+   [Pf0Drv] Parent theory of "string_num"
    
    [n2nsum_def]  Definition
       

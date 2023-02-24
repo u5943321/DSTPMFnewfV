@@ -170,75 +170,250 @@ rw[Once EXTENSION] ) >>
     irule $ cj 1 tshift_id >> metis_tac[]) >> gs[]
 QED       
 
-Theorem EL_specslwtl:
-∀n1 n tl sl.
-LENGTH tl = n1 ∧ n < LENGTH sl ∧ LENGTH sl = LENGTH tl ∧ ok_abs sl ∧
-(∀t. MEM t tl ⇒ tbounds t = {}) ∧
-(∀n0 s0 st. MEM st sl ∧ (n0,s0) ∈ sfv st ⇒ sbounds s0 = ∅)  ⇒
-    EL n (specslwtl tl sl) =
-    (EL n tl,
-     sprpl (shift_bmap (n+1) (mk_bmap (REVERSE (TAKE)))) (EL n sl))
-Proof
-Induct_on ‘n1’ >> simp[] >> Cases_on ‘tl’ >> Cases_on ‘sl’ >> simp[] >>
-rw[] >> Cases_on ‘n’ >> gs[specslwtl] (* 2 *)
->- (gs[ok_abs_def] >>
-   first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
-   irule $ cj 2 $ GSYM tprpl_id >>
-   gs[]) >>
-first_x_assum $ qspecl_then [‘n'’,‘t’,‘(specsl 0 h t')’] assume_tac >>
-gs[LENGTH_specsl] >> 
-‘ ok_abs (specsl 0 h t')’ by
-(gs[ok_abs_def] >> simp[LENGTH_specsl] >> rw[] >>
-‘n < LENGTH t'’ by simp[] >>
-drule_then assume_tac specsl_EL >> gs[] >>
-‘SUC n < SUC (LENGTH t)’ by simp[] >>
-first_x_assum $ drule_then assume_tac >> gs[] >>
-first_x_assum $ qspecl_then [‘h’,‘0’] assume_tac >> gs[] >>
-pop_assum (assume_tac o GSYM) >> cheat) >>
-gs[] >>
-‘(∀n0 s0 st.
-           MEM st (specsl 0 h t') ∧ (n0,s0) ∈ sfv st ⇒ sbounds s0 = ∅)’
- by cheat >>
-first_x_assum $ drule_then assume_tac >> gs[] >>
-‘n' < LENGTH t'’ by simp[] >>
-drule_then assume_tac specsl_EL >> gs[] >>
-rename [‘ EL n (specslwtl t (specsl 0 h sl))’] >>
-qspecl_then [‘(EL n sl)’,‘n’,‘h’] assume_tac $ cj 2 trpl_tprpl >>
-‘tbounds h = {}’ by metis_tac[] >> gs[] >>
-qspecl_then [‘(EL n sl)’,‘(shift_bmap (n + 1) (mk_bmap (REVERSE t)))’,
-‘(shift_bmap n (mk_bmap [h]))’] assume_tac $ cj 2 tprpl_FUNION >>
-‘(∀i. i ∈ FDOM (shift_bmap n (mk_bmap [h])) ∩ sbounds (EL n sl) ⇒
-             tbounds (shift_bmap n (mk_bmap [h]) ' i) = ∅) ∧
-        FDOM (shift_bmap (n + 1) (mk_bmap (REVERSE t))) ∩
-        FDOM (shift_bmap n (mk_bmap [h])) =
-        ∅’ by cheat >> gs[] >>
-        
-        
-‘srpl n h (EL n sl) =
- sprpl (shift_bmap n (mk_bmap [t])) tm)’
-simp[trpl_tprpl]
-                                           
 
-‘SUC n < LENGTH ’
-cheat
-QED  
+
+Definition v2twbmap_def:
+  v2twbmap (b2v:num |-> string # sort) (bmap: num |-> term) =
+  FUN_FMAP
+  (λv. bmap ' (CHOICE {i | i ∈ FDOM b2v ∧ b2v ' i = v}))
+  (FRANGE b2v)
+End
+
+
+Theorem FAPPLY_v2twbmap:
+INJ ($' b2v) (FDOM b2v) (FRANGE b2v) ∧ FDOM b2v = FDOM bmap ⇒
+∀i. i ∈ FDOM b2v ⇒ (v2twbmap b2v bmap) ' (b2v ' i) = bmap ' i
+Proof
+simp[] >> rw[INJ_DEF,v2twbmap_def] >>
+qspecl_then [‘(λv. bmap ' (CHOICE {i' | i' ∈ FDOM bmap ∧ b2v ' i' = v}))’,
+‘(FRANGE b2v)’] assume_tac (SRULE[PULL_FORALL] FUN_FMAP_DEF) >>
+gs[] >>
+first_x_assum $ qspecl_then [‘b2v ' i’] assume_tac >>
+gs[FRANGE_DEF] >>
+‘{i' | i' ∈ FDOM bmap ∧ b2v ' i' = b2v ' i} = {i}’ suffices_by simp[] >>
+rw[Once EXTENSION] >> metis_tac[]
+QED
+
+Theorem FDOM_v2twbmap:
+FDOM (v2twbmap (b2v:num |-> string # sort) (bmap: num |-> term))
+= (FRANGE b2v)
+Proof
+simp[v2twbmap_def,FUN_FMAP_DEF]
+QED
+        
+
+
 
 Theorem tprpl_wvar:
-  tprpl bmap t = tinst (TO_FMAP ) tprpl (mk_bmap)
+  (∀tm bmap b2v.
+   INJ ($' b2v) (FDOM b2v) (FRANGE b2v) ∧
+   FDOM bmap = FDOM b2v ∧
+  (∀i. i ∈ FDOM b2v ⇒
+   tfv (Var' (b2v ' i)) ∩ tfv tm = {}) ⇒
+  tprpl bmap tm = tinst (v2twbmap b2v bmap) (tprpl (FMAP_MAP Var' b2v) tm)) ∧
+  (∀st bmap b2v.
+     INJ ($' b2v) (FDOM b2v) (FRANGE b2v) ∧
+     FDOM bmap = FDOM b2v ∧
+  (∀i. i ∈ FDOM b2v ⇒
+   tfv (Var' (b2v ' i)) ∩ sfv st = {}) ⇒
+  sprpl bmap st = sinst (v2twbmap b2v bmap) (sprpl (FMAP_MAP Var' b2v) st))
+Proof
+ho_match_mp_tac better_tm_induction >>
+gs[tprpl_def,tinst_def,MAP_MAP_o,MAP_EQ_f,tbounds_thm,FDOM_FMAP_MAP,
+   FDOM_v2twbmap,PULL_EXISTS] >> rw[] (* 7 *)
+>- (‘(s0,st) ∉ FRANGE b2v’
+    by (CCONTR_TAC >> gs[FRANGE_DEF] >>
+       first_x_assum $ drule_then assume_tac >> gs[]) >>
+   simp[] >>
+   irule $ GSYM $ cj 2 tinst_vmap_id >>
+   rw[] >>   
+   ‘FDOM (v2twbmap b2v bmap) ∩ sfv st = {}’
+     suffices_by (gs[EXTENSION] >> metis_tac[]) >>
+   simp[FDOM_v2twbmap,FRANGE_DEF] >>
+   dsimp[Once EXTENSION] >>
+   ‘∀x. x ∈ FDOM b2v ⇒ b2v ' x ∉ sfv st’ suffices_by metis_tac[] >>
+   rw[] >>
+   first_x_assum $ drule_then assume_tac >>
+   Cases_on ‘b2v ' x’ >>
+   gs[EXTENSION,tfv_thm] >> metis_tac[])
+>- (first_x_assum irule >> rw[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[EXTENSION] >> metis_tac[EXTENSION])
+>- (first_x_assum irule >> rw[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[EXTENSION] >> metis_tac[EXTENSION])
+>- (qspecl_then [‘b2v’,‘Var'’,‘n’] (drule_then assume_tac) FAPPLY_FMAP_MAP >>
+   gs[] >> Cases_on ‘b2v ' n’ >> simp[tinst_def] >>
+   ‘(q,r) ∈  FDOM (v2twbmap b2v bmap)’
+    by (simp[FDOM_v2twbmap,FRANGE_DEF] >> metis_tac[]) >>
+   simp[] >>
+   qpat_x_assum ‘_ = (q,r)’ (assume_tac o GSYM) >> gs[] >> 
+   irule $ GSYM FAPPLY_v2twbmap >> simp[]) >>
+first_x_assum irule >> simp[] >> rw[] >>
+rw[] >>
+first_x_assum $ drule_then assume_tac >>
+gs[EXTENSION] >> metis_tac[EXTENSION]
+QED
+
+
+
+Theorem tfv_tprpl_SUBSET:
+ (∀t i new. 
+            tfv t ⊆ tfv (tprpl bmap t)) ∧
+ (∀s i new. 
+           sfv s ⊆ sfv (sprpl bmap s))
+Proof
+ ho_match_mp_tac better_tm_induction >> gs[tfv_thm,tprpl_def,MEM_MAP] >>
+ rw[] (* 3 *)
+ >- (rw[SUBSET_DEF,PULL_EXISTS] >>
+    first_x_assum $ drule_all_then assume_tac >> gs[SUBSET_DEF] >> metis_tac[])
+ >- gs[SUBSET_DEF] >>
+ rw[SUBSET_DEF] >> first_x_assum $ drule_then assume_tac >>
+ gs[SUBSET_DEF,PULL_EXISTS] >> metis_tac[]    
+QED
+
+
+Theorem LENGTH_specslwtl:
+∀n tl sl. LENGTH tl = n ∧ LENGTH sl = n ⇒
+LENGTH (specslwtl tl sl) = n
+Proof
+Induct_on ‘n’ >> Cases_on ‘tl’ >> Cases_on ‘sl’ >>
+gs[specslwtl] >> rw[] >>
+first_x_assum $ qspecl_then [‘t’,‘(specsl 0 h t')’] assume_tac >>
+gs[LENGTH_specsl]
+QED
+
+Theorem wfabsap0_wft:
+  ∀tl sl t. wfabsap0 Σf sl tl ∧ MEM t tl ⇒ wft Σf t
+Proof
+Induct_on ‘tl’ >> simp[wfabsap0_def] >>
+Cases_on ‘sl’ >> simp[wfabsap0_def] >> metis_tac[]
+QED
+
+
+      
+
+Theorem wfabsap_wfabsap0:
+∀n sl tl. LENGTH sl = n ⇒ (wfabsap0 Σ sl tl ⇒ wfabsap Σ sl tl)
+Proof
+Induct_on ‘n’ >>
+Cases_on ‘sl’ >> Cases_on ‘tl’ >> gs[wfabsap_def] (* 3 *)
+>- gs[wfabsap0_def] >- gs[wfabsap0_def] >>
+strip_tac >> strip_tac >> 
+drule_then assume_tac $ iffLR wfabsap0_specslwtl >> gs[] >>
+gs[wfabsap0_def] >>
+first_x_assum $ qspecl_then [‘(specsl 0 h' t)’] assume_tac >>
+gs[LENGTH_specsl] >>
+rw[] >> gs[MEM_EL,PULL_EXISTS] >>
+drule_then assume_tac $ iffLR wfabsap0_specslwtl >> gs[] >>
+gs[MEM_EL,PULL_EXISTS] >>
+Cases_on ‘EL n (specslwtl t' (specsl 0 h' t))’ >>
+first_x_assum $ qspecl_then [‘q’,‘r’,‘n’] assume_tac >>
+gs[] >>
+‘n < LENGTH (specslwtl t' (specsl 0 h' t))’
+ by (‘LENGTH t' = LENGTH (specsl 0 h' t)’ by simp[LENGTH_specsl] >>
+    drule_then assume_tac LENGTH_specslwtl >>
+    first_x_assum $ qspecl_then [‘(specsl 0 h' t)’] assume_tac >>
+    pop_assum mp_tac >> REWRITE_TAC[] >> strip_tac >>
+    pop_assum SUBST_ALL_TAC >> REWRITE_TAC[LENGTH_specsl] >>
+    metis_tac[]) >>
+gs[] >>
+qspecl_then [‘LENGTH t’,‘n’,‘t'’,‘(specsl 0 h' t)’] assume_tac
+EL_specslwtl >> gs[] >>
+‘(∀t. MEM t t' ⇒ tbounds t = ∅)’ by
+   (rw[] >> drule_then assume_tac wfabsap0_wft >>
+   first_x_assum $ drule_then assume_tac >>
+   metis_tac[wft_no_bound]) >>
+gs[] >>
+drule_then assume_tac $ cj 2 wft_no_vbound >>
+‘n < LENGTH t’ by simp[] >>
+drule_then assume_tac specsl_EL  >> gs[] >>
+CCONTR_TAC >>
+‘∃i. i ∈ sbounds s0’ by metis_tac[MEMBER_NOT_EMPTY] >>
+‘(n0,s0) ∈ sfv (srpl n h' (EL n t))’
+ by metis_tac[tfv_trpl_SUBSET1,SUBSET_DEF] >>
+‘(n0,s0) ∈ sfv (sprpl (mk_bmap (REVERSE (TAKE n t'))) (srpl n h' (EL n t)))’
+suffices_by metis_tac[] >>
+metis_tac[SUBSET_DEF,tfv_tprpl_SUBSET]
+QED
         
-Induct_on ‘tl’ >>  simp[] >>
-Cases_on ‘sl’ >> simp[] >> rw[] >>
-rw[specslwtl] >> Cases_on ‘n’ >> gs[] (* 2 *)
->- (gs[ok_abs_def] >>
-   first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
-   irule $ cj 2 $ GSYM tprpl_id >>
-   gs[]) >>
-first_x_assum $ qspecl_then [‘t’,‘n'’] assume_tac >> gs[] >>
+Definition absvl_def:
+absvl i v [] = [] ∧
+absvl i v ((n:string,s) :: t) = 
+(n,sabs v i s) :: (absvl (i+1) v t)
+End
 
-first_x_assum $ drule_then assume_tac   
+Definition vl2sl0_def:
+  vl2sl0 [] = [] ∧
+  vl2sl0 (v :: vs) = v :: absvl 0 v (vl2sl0 vs)
+End
+
+Definition vl2sl_def:
+  vl2sl vl = MAP SND (vl2sl0 vl)
+End
+        
+
+(* 
+Definition plainfV_def:
+plainfV (P,sl) =
+fVar P sl (MAP Bound (REVERSE (COUNT_LIST (LENGTH sl))))
+End
+*)        
 
 
-               simp[EL_CONS]
+
+          
+Definition mk_FALLL_def:
+mk_FALLL [] b = b ∧
+mk_FALLL ((n,s) :: vl) b = mk_FALL n s (mk_FALLL vl b)
+End
+
+
+Definition fabsl_def:
+fabsl [] i b = b ∧
+fabsl (h :: t) i b = fabsl t (i+1) (fabs h i b)
+End
+
+Theorem mk_FALL_FALLL:
+mk_FALL n s (FALLL sl b) = FALLL (abssl (n,s) 0 sl) (fabs 
+        
+Theorem mk_FALLL_FALLL:
+∀n vl b. LENGTH vl = n ⇒
+ mk_FALLL vl b = FALLL (vl2sl vl) (fabsl (REVERSE vl) 0 b)
+Proof
+Induct_on ‘n’ >>
+cheat >>
+Cases_on ‘vl’ >> simp[] >> rw[] >> Cases_on ‘h’ >>
+rw[mk_FALLL_def] >>
+simp[mk_FALLL_def] 
+(*
+Theorem mk_FALLL_FALLL:
+mk_FALLL vl b = FALLL (abssl_def         
+*)
+
+Theorem mk_FALLL_vl:
+∀n vl sl.
+LENGTH vl = n ∧
+ALL_DISTINCT (MAP FST vl) ⇒ 
+mk_FALLL vl (fVar P sl (MAP Var' vl)) = FALLL sl (plainfV (P,sl))
+Proof
+Induct_on ‘n’ >- cheat >>
+Cases_on ‘vl’ >> Cases_on ‘sl’ >> gs[mk_FALLL_def]
+>- cheat >>
+gs[MEM_MAP] >> rw[] >> gs[wfabsap0_def] >>
+first_x_assum $ qspecl_then [‘t’,‘t'’] assume_tac >> gs[] >>
+Cases_on ‘h’ >> simp[mk_FALLL_def] 
+gs[] >>
+Cases_on ‘h’ >>
+simp[mk_FALLL_def]
+
+        
+
+Theorem wff_mk_FALLL:
+
+
+
+        
 (*        
 Theorem specsl_var:
   (specsl 0 t sl) = MAP (ssubst (n,HD sl) t) (specsl 0 (Var n (HD sl)) sl)
