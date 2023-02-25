@@ -2403,7 +2403,9 @@ Induct_on ‘Pf’ >> rw[] >> TRY (metis_tac[]) (* 16 *)
 >~ [‘(insth fσ' vσ (uniqify uσ (fVinsth fσ th)))’] (* M-h M-p *)
 >- metis_tac[main_fVinst_case]
 >~ [‘uniqifn uσ (thfVars (vinsth vσ th))’]
-
+>- metis_tac[main_vinsth_case]
+>~ [‘uniqifn uσ (thfVars (gen (x,s) (Γ,A,f)))’] >>
+   gs[] 
 
 >- (rw[Pf0Drv_def] >> irule_at Any Pf0_AX >>
    gs[Uof_SUBSET,PULL_EXISTS] >>

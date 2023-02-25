@@ -369,13 +369,141 @@ mk_FALLL ((n,s) :: vl) b = mk_FALL n s (mk_FALLL vl b)
 End
 
 
+
+
+Theorem mk_FALL_FALLL0:
+∀k n s sl b i. LENGTH sl = k ⇒ 
+(fabs (n,s) i (FALLL sl b)) =
+ FALLL (abssl (n,s) i sl) (fabs (n,s) (i + LENGTH sl) b)
+Proof
+Induct_on ‘k’ >> Cases_on ‘sl’ >> gs[FALLL_def,abssl_def] >>
+rw[] >> simp[fabs_def,arithmeticTheory.ADD1]
+QED
+
+ 
+        
+Theorem fVslfv_mk_FALL:
+fVslfv (mk_FALL n s b) = fVslfv b
+Proof
+rw[mk_FALL_def,fVslfv_fabs,abst_def,fVslfv_def,fVars_def,fVars_fabs]
+QED
+
+
+Theorem fVslfv_mk_FALLL:
+∀k vl f. LENGTH vl = k ⇒
+fVslfv (mk_FALLL vl f) = fVslfv f
+Proof
+Induct_on ‘k’ >> Cases_on ‘vl’ >> simp[mk_FALLL_def] >>
+Cases_on ‘h’ >> gs[mk_FALLL_def,fVslfv_mk_FALL]
+QED
+
+
+
+
+Theorem DIFF_of_UNION:
+(A ∪ B) DIFF C = A DIFF C ∪ B DIFF C
+Proof
+rw[EXTENSION] >> metis_tac[]
+QED
+        
+
+Theorem mk_FALLL_FALLL:
+mk_FALLL vl b = FALLL (vl2sl vl)
+Proof
+
+
+Definition fabsl_def:
+        
+(*
+Theorem ffv_FALLL:
+∀k vl f. LENGTH vl = k ⇒
+(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
+     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
+(∀n. n < LENGTH vl ⇒ ∀n1 s1. (n1,s1) ∈ ffv f ⇒ (EL n vl) ∉ sfv s1) ⇒
+ffv (mk_FALLL vl f) = ffv f ∪ slfv (MAP SND vl) DIFF (set vl)
+Proof
+Induct_on ‘k’ >> Cases_on ‘vl’ >> simp[mk_FALLL_def,slfv_def,Uof_EMPTY] >>
+Cases_on ‘h’ >> rename [‘(n,s)’] >> gs[mk_FALLL_def] >> rw[] >>
+qspecl_then [‘(mk_FALLL t f)’,‘n’,‘s’] assume_tac ffv_mk_FALL >>
+‘ffv (mk_FALL n s (mk_FALLL t f)) =
+        ffv (mk_FALLL t f) ∪ sfv s DELETE (n,s)’ by cheat >>
+simp[] >>
+first_x_assum $ qspecl_then [‘t’,‘f’] assume_tac >>
+‘ffv (mk_FALLL t f) = ffv f ∪ slfv (MAP SND t) DIFF set t’
+ by cheat >> gs[] >>
+simp[Once INSERT_SING_UNION] >> simp[Uof_UNION,Uof_Sing] >>
+simp[slfv_def] >> simp[Once DIFF_of_UNION] >> simp[UNION_ASSOC] >> 
+simp[Once INSERT_SING_UNION] >> simp[] >>
+rw[Once EXTENSION,EQ_IMP_THM] (* 9 *) >> TRY (metis_tac[]) >>
+CCONTR_TAC >> gs[] >>
+gs[MEM_EL] >>
+rename [‘EL k t’] >>
+last_x_assum $ qspecl_then [‘SUC k’] assume_tac >> gs[]  >>
+
+simp[ffv_mk_FALL]
+*)
+        
+
+
+Theorem wff_mk_FALLL:
+∀k vl. LENGTH vl = k ⇒
+(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
+     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
+(∀n. n < LENGTH vl ⇒ ∀n1 s1. (n1,s1) ∈ ffv f ⇒ (EL n vl) ∉ sfv s1) ⇒
+wff Σ f ⇒ wff Σ (mk_FALLL vl f)
+Proof             
+Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
+rw[] >> Cases_on ‘h’ >> rename [‘(n,s)’] >>
+simp[mk_FALLL_def]>> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+rename [‘(Σf,Σp,Σe)’] >>
+irule $ cj 6 wff_rules >>
+‘wff (Σf,Σp,Σe) (mk_FALLL t f)’
+ by (first_x_assum irule >> simp[] >>
+    gs[] >> rw[] (* 2 *)
+    >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
+       first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
+       metis_tac[]) >>
+    first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
+gs[] >>
+‘wfs Σf s’
+ by (first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >> gs[] >>
+simp[fVslfv_mk_FALLL] >> ffv_mk_FALLL ffv_FALLL
+fVslfv_mk_FALLL 
+
+        
+Theorem wff_mk_FALLL:
+∀k vl. LENGTH vl = k ⇒
+(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
+     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ⇒
+wff Σ f ⇒ wff Σ (mk_FALLL vl f)
+Proof             
+Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
+rw[] >> Cases_on ‘h’ >> rename [‘(n,s)’] >>
+simp[mk_FALLL_def]>> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+rename [‘(Σf,Σp,Σe)’] >>
+irule $ cj 6 wff_rules >>
+‘wff (Σf,Σp,Σe) (mk_FALLL t f)’
+ by (first_x_assum irule >> simp[] >>
+    gs[] >> rw[] (* 2 *)
+    >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
+       first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
+       metis_tac[]) >>
+    first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
+gs[] >>
+‘wfs Σf s’
+ by (first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >> gs[] >>
+simp[fVslfv_mk_FALLL] >> ffv_mk_FALLL ffv_FALLL
+fVslfv_mk_FALLL 
+
+                  
 Definition fabsl_def:
 fabsl [] i b = b ∧
 fabsl (h :: t) i b = fabsl t (i+1) (fabs h i b)
 End
 
-Theorem mk_FALL_FALLL:
-mk_FALL n s (FALLL sl b) = FALLL (abssl (n,s) 0 sl) (fabs 
         
 Theorem mk_FALLL_FALLL:
 ∀n vl b. LENGTH vl = n ⇒
