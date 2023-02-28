@@ -336,7 +336,112 @@ CCONTR_TAC >>
 suffices_by metis_tac[] >>
 metis_tac[SUBSET_DEF,tfv_tprpl_SUBSET]
 QED
+
+
+
+
+
+Theorem wfabsap_IMP_wfabsap0:
+∀tl sl. wfabsap Σ sl tl ⇒ wfabsap0 Σ sl tl
+Proof
+Induct_on ‘tl’ >> Cases_on ‘sl’ >> gs[wfabsap_def,wfabsap0_def]
+QED
+          
+Theorem wfabsap_iff_wfabsap0:
+∀tl sl.
+wfabsap0 Σ sl tl ⇔ wfabsap Σ sl tl
+Proof
+metis_tac[ wfabsap_IMP_wfabsap0,wfabsap_wfabsap0]
+QED
+
+
+Theorem LENGTH_specslwtl1:
+LENGTH sl = LENGTH tl ⇒ LENGTH (specslwtl tl sl) = LENGTH tl
+Proof
+metis_tac[LENGTH_specslwtl]
+QED
+
+
+Theorem EL_specslwtl1:
+∀n tl sl.
+       n < LENGTH sl ∧ LENGTH sl = LENGTH tl ∧
+       (∀t. MEM t tl ⇒ tbounds t = ∅) ⇒
+       EL n (specslwtl tl sl) =
+       (EL n tl,sprpl (mk_bmap (REVERSE (TAKE n tl))) (EL n sl))
+Proof
+metis_tac[EL_specslwtl]
+QED
+
+Theorem EL_specslwtl_alt:
+
+Proof        
+
+EL_specslwtl
+
+tprpl_wvar
+QED
+
+Theorem foo:
+∀n tl sl. LENGTH tl = n ⇒ wfabsap0 Σ sl tl ⇒ ∃vl. wfabsap0 Σ sl (MAP Var' vl)
+Proof
+Induct_on ‘n’ >- cheat >>
+Cases_on ‘tl’ >> Cases_on ‘sl’ >- cheat >>
+simp[] >> rw[] >> rename [‘wfabsap0 Σ (s::sl) (t::tl)’] >>
+gs[wfabsap0_specslwtl,specslwtl] >>
+‘(MAP Var' vl) = MAP ’
+
+
+       
+drule_then assume_tac $ iffLR $ cj 2 $ wfabsap0_def >>
+gs[] >>
+first_x_assum $ qspecl_then [‘tl’,‘(specsl 0 t sl)’] assume_tac >>
+gs[] >> drule_then assume_tac $ iffLR wfabsap0_specslwtl >>
+gs[] >> irule_at Any $ iffRL wfabsap0_specslwtl >>
+simp[] >> qexists ‘("",s) :: vl’>> simp[] >>
+gs[LENGTH_specsl] >> gs[MEM_EL,PULL_EXISTS] >>
+gs[LENGTH_specslwtl1,LENGTH_specsl] >>
+simp[specslwtl] >> rpt gen_tac >> strip_tac >>
+Cases_on ‘n = 0’ (* 2 *)
+>- (gs[] >> simp[wft_def,sort_of_def]) >>
+Cases_on ‘n’ >> gs[] >> EL_specslwtl
+
+
         
+Theorem wff_mk_FALLL_wfabsap:
+∀vl sl. wfabsap (FST Σ) sl (MAP Var' vl) ⇒
+wff Σ (FALLL sl (fVar P sl (MAP Bound (REVERSE (COUNT_LIST (LENGTH sl))))))
+Proof
+Induct_on ‘vl’ 
+>- cheat >>
+Cases_on ‘sl’ >- cheat >>
+simp[wfabsap_def] >> rw[] >>
+simp[FALLL_def] >> first_x_assum $ drule_then assume_tac >>
+
+        
+               
+Theorem wfabsap0_alt:
+wfabsap0 Σ sl tl ⇔
+LENGTH sl = LENGTH tl ∧
+∀n. n < LENGTH sl ⇒ EL n (specslwtl tl sl) =
+(EL n tl,sprpl (mk_bmap (REVERSE (TAKE n tl))) (EL n sl))
+Proof
+simp[wfabsap0_specslwtl,MEM_EL,PULL_EXISTS] >>
+Cases_on ‘LENGTH sl = LENGTH tl’ >> simp[LENGTH_specslwtl1] >>
+simp[EL_specslwtl]
+
+QED
+
+
+Theorem wfabsap0_alt:
+wfabsap0 Σ sl tl ⇒
+∃vtl. wfabsap0 Σ sl vtl ∧ 
+∀n. n < LENGTH sl ⇒ EL n (specslwtl tl sll) =
+(El n tl,sprpl (mk_bmap (REVERSE (TAKE n tl))) (EL n sl))
+Proof
+cheat
+QED
+        
+
 Definition absvl_def:
 absvl i v [] = [] ∧
 absvl i v ((n:string,s) :: t) = 
@@ -358,9 +463,7 @@ Definition plainfV_def:
 plainfV (P,sl) =
 fVar P sl (MAP Bound (REVERSE (COUNT_LIST (LENGTH sl))))
 End
-*)        
-
-
+*)
 
           
 Definition mk_FALLL_def:
@@ -411,6 +514,10 @@ Theorem mk_FALLL_FALLL:
 mk_FALLL vl b = FALLL (vl2sl vl)
 Proof
 
+
+Definition tabsl_def:
+  tabsl [] i tm = tm ∧
+  tabsl (v :: vs) i tm = tabs (tabsl vs tm)     
 
 Definition fabsl_def:
         
