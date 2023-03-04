@@ -615,54 +615,14 @@ gs[SUBSET_DEF] >> metis_tac[]
 QED
 
 
-        
-Theorem ffv_mk_FALLL_SUBSET:
-∀k vl f. LENGTH vl = k ⇒
-(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
-     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
-(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
-(∀n. n < LENGTH vl ⇒ ∀n1 s1. (n1,s1) ∈ ffv f ⇒ (EL n vl) ∉ sfv s1) ⇒
-ffv (mk_FALLL vl f) ⊆ ffv f ∪ slfv (MAP SND vl) 
-Proof
-Induct_on ‘k’ >> Cases_on ‘vl’ >> simp[mk_FALLL_def,slfv_def,Uof_EMPTY] >>
-Cases_on ‘h’ >> rename [‘(n,s)’] >> gs[mk_FALLL_def] >> rw[] >>
-qspecl_then [‘(mk_FALLL t f)’,‘n’,‘s’] assume_tac ffv_mk_FALL >>
-first_x_assum $ qspecl_then [‘t’,‘f’] assume_tac >> gs[] >>
-‘ffv (mk_FALLL t f) ⊆ ffv f ∪ slfv (MAP SND t)’
- by (first_x_assum irule >> rw[] (* 3 *)
-    >- (qpat_x_assum ‘∀n'. _ ⇒ ∀n1 s1. _ ∈ ffv f ⇒ _’
-       $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
-       metis_tac[])
-    >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
-       first_x_assum irule >> qexistsl [‘SUC m’,‘n1’] >> simp[]) >>
-    qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’
-    $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
-‘ffv (mk_FALL n s (mk_FALLL t f)) =
-        ffv (mk_FALLL t f) ∪ sfv s DELETE (n,s)’
- by (first_x_assum irule >> rw[] >- cheat >>
-    ‘(n0,s0) ∈ ffv f ∨ (n0,s0) ∈ slfv (MAP SND t)’
-      by gs[SUBSET_DEF] (* 2 *)
-    >- (qpat_x_assum ‘∀n'. _ ⇒ ∀n1 s1. _ ∈ ffv f ⇒ _’
-       $ qspecl_then [‘0’] assume_tac >> gs[] >>
-       metis_tac[]) >>
-    gs[IN_slfv,MEM_MAP,MEM_EL] >> 
-    last_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
-    first_x_assum irule >> qexistsl [‘SUC n'’] >> simp[] >>
-    metis_tac[]) >>
-gs[] >> simp[Uof_INSERT,GSYM slfv_def] >>
-gs[SUBSET_DEF] >> metis_tac[]
-QED
 
-
-
-
-        
 Theorem wff_mk_FALLL:
 ∀k vl. LENGTH vl = k ⇒
 (∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
      ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
 (∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
-(∀n. n < LENGTH vl ⇒ ∀n1 s1. (n1,s1) ∈ ffv f ⇒ (EL n vl) ∉ sfv s1) ⇒
+(∀n. n < LENGTH vl ⇒ ∀n1 s1. (n1,s1) ∈ ffv f ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ EL n vl ∉ fVslfv f) ⇒
 wff Σ f ⇒ wff Σ (mk_FALLL vl f)
 Proof             
 Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
@@ -673,57 +633,48 @@ irule $ cj 6 wff_rules >>
 ‘wff (Σf,Σp,Σe) (mk_FALLL t f)’
  by (first_x_assum irule >> simp[] >>
     gs[] >> rw[] (* 2 *)
-    >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
-       metis_tac[])
+    >- (first_x_assum $ drule_at_then Any assume_tac >>
+        first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])
     >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
        first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
-       metis_tac[]) >>
+       metis_tac[]) 
+    >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])>>
     qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
 gs[] >>
 ‘wfs Σf s’
  by (qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘0’] assume_tac >> gs[]) >> gs[] >>
 simp[fVslfv_mk_FALLL] >> rw[] (* 2 *)
->- (‘(n1,s1) ∈ slfv (MAP SND t) ∨ (n1,s1) ∈ ffv f’ by cheat
+>- (‘(n1,s1) ∈ slfv (MAP SND t) ∨ (n1,s1) ∈ ffv f’
+     by (qspecl_then [‘(Σf,Σp,Σe)’,‘LENGTH t’,‘t’,‘f’] assume_tac
+        (Q.GEN ‘Σ’ ffv_mk_FALLL_SUBSET) >>
+        ‘ffv (mk_FALLL t f) ⊆ ffv f ∪ slfv (MAP SND t)’
+         suffices_by (gs[SUBSET_DEF] >> metis_tac[]) >>
+        first_x_assum irule >> rw[] (* 4 *)
+        >- (first_x_assum $ drule_at_then Any assume_tac >>
+            first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+            gs[])
+        >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[] >>
+           first_x_assum $ qspecl_then [‘SUC m’] assume_tac >>
+           gs[] >> metis_tac[])
+        >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[]) >>
+        qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’
+        $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) 
     >- (gs[IN_slfv,MEM_MAP,MEM_EL] >>
        last_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
        first_x_assum irule >>
        qexistsl [‘SUC n'’,‘n1’] >> simp[]) >>
-    first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
-    metis_tac[])
-       
+    first_x_assum $ drule_at_then Any assume_tac >>
+    first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >>
+first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]
+QED    
 
 
-
-                       ffv_mk_FALLL ffv_FALLL
-fVslfv_mk_FALLL 
 
         
-Theorem wff_mk_FALLL:
-∀k vl. LENGTH vl = k ⇒
-(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
-     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
-(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ⇒
-wff Σ f ⇒ wff Σ (mk_FALLL vl f)
-Proof             
-Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
-rw[] >> Cases_on ‘h’ >> rename [‘(n,s)’] >>
-simp[mk_FALLL_def]>> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
-rename [‘(Σf,Σp,Σe)’] >>
-irule $ cj 6 wff_rules >>
-‘wff (Σf,Σp,Σe) (mk_FALLL t f)’
- by (first_x_assum irule >> simp[] >>
-    gs[] >> rw[] (* 2 *)
-    >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
-       first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
-       metis_tac[]) >>
-    first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
-gs[] >>
-‘wfs Σf s’
- by (first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >> gs[] >>
-simp[fVslfv_mk_FALLL] >> ffv_mk_FALLL ffv_FALLL
-fVslfv_mk_FALLL 
+        
 
-                  
 Definition fabsl_def:
 fabsl [] i b = b ∧
 fabsl (h :: t) i b = fabsl t (i+1) (fabs h i b)
