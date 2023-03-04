@@ -1,7 +1,8 @@
 open HolKernel Parse boolLib bossLib;
 open stringTheory finite_setTheory pred_setTheory listTheory;
 open finite_mapTheory;
-val _ = new_theory "tmsytx";
+
+val _ = new_theory "tmst";
 
 
 Datatype: term = Var string sort | Fn string sort (term list)
@@ -116,56 +117,56 @@ Proof
 QED  
 
 
-Definition is_bound_def:
-is_bound (Var _ _) = F ∧
-is_bound (Fn _ _ _) = F ∧
-is_bound (Bound _) = T
+Definition is_bon_def:
+is_bon (Var _ _) = F ∧
+is_bon (Fn _ _ _) = F ∧
+is_bon (Bound _) = T
 End
 
 
-Definition tbounds_def:
-  tbounds (Bound i) = {i} ∧
-  tbounds (Var n s) = sbounds s ∧
-  tbounds (Fn n s l) = BIGUNION (set (MAP tbounds l)) ∪ sbounds s ∧
-  sbounds (St n tl) = BIGUNION (set (MAP tbounds tl))
+Definition tbons_def:
+  tbons (Bound i) = {i} ∧
+  tbons (Var n s) = {} ∧
+  tbons (Fn n s l) = BIGUNION (set (MAP tbons l)) ∪ sbons s ∧
+  sbons (St n tl) = BIGUNION (set (MAP tbons tl))
 Termination
 WF_REL_TAC ‘measure (λs. case s of INL t => term_size t
                                 | INR s => sort_size s)’                        
 End
 
 
-Theorem tbounds_thm:
-  tbounds (Bound i) = {i} ∧
-  tbounds (Var n s) = sbounds s ∧
-  tbounds (Fn n s l) = BIGUNION {tbounds t | MEM t l} ∪ sbounds s ∧
-  sbounds (St n tl) = BIGUNION {tbounds t | MEM t tl}
+Theorem tbons_thm:
+  tbons (Bound i) = {i} ∧
+  tbons (Var n s) = {} ∧
+  tbons (Fn n s l) = BIGUNION {tbons t | MEM t l} ∪ sbons s ∧
+  sbons (St n tl) = BIGUNION {tbons t | MEM t tl}
 Proof
-rw[tbounds_def,EXTENSION,MEM_MAP]
+rw[tbons_def,EXTENSION,MEM_MAP]
 QED
 
         
-Definition no_bound_def:
-  no_bound σ ⇔ ∀x. x ∈ FDOM σ ⇒ tbounds  (σ ' x) = {}
+Definition no_bon_def:
+  no_bon σ ⇔ ∀x. x ∈ FDOM σ ⇒ tbons  (σ ' x) = {}
 End         
 
 
-Theorem is_bound_alt:
-is_bound t ⇔ ∃i. t = Bound i
+Theorem is_bon_alt:
+is_bon t ⇔ ∃i. t = Bound i
 Proof
-Cases_on ‘t’ >> rw[is_bound_def]
+Cases_on ‘t’ >> rw[is_bon_def]
 QED
             
-Theorem no_bound_not_bound:
-  no_bound σ ∧ x ∈ FDOM σ ⇒ ¬(is_bound (σ ' x))
+Theorem no_bon_not_bound:
+  no_bon σ ∧ x ∈ FDOM σ ⇒ ¬(is_bon (σ ' x))
 Proof
-  rw[no_bound_def,is_bound_alt] >> strip_tac >>
-  first_x_assum drule  >> gs[tbounds_def]
+  rw[no_bon_def,is_bon_alt] >> strip_tac >>
+  first_x_assum drule  >> gs[tbons_def]
 QED  
 
           
 Definition tmatch_def:
   (tmatch (lcs:string # sort -> bool) (Var n s) ct (f:string # sort |-> term) =
-   if tbounds ct ≠ {} then NONE else
+   if tbons ct ≠ {} then NONE else
    if  (n,s) ∈ lcs then
      if Var n s = ct then SOME f else NONE
    else 
@@ -202,7 +203,7 @@ Termination
            INL (_,t1,t2,_) => term_size t1 + term_size t2 
          | INR (INL (_,s1,s2,_)) => sort_size s1 + sort_size s2
          | INR (INR (_,tl1,tl2,_)) => term1_size tl1 + term1_size tl2)’   >>
-   rw[] >> Cases_on ‘ct’ >> gs[sort_of_def,tbounds_def]
+   rw[] >> Cases_on ‘ct’ >> gs[sort_of_def,tbons_def]
 End   
                 
 Definition stms_def[simp]:
@@ -870,18 +871,18 @@ QED
 
 Theorem IS_SOME_match:
    (∀t f σ.
-     complete f ∧ cstt σ ∧ no_bound σ ∧
+     complete f ∧ cstt σ ∧ no_bon σ ∧
      (tfv t ⊆ FDOM σ) ∧
      (∀n s. (n,s) ∈ FDOM f ∩ FDOM σ ∩ tfv t ⇒ f ' (n,s) = σ ' (n,s)) ⇒
      tmatch {} t (tinst σ t) f = SOME (FUNION f (DRESTRICT σ (tfv t)))) ∧
    (∀st f σ.
-     complete f ∧ cstt σ ∧ no_bound σ ∧
+     complete f ∧ cstt σ ∧ no_bon σ ∧
      (sfv st ⊆ FDOM σ) ∧
      (∀n s. (n,s) ∈ FDOM f ∩ FDOM σ ∩ sfv st ⇒ f ' (n,s) = σ ' (n,s)) ⇒
      smatch {} st (sinst σ st) f =
      SOME (FUNION f (DRESTRICT σ (sfv st)))) ∧
    (∀l f σ.
-     complete f ∧ cstt σ ∧ no_bound σ ∧
+     complete f ∧ cstt σ ∧ no_bon σ ∧
      (BIGUNION {tfv t | MEM t l} ⊆ FDOM σ) ∧
      (∀n s. (n,s) ∈ FDOM f ∩ FDOM σ ∩
             BIGUNION {tfv t | MEM t l} ⇒ f ' (n,s) = σ ' (n,s)) ⇒
@@ -891,7 +892,7 @@ Theorem IS_SOME_match:
 Proof
   ho_match_mp_tac original_tm_induction>> rw[] (* 6 *)
   >- (gs[tmatch_def,AllCaseEqs()] >>
-     drule_then assume_tac $ iffLR no_bound_def >>
+     drule_then assume_tac $ iffLR no_bon_def >>
      first_x_assum (drule_then assume_tac) >> gs[] >> 
      Cases_on ‘(s0,st) ∈ FDOM f’ >> gs[] (* 2 *)
      >- (Cases_on ‘st’ >> gs[tmatch_def,PULL_EXISTS] >>
@@ -987,25 +988,25 @@ Proof
 QED
 
 
-Theorem no_bound_FUPDATE:
-  no_bound f ∧ tbounds t = {} ⇒ no_bound (f |+ (x,t))
+Theorem no_bon_FUPDATE:
+  no_bon f ∧ tbons t = {} ⇒ no_bon (f |+ (x,t))
 Proof
- rw[no_bound_def] (* 2 *)
+ rw[no_bon_def] (* 2 *)
  >- rw[FAPPLY_FUPDATE] >>
  Cases_on ‘x' = x’ >> rw[FAPPLY_FUPDATE] >>
  rw[FAPPLY_FUPDATE_THM]
 QED 
       
-Theorem tmatch_no_bound:
-  (∀t1 t2 f σ. no_bound f ∧ tmatch ∅ t1 t2 f  = SOME σ ⇒ no_bound σ) ∧
-  (∀s1 s2 f σ. no_bound f ∧ smatch ∅ s1 s2 f  = SOME σ ⇒ no_bound σ) ∧
-  (∀tl1 tl2 f σ. no_bound f ∧ tlmatch ∅ tl1 tl2 f = SOME σ ⇒ no_bound σ)
+Theorem tmatch_no_bon:
+  (∀t1 t2 f σ. no_bon f ∧ tmatch ∅ t1 t2 f  = SOME σ ⇒ no_bon σ) ∧
+  (∀s1 s2 f σ. no_bon f ∧ smatch ∅ s1 s2 f  = SOME σ ⇒ no_bon σ) ∧
+  (∀tl1 tl2 f σ. no_bon f ∧ tlmatch ∅ tl1 tl2 f = SOME σ ⇒ no_bon σ)
 Proof
   ho_match_mp_tac original_tm_induction >> rw[] (* 6 *)
   >-  (gs[tmatch_def,AllCaseEqs()] >>
        first_x_assum $ drule_all_then assume_tac >>
        qpat_x_assum ‘_ = σ’ (assume_tac o GSYM) >> rw[] >>
-       irule no_bound_FUPDATE >> simp[])
+       irule no_bon_FUPDATE >> simp[])
   >- (Cases_on ‘t2’ >>  gvs[tmatch_def,AllCaseEqs(),PULL_EXISTS] >>
      rpt (first_x_assum $ drule_all_then assume_tac) >> rw[])
   >- (Cases_on ‘t2’ >> gvs[tmatch_def,AllCaseEqs(),PULL_EXISTS])
@@ -1017,32 +1018,32 @@ Proof
   rpt (last_x_assum (drule_all_then strip_assume_tac))
 QED
 
-Theorem FEMPTY_no_bound:
-no_bound FEMPTY
+Theorem FEMPTY_no_bon:
+no_bon FEMPTY
 Proof
-rw[no_bound_def]
+rw[no_bon_def]
 QED
 
-val tmatch_no_bound_FEMPTY = tmatch_no_bound |> cj 1
+val tmatch_no_bon_FEMPTY = tmatch_no_bon |> cj 1
                                              |> Q.SPECL [‘t1’,‘t2’,‘FEMPTY’]
-                                             |> SRULE [FEMPTY_no_bound]
+                                             |> SRULE [FEMPTY_no_bon]
                                              |> GEN_ALL
 
-val smatch_no_bound_FEMPTY = tmatch_no_bound |> cj 2
+val smatch_no_bon_FEMPTY = tmatch_no_bon |> cj 2
                                              |> Q.SPECL [‘s1’,‘s2’,‘FEMPTY’]
-                                             |> SRULE [FEMPTY_no_bound]
+                                             |> SRULE [FEMPTY_no_bon]
                                              |> GEN_ALL
 
 
-val tlmatch_no_bound_FEMPTY = tmatch_no_bound |> cj 3
+val tlmatch_no_bon_FEMPTY = tmatch_no_bon |> cj 3
                                              |> Q.SPECL [‘tl1’,‘tl2’,‘FEMPTY’]
-                                             |> SRULE [FEMPTY_no_bound]
+                                             |> SRULE [FEMPTY_no_bon]
                                              |> GEN_ALL
                                              
                                              
 Theorem match_SOME_iff_inst:
   (∀t1 t2. IS_SOME (tmatch {} t1 t2 FEMPTY) ⇔
-           ∃σ. cstt σ ∧ no_bound σ ∧ tfv t1 ⊆ FDOM σ ∧ t2 = tinst σ t1)
+           ∃σ. cstt σ ∧ no_bon σ ∧ tfv t1 ⊆ FDOM σ ∧ t2 = tinst σ t1)
 Proof
  rw[EQ_IMP_THM] (* 2 *)
  >- (Cases_on ‘tmatch ∅ t1 t2 FEMPTY’ >> gs[] >>
@@ -1051,7 +1052,7 @@ Proof
     ‘tfv t1 ⊆ FDOM x’
     by
     metis_tac[tmatch_FEMPTY_property,SUBSET_ANTISYM_EQ]>>
-    ‘no_bound x’ by metis_tac[tmatch_no_bound_FEMPTY] >>
+    ‘no_bon x’ by metis_tac[tmatch_no_bon_FEMPTY] >>
     rw[] >> 
     irule $ cj 1 tmatch_SOME_tinst >>
     metis_tac[FEMPTY_complete]) >> 
@@ -1115,7 +1116,7 @@ val sinst_o_vmap = cj 2 inst_o_vmap
 
 Theorem match_SOME_iff_inst':
   (∀t1 t2. IS_SOME (tmatch {} t1 t2 FEMPTY) ⇔
-           ∃σ. cstt σ ∧ no_bound σ ∧ tfv t1 = FDOM σ ∧ t2 = tinst σ t1)
+           ∃σ. cstt σ ∧ no_bon σ ∧ tfv t1 = FDOM σ ∧ t2 = tinst σ t1)
 Proof
  rw[EQ_IMP_THM] (* 2 *)
  >- (Cases_on ‘tmatch ∅ t1 t2 FEMPTY’ >> gs[] >>
@@ -1124,7 +1125,7 @@ Proof
     ‘tfv t1 = FDOM x’
     by
     metis_tac[tmatch_FEMPTY_property]>>
-    ‘no_bound x’ by metis_tac[tmatch_no_bound_FEMPTY] >>
+    ‘no_bon x’ by metis_tac[tmatch_no_bon_FEMPTY] >>
     rw[] >> simp[Once EQ_SYM_EQ] >>
     irule $ cj 1 tmatch_SOME_tinst >>
     metis_tac[FEMPTY_complete]) >> 
@@ -1139,19 +1140,19 @@ QED
 
 
 Theorem cstt_sort_of_tinst':
- cstt σ ∧ no_bound σ ∧ ¬(is_bound t) ⇒
+ cstt σ ∧ no_bon σ ∧ ¬(is_bon t) ⇒
  sort_of (tinst σ t) = sinst σ (sort_of t)
 Proof
  Induct_on ‘t’ >> gs[sort_of_def] >> rw[] >>
- gs[cstt_def,sort_of_def,tbounds_def,is_bound_alt]
+ gs[cstt_def,sort_of_def,tbons_def,is_bon_alt]
 QED 
 
 Theorem cstt_sort_of_tinst:
- cstt σ ∧ no_bound σ ∧ tbounds t = {} ⇒
+ cstt σ ∧ no_bon σ ∧ tbons t = {} ⇒
  sort_of (tinst σ t) = sinst σ (sort_of t)
 Proof
  Induct_on ‘t’ >> gs[sort_of_def] >> rw[] >>
- gs[cstt_def,sort_of_def,tbounds_def]
+ gs[cstt_def,sort_of_def,tbons_def]
 QED 
 
 Definition tsubtm_def:
@@ -1205,55 +1206,55 @@ Proof
 QED
 
 Theorem ssubtm_tsubtm:
-∀t0 t. tbounds t = {} ∧ t0 ∈ ssubtm (sort_of t) ⇒ t0 ∈ tsubtm t
+∀t0 t. tbons t = {} ∧ t0 ∈ ssubtm (sort_of t) ⇒ t0 ∈ tsubtm t
 Proof
-rw[] >> Cases_on ‘t’ >> gs[tsubtm_def,sort_of_def,tbounds_def]
+rw[] >> Cases_on ‘t’ >> gs[tsubtm_def,sort_of_def,tbons_def]
 QED
 
-Theorem tbounds_Fn:
-  tbounds (Fn s0 s l) = ∅ ⇔ sbounds s = {} ∧
-  ∀t. MEM t l ⇒ tbounds t = {}
+Theorem tbons_Fn:
+  tbons (Fn s0 s l) = ∅ ⇔ sbons s = {} ∧
+  ∀t. MEM t l ⇒ tbons t = {}
 Proof
-rw[tbounds_def,LIST_TO_SET_MAP,IMAGE_DEF,EXTENSION] >>
+rw[tbons_def,LIST_TO_SET_MAP,IMAGE_DEF,EXTENSION] >>
 metis_tac[]
 QED
 
 
 
-Theorem sbounds_St:
-  sbounds (St n l) = ∅ ⇔ 
-  ∀t. MEM t l ⇒ tbounds t = {}
+Theorem sbons_St:
+  sbons (St n l) = ∅ ⇔ 
+  ∀t. MEM t l ⇒ tbons t = {}
 Proof
-rw[tbounds_def,LIST_TO_SET_MAP,IMAGE_DEF,EXTENSION] >>
+rw[tbons_def,LIST_TO_SET_MAP,IMAGE_DEF,EXTENSION] >>
 metis_tac[]
 QED
 
 
 
 Theorem sfv_tfv:
-∀t n s. ¬(is_bound t) ∧ (n,s) ∈ sfv (sort_of t) ⇒ (n,s) ∈ tfv t
+∀t n s. ¬(is_bon t) ∧ (n,s) ∈ sfv (sort_of t) ⇒ (n,s) ∈ tfv t
 Proof
-Cases_on ‘t’ >> gs[sort_of_def,tfv_def,is_bound_def]
+Cases_on ‘t’ >> gs[sort_of_def,tfv_def,is_bon_def]
 QED
         
 
 Theorem ssubtm_tsubtm:
-∀t0 t. ¬(is_bound t) ∧ t0 ∈ ssubtm (sort_of t) ⇒ t0 ∈ tsubtm t
+∀t0 t. ¬(is_bon t) ∧ t0 ∈ ssubtm (sort_of t) ⇒ t0 ∈ tsubtm t
 Proof
-rw[] >> Cases_on ‘t’ >> gs[tsubtm_def,sort_of_def,is_bound_def]
+rw[] >> Cases_on ‘t’ >> gs[tsubtm_def,sort_of_def,is_bon_def]
 QED
 
-Theorem no_bound_not_is_bound:
-  no_bound σ ∧ x ∈ FDOM σ ⇒ ¬(is_bound (σ ' x))
+Theorem no_bon_not_is_bon:
+  no_bon σ ∧ x ∈ FDOM σ ⇒ ¬(is_bon (σ ' x))
 Proof
-  rpt strip_tac >> gs[no_bound_def,is_bound_alt]   >>
-  first_x_assum drule >> rw[tbounds_def]
+  rpt strip_tac >> gs[no_bon_def,is_bon_alt]   >>
+  first_x_assum drule >> rw[tbons_def]
 QED          
 
 Theorem tinst_subtm:
-(∀t σ n st. (n,st) ∈ FDOM σ ∩ tfv t ∧ cstt σ ∧ no_bound σ ⇒
+(∀t σ n st. (n,st) ∈ FDOM σ ∩ tfv t ∧ cstt σ ∧ no_bon σ ⇒
            σ ' (n,st) ∈ tsubtm (tinst σ t)) ∧
-(∀s σ n st. (n,st) ∈ FDOM σ ∩ sfv s ∧ cstt σ ∧ no_bound σ ⇒
+(∀s σ n st. (n,st) ∈ FDOM σ ∩ sfv s ∧ cstt σ ∧ no_bon σ ⇒
            σ ' (n,st) ∈ ssubtm (sinst σ s))
 Proof                 
 ho_match_mp_tac better_tm_induction >> rw[] >> gvs[]
@@ -1262,7 +1263,7 @@ ho_match_mp_tac better_tm_induction >> rw[] >> gvs[]
 >- (rename [‘(n1,st1) ∉ FDOM σ’] >> 
    Cases_on ‘(n1,st1) ∈ FDOM σ’ (* 2 *)
    >- (gs[] >>  irule ssubtm_tsubtm >>
-       drule_then assume_tac no_bound_not_is_bound >>
+       drule_then assume_tac no_bon_not_is_bon >>
        first_x_assum drule >> rw[] >>
        gs[cstt_def]) >>
    gs[tsubtm_def])
@@ -1279,10 +1280,10 @@ QED
 
 
 Theorem tfv_sinst:
-(∀t σ. cstt σ ∧ tfv t ⊆ FDOM σ ∧ no_bound σ ⇒
+(∀t σ. cstt σ ∧ tfv t ⊆ FDOM σ ∧ no_bon σ ⇒
  (∀n st. (n,st) ∈ tfv (tinst σ t) ⇔
        ∃n0 st0. (n0,st0) ∈ tfv t ∧ (n,st) ∈ tfv (σ ' (n0,st0)))) ∧
-(∀s σ. cstt σ ∧ sfv s ⊆ FDOM σ ∧ no_bound σ ⇒
+(∀s σ. cstt σ ∧ sfv s ⊆ FDOM σ ∧ no_bon σ ⇒
  (∀n st. (n,st) ∈ sfv (sinst σ s) ⇔
        ∃n0 st0. (n0,st0) ∈ sfv s ∧ (n,st) ∈ tfv (σ ' (n0,st0))))
 Proof                 
@@ -1297,9 +1298,9 @@ ho_match_mp_tac better_tm_induction >> rw[] >> gvs[]
    pop_assum mp_tac >> pop_assum (K all_tac) >>
    gs[cstt_def] >> first_x_assum (drule o GSYM) >> rw[] >>
    irule sfv_tfv >> simp[] >>
-   gs[no_bound_def,is_bound_alt,tbounds_def] >>
+   gs[no_bon_def,is_bon_alt,tbons_def] >>
    first_x_assum drule >> rw[] >>
-   CCONTR_TAC >> gs[tbounds_def])
+   CCONTR_TAC >> gs[tbons_def])
 >- (eq_tac(* 2 *)
    >- (simp[PULL_EXISTS,MEM_MAP] >> rw[] (* 2 *)
       >- (‘tfv a ⊆ FDOM σ’ by (gs[SUBSET_DEF]  >> metis_tac[]) >>
@@ -1330,7 +1331,7 @@ QED
 (*fv_subtm tinst_subtm cstt_sort_of_tinst tfv_def*)
 
 Theorem tmatch_TRANS_lemma:
-  cstt σ ∧ sfv s ⊆ tfv t ∧ tfv t ⊆ FDOM σ ∧ no_bound σ ⇒
+  cstt σ ∧ sfv s ⊆ tfv t ∧ tfv t ⊆ FDOM σ ∧ no_bon σ ⇒
   sfv (sinst σ s) ⊆ tfv (tinst σ t)
 Proof
   rw[] >> drule_all_then assume_tac $ cj 1 tfv_sinst >>
@@ -1340,49 +1341,63 @@ Proof
   gs[SUBSET_DEF] >> metis_tac[]
 QED  
 
+
      
-Theorem sbounds_tbounds:
-(∀t n st. (n,st) ∈ tfv t ⇒ sbounds st ⊆ tbounds t) ∧
-(∀s n st. (n,st) ∈ sfv s ⇒ sbounds st ⊆ sbounds s)
+     
+(*contain bad variable*)
+Definition tcbv_def:
+  tcbv tm ⇔ ∃n s. (n,s) ∈ tfv tm ∧ sbons s ≠ {}
+End
+
+Definition scbv_def:
+  scbv st ⇔ ∃n s. (n,s) ∈ sfv st ∧ sbons s ≠ {}
+End          
+
+
+             
+(*
+Theorem sbons_tbons:
+(∀t n st. (n,st) ∈ tfv t ⇒ sbons st ⊆ tbons t) ∧
+(∀s n st. (n,st) ∈ sfv s ⇒ sbons st ⊆ sbons s)
 Proof
 ho_match_mp_tac better_tm_induction >> rw[] (* 5 *)
->- gs[tbounds_def]
->- (gs[tbounds_def] >> metis_tac[])
->- (gs[tbounds_def] >>
+>- gs[tbons_def]
+>- (gs[tbons_def] >> metis_tac[])
+>- (gs[tbons_def] >>
    first_x_assum $ drule_all_then assume_tac >>
    irule SUBSET_TRANS >> first_x_assum $ irule_at Any >>
    rw[SUBSET_DEF,MEM_MAP] >> metis_tac[])
 >- (first_x_assum $ drule_then assume_tac >>
    irule SUBSET_TRANS >> first_x_assum $ irule_at Any >>
-   rw[SUBSET_DEF,MEM_MAP,tbounds_def]) >>
+   rw[SUBSET_DEF,MEM_MAP,tbons_def]) >>
 first_x_assum $ drule_all_then assume_tac >>
 irule SUBSET_TRANS >> first_x_assum $ irule_at Any >>
-rw[SUBSET_DEF,MEM_MAP,tbounds_def] >> metis_tac[]
+rw[SUBSET_DEF,MEM_MAP,tbons_def] >> metis_tac[]
 QED
+*)
 
-
-Theorem tbounds_EMPTY_tinst_no_bound:
-  tbounds t = {} ∧ no_bound σ ⇒ tbounds (tinst σ t) = {}
+Theorem tbons_EMPTY_tinst_no_bon:
+  tbons t = {} ∧ no_bon σ ⇒ tbons (tinst σ t) = {}
 Proof
  Induct_on ‘t’ (* 3 *)
- >- (rw[tinst_def,tbounds_def] (* 2 *)
-    >- (Cases_on ‘s’ >> gs[tinst_def,sbounds_St,MEM_MAP,PULL_EXISTS]) >>
-    gs[no_bound_def])
- >- (rw[tinst_def,tbounds_def] (* 3 *)
-    >- (Cases_on ‘s’ >> gs[tinst_def,sbounds_St,MEM_MAP,PULL_EXISTS])
+ >- (rw[tinst_def,tbons_def] 
+    >> Cases_on ‘s’ >> gs[tinst_def,sbons_St,MEM_MAP,PULL_EXISTS] >>
+    gs[no_bon_def])
+ >- (rw[tinst_def,tbons_def] (* 3 *)
+    >- (Cases_on ‘s’ >> gs[tinst_def,sbons_St,MEM_MAP,PULL_EXISTS])
     >- (gs[MAP_MAP_o,EXTENSION,MEM_MAP] >> metis_tac[]) >>
-    Cases_on ‘s’ >> gs[tinst_def,sbounds_St,MEM_MAP,PULL_EXISTS]) >>
- rw[tbounds_def]
+    Cases_on ‘s’ >> gs[tinst_def,sbons_St,MEM_MAP,PULL_EXISTS]) >>
+ rw[tbons_def]
 QED 
     
           
-Theorem o_vmap_no_bound:
-no_bound (σ1:string # sort |-> term) ∧ no_bound σ2 ⇒ no_bound (o_vmap σ2 σ1)
+Theorem o_vmap_no_bon:
+no_bon (σ1:string # sort |-> term) ∧ no_bon σ2 ⇒ no_bon (o_vmap σ2 σ1)
 Proof
-rw[no_bound_def,FDOM_o_vmap] >> Cases_on ‘x’ >>
+rw[no_bon_def,FDOM_o_vmap] >> Cases_on ‘x’ >>
 drule FAPPLY_o_vmap >> rw[] >> 
 gs[FDOM_o_vmap,FAPPLY_o_vmap] >>
-irule tbounds_EMPTY_tinst_no_bound >> gs[no_bound_def]
+irule tbons_EMPTY_tinst_no_bon >> gs[no_bon_def]
 QED
 
 
@@ -1406,7 +1421,7 @@ Proof
  rev_drule cstt_sort_of_tinst >> rw[] >>
  rw[sort_of_def] >>
  last_x_assum (qspecl_then [‘σ ' (n,s)’] assume_tac) >>
- gs[no_bound_def,cstt_def] >> 
+ gs[no_bon_def,cstt_def] >> 
  irule sinst_o_vmap >>
  ‘sfv s ⊆ FDOM σ’
    by (irule $ iffLR is_cont_def >>
@@ -1416,26 +1431,26 @@ Proof
  (assume_tac o GSYM) >> gs[] >>
  qpat_x_assum ‘ tfv t1 = FDOM σ’
  (assume_tac o GSYM) >> gs[] >>
- irule tmatch_TRANS_lemma >> gs[cstt_def,no_bound_def] >>
+ irule tmatch_TRANS_lemma >> gs[cstt_def,no_bon_def] >>
  CCONTR_TAC >> gs[GSYM MEMBER_NOT_EMPTY] >>
- drule $ cj 1 sbounds_tbounds >> rw[SUBSET_DEF] >>
+ drule $ cj 1 sbons_tbons >> rw[SUBSET_DEF] >>
  metis_tac[]) >>
- irule o_vmap_no_bound >> simp[]
+ irule o_vmap_no_bon >> simp[]
 QED    
         
 
-Theorem DRESTRICT_no_bound:
-  no_bound σ ⇒ no_bound (DRESTRICT σ s)
+Theorem DRESTRICT_no_bon:
+  no_bon σ ⇒ no_bon (DRESTRICT σ s)
 Proof
-rw[no_bound_def,DRESTRICT_DEF]
+rw[no_bon_def,DRESTRICT_DEF]
 QED
    
 
 
 Theorem tmatch_FEMPTY:
-  ∀f. complete f ∧ cstt f ∧ no_bound f ⇒
+  ∀f. complete f ∧ cstt f ∧ no_bon f ⇒
  (tmatch {} t1 t2 f = SOME σ ⇔
-  ∃σ0.   no_bound σ0 ∧
+  ∃σ0.   no_bon σ0 ∧
          (∀n s. (n,s) ∈ FDOM f ∩ FDOM σ0 ⇒ f ' (n,s) = σ0 ' (n,s)) ∧
          tmatch {} t1 t2 FEMPTY = SOME σ0 ∧ σ = FUNION f σ0)
 Proof 
@@ -1443,20 +1458,20 @@ Proof
  >- (rw[] >> drule_all_then assume_tac $ cj 1 tmatch_SOME_tinst >>
     pop_assum (assume_tac o GSYM) >> rw[] >>
     qexists ‘DRESTRICT σ (tfv t1)’ >> rw[] (* 3 *)
-    >- (drule_all_then assume_tac $ cj 1 tmatch_no_bound >>
-       metis_tac[DRESTRICT_no_bound])
+    >- (drule_all_then assume_tac $ cj 1 tmatch_no_bon >>
+       metis_tac[DRESTRICT_no_bon])
     >- (drule_all_then strip_assume_tac tmatch_property >> gs[SUBMAP_DEF,DRESTRICT_DEF])
     >- (‘tmatch ∅ t1 (tinst σ t1) FEMPTY = SOME (FUNION FEMPTY (DRESTRICT σ (tfv t1)))’
         suffices_by simp[] >> 
        irule $ cj 1 IS_SOME_match >> simp[FEMPTY_complete] >>
-       ‘ no_bound σ ’ by metis_tac[tmatch_no_bound] >> simp[] >>
+       ‘ no_bon σ ’ by metis_tac[tmatch_no_bon] >> simp[] >>
        drule_all_then strip_assume_tac tmatch_property >>
        rw[SUBSET_UNION] >>
        irule $ cj 1 match_SOME_cstt >> metis_tac[]) >>
     ‘tmatch ∅ t1 (tinst σ t1) f = SOME (f ⊌ DRESTRICT σ (tfv t1))’
        suffices_by (rw[] >> gs[]) >>
     irule $ cj 1 IS_SOME_match >> simp[] >>
-     ‘ no_bound σ ’ by metis_tac[tmatch_no_bound] >> simp[] >>
+     ‘ no_bon σ ’ by metis_tac[tmatch_no_bon] >> simp[] >>
     drule_all_then strip_assume_tac $ cj 1 match_SOME_cstt >>
     drule_all_then strip_assume_tac tmatch_property >> simp[SUBSET_UNION] >>
     rw[] >> gs[SUBMAP_DEF]) >>
@@ -1476,8 +1491,8 @@ QED
  
 
 Theorem tlmatch_each_lemma:
-complete f ∧ cstt f ∧ no_bound f ∧ tmatch ∅ t1 t2 f = SOME σ ∧
-f ⊑ f1 ∧ complete f1 ∧ cstt f1 ∧ no_bound f1 ∧
+complete f ∧ cstt f ∧ no_bon f ∧ tmatch ∅ t1 t2 f = SOME σ ∧
+f ⊑ f1 ∧ complete f1 ∧ cstt f1 ∧ no_bon f1 ∧
 (∀x. x ∈ FDOM f1 ∧ x ∈ FDOM σ ⇒ f1 ' x = σ ' x) ⇒
 tmatch ∅ t1 t2 f1 = SOME (FUNION f1 σ)
 Proof
@@ -1519,7 +1534,7 @@ QED
 
 Theorem tlmatch_each:
 ∀tl1 tl2 f.
- complete f ∧ cstt f ∧ no_bound f ∧
+ complete f ∧ cstt f ∧ no_bon f ∧
  tl1 ≠ [] ∧ tl2 ≠ [] ∧ LENGTH tl1 = LENGTH tl2 ⇒
  ∀σ. (tlmatch {} tl1 tl2 f = SOME σ ⇔
   FDOM σ = FDOM f ∪ BIGUNION {tfv t | MEM t tl1} ∧ 
@@ -1552,7 +1567,7 @@ eq_tac (* 2 *)
    ‘∃n0. n = SUC n0’ by metis_tac[arithmeticTheory.num_CASES] >>
    gs[] >>
    ‘cstt f1’ by metis_tac[match_SOME_cstt] >> gs[] >>
-  ‘no_bound f1’ by metis_tac[tmatch_no_bound] >> gs[] >>
+  ‘no_bon f1’ by metis_tac[tmatch_no_bon] >> gs[] >>
   first_x_assum (qspecl_then [‘σ’] assume_tac) >> gs[] >>
   first_x_assum $ drule_all_then assume_tac >>
   drule_all_then assume_tac tmatch_FEMPTY >>
@@ -1591,7 +1606,7 @@ drule_all_then strip_assume_tac $ cj 1 match_SOME_cstt >> simp[] >>
         FDOM f ∪ tfv t1 ∪ BIGUNION {tfv t | MEM t tl1}’
  by (rw[EXTENSION] >> metis_tac[]) >> simp[] >>
 pop_assum (K all_tac) >>
-‘no_bound f1’ by metis_tac[tmatch_no_bound]>>
+‘no_bon f1’ by metis_tac[tmatch_no_bon]>>
 rw[] >> ‘SUC n < SUC (LENGTH tl2)’ by simp[] >>
 first_x_assum $ drule_then assume_tac >> gs[] >>
 ‘DRESTRICT σ (FDOM f ∪ tfv t1 ∪ tfv (EL n tl1)) =
@@ -1644,20 +1659,20 @@ Proof
  rw[] >>
  drule_at Any tlmatch_each >> rw[] >> 
  first_x_assum (qspecl_then [‘FEMPTY’,‘σ’] assume_tac) >>
- gs[FEMPTY_complete,FEMPTY_cstt,FEMPTY_no_bound]
+ gs[FEMPTY_complete,FEMPTY_cstt,FEMPTY_no_bon]
 QED
         
         
 
 Theorem IS_SOME_match_FEMPTY:
  (∀t σ.
-    cstt σ ∧ tfv t ⊆ FDOM σ ∧ no_bound σ ⇒
+    cstt σ ∧ tfv t ⊆ FDOM σ ∧ no_bon σ ⇒
     tmatch ∅ t (tinst σ t) FEMPTY = SOME (DRESTRICT σ (tfv t))) ∧
  (∀st σ.
-    cstt σ ∧ sfv st ⊆ FDOM σ ∧ no_bound σ ⇒
+    cstt σ ∧ sfv st ⊆ FDOM σ ∧ no_bon σ ⇒
     smatch ∅ st (sinst σ st) FEMPTY = SOME (DRESTRICT σ (sfv st))) ∧
  ∀l σ.
-   cstt σ ∧ BIGUNION {tfv t | MEM t l} ⊆ FDOM σ ∧ no_bound σ ⇒
+   cstt σ ∧ BIGUNION {tfv t | MEM t l} ⊆ FDOM σ ∧ no_bon σ ⇒
        tlmatch ∅ l (MAP (tinst σ) l) FEMPTY =
        SOME (DRESTRICT σ (BIGUNION {tfv t | MEM t l}))
 Proof
@@ -1723,7 +1738,7 @@ tmatch_property |>Q.SPECL [‘t1’,‘t2’,‘FEMPTY’]
 
 
 Theorem o_vmap_cstt:
-cstt σ1 ∧ cstt σ2 ∧ no_bound σ1 ∧ no_bound σ2 ∧
+cstt σ1 ∧ cstt σ2 ∧ no_bon σ1 ∧ no_bon σ2 ∧
 complete σ1 ∧
 (∀x. x ∈ FDOM σ1 ⇒ tfv (σ1 ' x) ⊆ FDOM σ2) ⇒ cstt (o_vmap σ2 σ1)
 Proof
@@ -1731,7 +1746,7 @@ strip_tac >> rw[cstt_def] >> gs[FDOM_o_vmap,FAPPLY_o_vmap]  >>
 first_x_assum $ drule_then assume_tac >>
 drule cstt_sort_of_tinst >> rw[] >>
 first_x_assum (qspecl_then [‘σ1 ' (n,s)’] assume_tac) >>
-gs[no_bound_def] >> 
+gs[no_bon_def] >> 
 ‘sinst σ2 (sinst σ1 s) = sinst (o_vmap σ2 σ1) s’
  suffices_by
   (rw[] >> pop_assum (assume_tac o GSYM) >>
@@ -1742,7 +1757,7 @@ gs[SUBSET_DEF] >> rw[] (* 2 *)
 first_x_assum irule >> gs[cstt_def] >>
 last_x_assum $ drule_then (assume_tac o GSYM) >>
 gs[] >> Cases_on ‘x’ >> irule sfv_tfv >> simp[] >>
-irule no_bound_not_is_bound >> gs[no_bound_def]
+irule no_bon_not_is_bon >> gs[no_bon_def]
 QED
 
 
@@ -1787,9 +1802,9 @@ val tlmatch_each_FEMPTY = tlmatch_each |> Q.SPECL [‘tl1’,‘tl2’,‘FEMPTY
 
 Theorem tlmatch_tinst_imp_SOME:
   ∀tl1 tl2 f.
-       complete f ∧ cstt f ∧ no_bound f ∧
+       complete f ∧ cstt f ∧ no_bon f ∧
        tl1 ≠ [] ∧ tl2 ≠ [] ∧ LENGTH tl1 = LENGTH tl2 ⇒
-       ∀σ. f ⊑ σ ∧ cstt σ ∧ no_bound σ ∧
+       ∀σ. f ⊑ σ ∧ cstt σ ∧ no_bon σ ∧
            FDOM σ = FDOM f ∪ BIGUNION {tfv t | MEM t tl1} ∧
            (∀n. n < LENGTH tl1 ⇒
                EL n tl2 = tinst σ (EL n tl1)) ⇒ 
@@ -1813,8 +1828,8 @@ QED
 
 Theorem tlmatch_tinst_imp_SOME':
   ∀tl1 tl2 f.
-       complete f ∧ cstt f ∧ LENGTH tl1 = LENGTH tl2 ∧ no_bound f ⇒
-       ∀σ. f ⊑ σ ∧ cstt σ ∧  no_bound σ ∧
+       complete f ∧ cstt f ∧ LENGTH tl1 = LENGTH tl2 ∧ no_bon f ⇒
+       ∀σ. f ⊑ σ ∧ cstt σ ∧  no_bon σ ∧
            FDOM σ = FDOM f ∪ BIGUNION {tfv t | MEM t tl1} ∧
            (∀n. n < LENGTH tl1 ⇒
                EL n tl2 = tinst σ (EL n tl1)) ⇒ 
@@ -1831,7 +1846,7 @@ QED
 
 Theorem tlmatch_each_imp_tinst:
   ∀tl1 tl2 f.
-       complete f ∧ cstt f ∧  no_bound f ∧
+       complete f ∧ cstt f ∧  no_bon f ∧
        tl1 ≠ [] ∧ tl2 ≠ [] ∧ LENGTH tl1 = LENGTH tl2 ⇒
        ∀σ. tlmatch ∅ tl1 tl2 f = SOME σ ⇒
            FDOM σ = FDOM f ∪ BIGUNION {tfv t | MEM t tl1} ∧
@@ -1896,12 +1911,12 @@ End
 (*Q:Once EXTENSION |> DISCH_ALL *)
 
      
-Theorem wft_no_bound:
- (∀t. wft Σf t ⇒ tbounds t = {}) ∧
- (∀s. wfs Σf s ⇒ sbounds s = {})
+Theorem wft_no_bon:
+ (∀t. wft Σf t ⇒ tbons t = {}) ∧
+ (∀s. wfs Σf s ⇒ sbons s = {})
 Proof
  ho_match_mp_tac better_tm_induction >>
- rw[wft_def,tbounds_def] (* 2 *)
+ rw[wft_def,tbons_def] (* 2 *)
  >- (gs[Once EXTENSION,MEM_MAP] >>
     simp[LIST_TO_SET_MAP,Once EXTENSION,IMAGE_DEF] >>
     Cases_on ‘l’ >> gs[] >> metis_tac[]) >>
@@ -1914,18 +1929,18 @@ QED
 (*function symbol output cannot have extra variables than its argument, since we want to restrict to talk about inst where
 each var has a value. *)
 
-Theorem wfcod_no_bound0:
-  wfcod Σf σ ⇒ ∀x. x ∈  FDOM σ ⇒ tbounds (σ ' x) = {}
+Theorem wfcod_no_bon0:
+  wfcod Σf σ ⇒ ∀x. x ∈  FDOM σ ⇒ tbons (σ ' x) = {}
 Proof
   rw[wfcod_def] >> Cases_on ‘x’ >>
-  first_x_assum drule >> metis_tac[wft_no_bound]
+  first_x_assum drule >> metis_tac[wft_no_bon]
 QED  
 
 
-Theorem wfcod_no_bound:
-  wfcod Σf σ ⇒ no_bound σ
+Theorem wfcod_no_bon:
+  wfcod Σf σ ⇒ no_bon σ
 Proof
-  rw[no_bound_def] >>  irule wfcod_no_bound0 >>
+  rw[no_bon_def] >>  irule wfcod_no_bon0 >>
   metis_tac[]
 QED
 
@@ -1943,15 +1958,15 @@ simp[] >> rw[MAP_MAP_o] >>
  (o_vmap σ x)’
  suffices_by metis_tac[] >>
 irule tlmatch_tinst_imp_SOME_FEMPTY >>
-simp[FDOM_o_vmap,FEMPTY_no_bound] >>
-‘no_bound x’
-  by metis_tac[FEMPTY_no_bound,tmatch_no_bound]>>
-‘no_bound (o_vmap σ x)’
-  by (irule o_vmap_no_bound >> metis_tac[wfcod_no_bound])>>
+simp[FDOM_o_vmap,FEMPTY_no_bon] >>
+‘no_bon x’
+  by metis_tac[FEMPTY_no_bon,tmatch_no_bon]>>
+‘no_bon (o_vmap σ x)’
+  by (irule o_vmap_no_bon >> metis_tac[wfcod_no_bon])>>
 simp[] >>
 ‘cstt (o_vmap σ x)’
   by (irule o_vmap_cstt >> simp[PULL_EXISTS] >>
-     ‘no_bound σ’ by  metis_tac[wfcod_no_bound] >>
+     ‘no_bon σ’ by  metis_tac[wfcod_no_bon] >>
      simp[] >>
      ‘complete x’
       by metis_tac[FEMPTY_complete,tlmatch_complete] >>
@@ -2019,14 +2034,14 @@ Proof
  metis_tac[]) >> metis_tac[]) >>
  irule tlmatch_tinst_imp_SOME_FEMPTY >>
  simp[] >>
- ‘no_bound x’
-  by metis_tac[FEMPTY_no_bound,tmatch_no_bound]>>
- simp[FEMPTY_no_bound] >>
- ‘no_bound (o_vmap σ x)’
-  by (irule o_vmap_no_bound >> metis_tac[wfcod_no_bound]) >>
+ ‘no_bon x’
+  by metis_tac[FEMPTY_no_bon,tmatch_no_bon]>>
+ simp[FEMPTY_no_bon] >>
+ ‘no_bon (o_vmap σ x)’
+  by (irule o_vmap_no_bon >> metis_tac[wfcod_no_bon]) >>
  ‘cstt (o_vmap σ x)’
   by (irule o_vmap_cstt >> simp[PULL_EXISTS] >>
-     ‘no_bound σ’ by  metis_tac[wfcod_no_bound] >>
+     ‘no_bon σ’ by  metis_tac[wfcod_no_bon] >>
      gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> rw[] >>
      last_x_assum irule >> qexists ‘t’ >> simp[] >>
      Cases_on ‘x'’ >> Cases_on ‘x''’ >>
@@ -2110,15 +2125,15 @@ gs[MAP_EQ_f]
 QED
 
 Theorem trpl_id:
-(∀t i new. i ∉ tbounds t ⇒ trpl i new t = t) ∧
-∀st i new. i ∉ sbounds st ⇒ srpl i new st = st
+(∀t i new. i ∉ tbons t ⇒ trpl i new t = t) ∧
+∀st i new. i ∉ sbons st ⇒ srpl i new st = st
 Proof
 ho_match_mp_tac better_tm_induction >> rw[] (* 4 *)
->- (gs[trpl_def,tbounds_def])
->- (gs[trpl_def,tbounds_def,MEM_MAP] >> rw[MAP_fix] >>
+>- (gs[trpl_def,tbons_def])
+>- (gs[trpl_def,tbons_def,MEM_MAP] >> rw[MAP_fix] >>
     metis_tac[])
->- gs[trpl_def,tbounds_def] >>
-gs[trpl_def,tbounds_def,MEM_MAP] >> rw[MAP_fix] >>
+>- gs[trpl_def,tbons_def] >>
+gs[trpl_def,tbons_def,MEM_MAP] >> rw[MAP_fix] >>
 metis_tac[]
 QED
 
@@ -2133,7 +2148,7 @@ Definition wfabsap_def:
   (wfabsap Σf [] [] ⇔ T) ∧
   (wfabsap Σf (s:: sl) (t :: tl) ⇔
   (∀n0 s0 st. MEM st sl ∧ (n0,s0) ∈ sfv st ⇒
-              sbounds s0 = {}) ∧
+              sbons s0 = {}) ∧
   wft Σf t ∧ s = sort_of t ∧ wfs Σf s ∧ wfabsap Σf (specsl 0 t sl) tl) ∧
   (wfabsap Σf (s:: sl) [] ⇔ F) ∧
   (wfabsap Σf [] (t :: tl) ⇔ F)
@@ -2141,7 +2156,7 @@ End
 
 
 Definition ok_abs_def:
-  ok_abs sl = ∀n. n < LENGTH sl ⇒ sbounds (EL n sl) ⊆ count n
+  ok_abs sl = ∀n. n < LENGTH sl ⇒ sbons (EL n sl) ⊆ count n
 End
              
            
@@ -2161,11 +2176,11 @@ End
         
 
 Theorem tshift_id:
-(∀tm n.tbounds tm = {} ⇒ tshift n tm = tm) ∧
-(∀st n.sbounds st = {} ⇒ sshift n st = st)
+(∀tm n.tbons tm = {} ⇒ tshift n tm = tm) ∧
+(∀st n.sbons st = {} ⇒ sshift n st = st)
 Proof
 ho_match_mp_tac better_tm_induction >>
-gs[tbounds_thm,tshift_def,MAP_fix,EXTENSION] >> rw[](* 2 *)
+gs[tbons_thm,tshift_def,MAP_fix,EXTENSION] >> rw[](* 2 *)
 >> metis_tac[]
 QED
 
@@ -2181,29 +2196,29 @@ mk_bmap tl = FUN_FMAP (λn. EL n tl) (count (LENGTH tl))
 End
 
 Theorem Bound_tsubtm:
-(∀t. Bound i ∈ tsubtm t ⇔ i ∈ tbounds t) ∧
-(∀s. Bound i ∈ ssubtm s ⇔ i ∈ sbounds s)
+(∀t. Bound i ∈ tsubtm t ⇔ i ∈ tbons t) ∧
+(∀s. Bound i ∈ ssubtm s ⇔ i ∈ sbons s)
 Proof
 ho_match_mp_tac better_tm_induction >>
-rw[tsubtm_def,tbounds_thm,MEM_MAP] >> metis_tac[]
+rw[tsubtm_def,tbons_thm,MEM_MAP] >> metis_tac[]
 QED
 
 Theorem trpl_eliminate0:
 (∀tm i new.
- (∀n s.(n,s) ∈ tfv tm ⇒ sbounds s = {}) ∧
+ (∀n s.(n,s) ∈ tfv tm ⇒ sbons s = {}) ∧
  (Bound i) ∉ tsubtm new ⇒
  (Bound i) ∉ tsubtm (trpl i new tm)) ∧
 (∀st i new.
-  (∀n s.(n,s) ∈ sfv st ⇒ sbounds s = {}) ∧
+  (∀n s.(n,s) ∈ sfv st ⇒ sbons s = {}) ∧
   (Bound i) ∉ tsubtm new ⇒
  (Bound i) ∉ ssubtm (srpl i new st))
 Proof
 ho_match_mp_tac better_tm_induction >>
-gs[tsubtm_def,trpl_def,MEM_MAP,tbounds_thm,Bound_tsubtm] >> rw[] (* 4 *)
+gs[tsubtm_def,trpl_def,MEM_MAP,tbons_thm,Bound_tsubtm] >> rw[] (* 4 *)
 >- (Cases_on ‘i ∉ s'’ >> simp[] >> gs[] >> rw[] >>
    metis_tac[])
 >- metis_tac[]
->- rw[tbounds_thm] >>
+>- rw[tbons_thm] >>
 Cases_on ‘i ∉ s'’ >> simp[] >> gs[] >> rw[] >>
 metis_tac[]
 QED
@@ -2215,27 +2230,27 @@ QED
 
 Theorem trpl_eliminate:
 (∀tm i new.
-   (∀n s.(n,s) ∈ tfv tm ⇒ sbounds s = {}) ∧
-   tbounds new = {} ⇒
-  tbounds (trpl i new tm) = tbounds tm DELETE i) ∧
+   (∀n s.(n,s) ∈ tfv tm ⇒ sbons s = {}) ∧
+   tbons new = {} ⇒
+  tbons (trpl i new tm) = tbons tm DELETE i) ∧
 (∀st i new.
-  (∀n s.(n,s) ∈ sfv st ⇒ sbounds s = {}) ∧
-  tbounds new = {}  ⇒
-  sbounds (srpl i new st) = sbounds st DELETE i)
+  (∀n s.(n,s) ∈ sfv st ⇒ sbons s = {}) ∧
+  tbons new = {}  ⇒
+  sbons (srpl i new st) = sbons st DELETE i)
 Proof
 ho_match_mp_tac better_tm_induction >>
-simp[tbounds_thm,trpl_def,MEM_MAP] >> rw[tbounds_thm] (* 3 *)
->- (‘{tbounds t | (∃a. t = trpl i new a ∧ MEM a l)} =
-    {tbounds t DELETE i | MEM t l}’
+simp[tbons_thm,trpl_def,MEM_MAP] >> rw[tbons_thm] (* 3 *)
+>- (‘{tbons t | (∃a. t = trpl i new a ∧ MEM a l)} =
+    {tbons t DELETE i | MEM t l}’
     by (rw[Once EXTENSION,PULL_EXISTS] >>
         metis_tac[]) >>
     simp[] >>
-    ‘sbounds (srpl i new st) = sbounds st DELETE i’
+    ‘sbons (srpl i new st) = sbons st DELETE i’
     by metis_tac[] >> simp[] >> 
     rw[Once EXTENSION,PULL_EXISTS] >> metis_tac[])
 >- rw[Once EXTENSION] >>
-‘BIGUNION {tbounds t | (∃a. t = trpl i new a ∧ MEM a l)} =
-   BIGUNION {tbounds t DELETE i | MEM t l}’
+‘BIGUNION {tbons t | (∃a. t = trpl i new a ∧ MEM a l)} =
+   BIGUNION {tbons t DELETE i | MEM t l}’
     by (rw[Once EXTENSION] >> metis_tac[]) >>
     simp[] >> rw[Once EXTENSION,PULL_EXISTS] >> metis_tac[]
 QED    
@@ -2307,7 +2322,7 @@ QED
 
 
 Theorem tfv_tinst_SUBSET_lemma:
-  cstt σ ∧  no_bound σ ∧
+  cstt σ ∧  no_bon σ ∧
   (∀x. x ∈ FDOM σ ⇒ tfv (σ ' x) ⊆ s) ∧
   tfv t ⊆ FDOM σ ⇒
   tfv (tinst σ t) ⊆ s
@@ -2323,7 +2338,7 @@ QED
 
 Theorem tlmatch_EMPTY_TRANS_lemma:
   cstt σ1 ∧ cstt σ2 ∧ complete σ1 ∧
-  no_bound σ1 ∧ no_bound σ2 ∧
+  no_bon σ1 ∧ no_bon σ2 ∧
   (∀x. x ∈ FDOM σ1 ⇒ tfv (σ1 ' x) ⊆ FDOM σ2) ∧
   FDOM σ1 = BIGUNION {tfv t | MEM t farg}
   ⇒
@@ -2335,8 +2350,8 @@ Proof
   simp[FDOM_o_vmap] >> 
   ‘cstt (o_vmap σ2 σ1)’
    by (irule o_vmap_cstt >> simp[]) >>
-  rw[] >> simp[FEMPTY_no_bound] >>
-  rev_drule_then assume_tac o_vmap_no_bound >>
+  rw[] >> simp[FEMPTY_no_bon] >>
+  rev_drule_then assume_tac o_vmap_no_bon >>
   gs[] >> rw[] >>
   drule (INST_TYPE [beta |-> “:term”] EL_MAP) >> rw[] >>
   irule $ cj 1 inst_o_vmap >>
@@ -2364,8 +2379,8 @@ Proof
  rw[MAP_MAP_o] >>
  irule tlmatch_EMPTY_TRANS_lemma >>
  simp[PULL_EXISTS,SUBSET_DEF,MEM_MAP,PULL_EXISTS] >>
- drule_then assume_tac tlmatch_no_bound_FEMPTY >>
- rev_drule_then assume_tac tlmatch_no_bound_FEMPTY >>
+ drule_then assume_tac tlmatch_no_bon_FEMPTY >>
+ rev_drule_then assume_tac tlmatch_no_bon_FEMPTY >>
  rw[] >> qexists ‘t’ >> simp[] >>
  rev_drule $ cj 1 tfv_sinst >> rw[] >>
  Cases_on ‘x'’ >>
@@ -2475,7 +2490,7 @@ Proof
 ho_match_mp_tac better_tm_induction >>
 rw[tsubtm_def,tsstt_def,tsubtm_REFL] (* 4 *)
 >- (Cases_on ‘Var s0 s = t1’ >> rw[tsubtm_REFL] >>
-   irule ssubtm_tsubtm >> simp[is_bound_def,sort_of_def])
+   irule ssubtm_tsubtm >> simp[is_bon_def,sort_of_def])
 >- (Cases_on ‘Fn s0 s l = t1’ >> rw[tsubtm_REFL] >>
    rw[tsubtm_def])
 >- (Cases_on ‘Fn s0 s l = t1’ >> rw[tsubtm_REFL] >>
@@ -3448,12 +3463,12 @@ QED
 
 
 
-Theorem wft_tbounds:
-(∀t. wft Σf t ⇒ tbounds t = {}) ∧
-(∀s. wfs Σf s ⇒ sbounds s = {})
+Theorem wft_tbons:
+(∀t. wft Σf t ⇒ tbons t = {}) ∧
+(∀s. wfs Σf s ⇒ sbons s = {})
 Proof
 ho_match_mp_tac better_tm_induction >>
-simp[wft_def,tbounds_thm] >> rw[] (* 2 *) 
+simp[wft_def,tbons_thm] >> rw[] (* 2 *) 
 >- (Cases_on ‘l’ >> gs[] >> 
     disj2_tac >> rw[Once EXTENSION] >>
     metis_tac[]) >>
@@ -3484,15 +3499,15 @@ simp[tfv_thm,tsubtm_def,MEM_MAP] >> rw[] (* 5 *)
 >> metis_tac[]
 QED
 
-Theorem wfabsap_sfv_sbounds:
+Theorem wfabsap_sfv_sbons:
   wfabsap Σf sl tl ⇒
   (∀n0 s0 st. MEM st sl ∧ (n0,s0) ∈ sfv st ⇒
-              sbounds s0 = {})
+              sbons s0 = {})
 Proof
 Cases_on ‘sl’ >> Cases_on ‘tl’ >> simp[wfabsap_def] >>
 rw[] (* 2 *)
 >- (CCONTR_TAC >> gs[GSYM MEMBER_NOT_EMPTY] >>
-   drule_then assume_tac $ cj 2 wft_tbounds>>
+   drule_then assume_tac $ cj 2 wft_tbons>>
    Cases_on ‘h'’ >> gs[wft_def,sort_of_def] (* 2 *)
    >> (gs[GSYM Bound_tsubtm]  >>
       drule_all_then assume_tac $ cj 2 tfv_tsubtm_closed >>
@@ -3511,13 +3526,13 @@ QED
 
         
 
-Theorem specsl_sbounds:
+Theorem specsl_sbons:
  ∀sl n t i.
  (∀n s st. (n,s) ∈ sfv st ∧ MEM st sl ⇒
-           sbounds s = {}) ∧
- tbounds t = {} ∧ n < LENGTH sl ⇒
- sbounds (EL n (specsl i t sl)) =
- sbounds (EL n sl) DELETE (n + i)
+           sbons s = {}) ∧
+ tbons t = {} ∧ n < LENGTH sl ⇒
+ sbons (EL n (specsl i t sl)) =
+ sbons (EL n sl) DELETE (n + i)
 Proof
  Induct_on ‘sl’ >> rw[] >>
  Cases_on ‘n < LENGTH sl’ >> simp[specsl_def] (* 2 *)
@@ -3539,14 +3554,14 @@ QED
         
 
 
-Theorem specsl_sbounds_SUBSET:
+Theorem specsl_sbons_SUBSET:
  ∀sl n t i.
  (∀n s st. (n,s) ∈ sfv st ∧ MEM st sl ⇒
-           sbounds s = {}) ∧ tbounds t = {} ∧ n < LENGTH sl ⇒
- sbounds (EL n sl) ⊆
- sbounds (EL n (specsl i t sl)) ∪ {n + i}
+           sbons s = {}) ∧ tbons t = {} ∧ n < LENGTH sl ⇒
+ sbons (EL n sl) ⊆
+ sbons (EL n (specsl i t sl)) ∪ {n + i}
 Proof
- rw[] >> drule_all_then assume_tac specsl_sbounds >>
+ rw[] >> drule_all_then assume_tac specsl_sbons >>
  gs[SUBSET_DEF,EXTENSION]
 QED 
 
@@ -3562,20 +3577,20 @@ Proof
  Induct_on ‘sl’ >> simp[wfabsap_def] >> rw[] >>
  rename [‘wfabsap Σf (specsl 0 t sl) tl’] >>
  first_x_assum $ drule_then assume_tac >>
- ‘sbounds (sort_of t) = {}’ by metis_tac[wft_no_bound] >>
+ ‘sbons (sort_of t) = {}’ by metis_tac[wft_no_bon] >>
  rw[ok_abs_def] >>
  Cases_on ‘n’ >> gs[] >>
  rename [‘n < LENGTH sl’] >>
  irule SUBSET_TRANS >>
- irule_at Any specsl_sbounds_SUBSET >>
+ irule_at Any specsl_sbons_SUBSET >>
  simp[] >>
  qexistsl [‘t’,‘0’] >> simp[] >>
- ‘sbounds (EL n (specsl 0 t sl)) ⊆ count (SUC n)’
+ ‘sbons (EL n (specsl 0 t sl)) ⊆ count (SUC n)’
    by (gs[ok_abs_def,LENGTH_specsl] >>
       first_x_assum $ drule_then assume_tac >>
       irule SUBSET_TRANS >> first_x_assum $ irule_at Any >>
       rw[SUBSET_DEF]) >> simp[] >>
- metis_tac[wft_no_bound]
+ metis_tac[wft_no_bon]
 QED 
                 
 
@@ -3592,14 +3607,14 @@ QED
 
 Theorem sinst_srpl:
 (∀tm i t σ.
-(∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = {}) ∧
-(∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = {}) ∧
+(∀n s. (n,s) ∈ tfv tm ⇒ sbons s = {}) ∧
+(∀v. v ∈ FDOM σ ⇒ tbons (σ ' v) = {}) ∧
 tfv tm ⊆ FDOM σ ⇒
 tinst σ (trpl i t tm) =
 trpl i (tinst σ t) (tinst σ tm)) ∧
 (∀st i t σ.
-(∀n s. (n,s) ∈ sfv st ⇒ sbounds s = {}) ∧
-(∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = {}) ∧
+(∀n s. (n,s) ∈ sfv st ⇒ sbons s = {}) ∧
+(∀v. v ∈ FDOM σ ⇒ tbons (σ ' v) = {}) ∧
 sfv st ⊆ FDOM σ ⇒
 sinst σ (srpl i t st) =
 srpl i (tinst σ t) (sinst σ st))
@@ -3607,7 +3622,7 @@ Proof
 ho_match_mp_tac better_tm_induction >>
 rw[] (* 4 *)
 >- (‘(trpl i t (Var s0 st)) = (Var s0 st)’
-    by (irule $ cj 1 trpl_id >> gs[tbounds_def]) >>
+    by (irule $ cj 1 trpl_id >> gs[tbons_def]) >>
    simp[] >>
    rw[Once EQ_SYM_EQ] >>
    irule $ cj 1 trpl_id >>
@@ -3627,7 +3642,7 @@ QED
         
 
 Theorem ok_abs_HD:
-ok_abs (s:: sl) ⇒ sbounds s = {}
+ok_abs (s:: sl) ⇒ sbons s = {}
 Proof
 rw[ok_abs_def] >>
 first_x_assum (qspecl_then [‘0’] assume_tac) >> gs[]
@@ -3636,8 +3651,8 @@ QED
 
 Theorem MAP_sinst_specsl:
 ∀sl i t σ.
-(∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = ∅) ∧
-(∀n s st. MEM st sl ∧ (n,s) ∈ sfv st ⇒ sbounds s = ∅) ∧
+(∀v. v ∈ FDOM σ ⇒ tbons (σ ' v) = ∅) ∧
+(∀n s st. MEM st sl ∧ (n,s) ∈ sfv st ⇒ sbons s = ∅) ∧
 BIGUNION {sfv s | MEM s sl} ⊆ FDOM σ  ⇒
 MAP (sinst σ) (specsl i t sl) =
 specsl i (tinst σ t) (MAP (sinst σ) sl)
@@ -3645,7 +3660,7 @@ Proof
 Induct_on ‘sl’ >> simp[specsl_def] >>
 rw[] (* 2 *)
 >- (irule $ cj 2 sinst_srpl >>
-   gs[no_bound_def] >> gs[SUBSET_DEF] >>
+   gs[no_bon_def] >> gs[SUBSET_DEF] >>
    metis_tac[]) >>
 first_x_assum irule >> gs[SUBSET_DEF] >> metis_tac[]
 QED
@@ -3664,23 +3679,23 @@ QED
  
 
 Theorem tfv_trpl:
- (∀t i new. i ∈ tbounds t ∧
-            (∀n0 s0. (n0,s0) ∈ tfv t ⇒ sbounds s0 = ∅) ⇒
+ (∀t i new. i ∈ tbons t ∧
+            (∀n0 s0. (n0,s0) ∈ tfv t ⇒ sbons s0 = ∅) ⇒
            tfv (trpl i new t) = tfv new ∪ tfv t) ∧
- (∀s i new. i ∈ sbounds s ∧
-            (∀n0 s0. (n0,s0) ∈ sfv s ⇒ sbounds s0 = ∅) ⇒
+ (∀s i new. i ∈ sbons s ∧
+            (∀n0 s0. (n0,s0) ∈ sfv s ⇒ sbons s0 = ∅) ⇒
            sfv (srpl i new s) = tfv new ∪ sfv s)
 Proof
  ho_match_mp_tac better_tm_induction >>
- simp[tbounds_def,trpl_def,tfv_thm,MEM_MAP] >>
+ simp[tbons_def,trpl_def,tfv_thm,MEM_MAP] >>
  rw[] (* 4 *)
- >- (‘sbounds s = ∅’ by metis_tac[] >>
+ >- (‘sbons s = ∅’ by metis_tac[] >>
      gs[GSYM MEMBER_NOT_EMPTY])
  >- (gs[PULL_EXISTS] >>
     ‘BIGUNION {tfv t | (∃a. t = trpl i new a ∧ MEM a l)} =   tfv new ∪ BIGUNION {tfv t | MEM t l}’
      by (rw[Once EXTENSION,PULL_EXISTS] >>
         rw[EQ_IMP_THM] (* 3 *)
-        >- (Cases_on ‘i ∈ tbounds a'’ (* 2 *)
+        >- (Cases_on ‘i ∈ tbons a'’ (* 2 *)
            >- (‘tfv (trpl i new a') = tfv new ∪ tfv a'’
                 by (first_x_assum irule >> metis_tac[]) >>
               gs[] >> metis_tac[]) >>
@@ -3692,13 +3707,13 @@ Proof
            gs[]) >>
         qexists ‘t’ >>
         simp[] >>
-        Cases_on ‘i ∈ tbounds t’ (* 2 *)
+        Cases_on ‘i ∈ tbons t’ (* 2 *)
         >- (‘tfv (trpl i new t) = tfv new ∪ tfv t’
             by metis_tac[] >>
            simp[]) >>
         ‘(trpl i new t) = t’ by metis_tac[trpl_id] >>
         simp[]) >> 
-    Cases_on ‘i∈ sbounds s’ (* 2 *)
+    Cases_on ‘i∈ sbons s’ (* 2 *)
     >- (‘sfv (srpl i new s) = tfv new ∪ sfv s’
          by (first_x_assum irule >> metis_tac[]) >>
         simp[] >>
@@ -3706,11 +3721,11 @@ Proof
         rw[Once EXTENSION] >> metis_tac[]) >>
     ‘(srpl i new s) = s’ by metis_tac[trpl_id] >>
     simp[UNION_ASSOC])
->- (Cases_on ‘∃a. MEM a l ∧ i ∈ tbounds a’ (* 2 *)
+>- (Cases_on ‘∃a. MEM a l ∧ i ∈ tbons a’ (* 2 *)
    >- (‘BIGUNION {tfv t | (∃a. t = trpl i new a ∧ MEM a l)} =   tfv new ∪ BIGUNION {tfv t | MEM t l}’
      by (rw[Once EXTENSION,PULL_EXISTS] >>
         rw[EQ_IMP_THM] (* 3 *)
-        >- (Cases_on ‘i ∈ tbounds a'’ (* 2 *)
+        >- (Cases_on ‘i ∈ tbons a'’ (* 2 *)
            >- (‘tfv (trpl i new a') = tfv new ∪ tfv a'’
                 by (first_x_assum irule >> metis_tac[]) >>
               gs[] >> metis_tac[]) >>
@@ -3722,7 +3737,7 @@ Proof
            gs[]) >>
         qexists ‘t’ >>
         simp[] >>
-        Cases_on ‘i ∈ tbounds t’ (* 2 *)
+        Cases_on ‘i ∈ tbons t’ (* 2 *)
         >- (‘tfv (trpl i new t) = tfv new ∪ tfv t’
             by metis_tac[] >>
            simp[]) >>
@@ -3731,7 +3746,7 @@ Proof
         simp[] >> ‘sfv (srpl i new s) = tfv new ∪ sfv s’
          by (first_x_assum irule >> metis_tac[]) >>
         simp[] >> rw[EXTENSION] >> metis_tac[]) >>
-    ‘∀a. MEM a l ⇒ i ∉ tbounds a’ by metis_tac[] >>
+    ‘∀a. MEM a l ⇒ i ∉ tbons a’ by metis_tac[] >>
     ‘BIGUNION {tfv t | (∃a. t = trpl i new a ∧ MEM a l)} =
      BIGUNION {tfv t | MEM t l}’
     by (AP_TERM_TAC >> rw[Once EXTENSION] >>
@@ -3744,7 +3759,7 @@ Proof
      simp[Once EXTENSION] >> metis_tac[]) >>
 rw[Once EXTENSION,PULL_EXISTS] >>
         rw[EQ_IMP_THM] (* 3 *)
-        >- (Cases_on ‘i ∈ tbounds a'’ (* 2 *)
+        >- (Cases_on ‘i ∈ tbons a'’ (* 2 *)
            >- (‘tfv (trpl i new a') = tfv new ∪ tfv a'’
                 by (first_x_assum irule >> metis_tac[]) >>
               gs[] >> metis_tac[]) >>
@@ -3756,7 +3771,7 @@ rw[Once EXTENSION,PULL_EXISTS] >>
            gs[]) >>
         qexists ‘t’ >>
         simp[] >>
-        Cases_on ‘i ∈ tbounds t’ (* 2 *)
+        Cases_on ‘i ∈ tbons t’ (* 2 *)
         >- (‘tfv (trpl i new t) = tfv new ∪ tfv t’
             by metis_tac[] >>
            simp[]) >>
@@ -3767,19 +3782,19 @@ QED
 
 Theorem tfv_trpl_SUBSET:
  (∀t i new. 
-            (∀n0 s0. (n0,s0) ∈ tfv t ⇒ sbounds s0 = ∅) ⇒
+            (∀n0 s0. (n0,s0) ∈ tfv t ⇒ sbons s0 = ∅) ⇒
             tfv t ⊆ tfv (trpl i new t)) ∧
  (∀s i new. 
-            (∀n0 s0. (n0,s0) ∈ sfv s ⇒ sbounds s0 = ∅) ⇒
+            (∀n0 s0. (n0,s0) ∈ sfv s ⇒ sbons s0 = ∅) ⇒
            sfv s ⊆ sfv (srpl i new s))
 Proof
  rw[] (* 2 *)
- >- (Cases_on ‘i ∈ tbounds t’ 
+ >- (Cases_on ‘i ∈ tbons t’ 
     >- (drule_all_then assume_tac $ cj 1 tfv_trpl >>
     simp[]) >>
     ‘(trpl i new t)= t’  by metis_tac[trpl_id] >>
     simp[]) >>
- Cases_on ‘i ∈ sbounds s’ (* 2 *)
+ Cases_on ‘i ∈ sbons s’ (* 2 *)
  >- (drule_all_then assume_tac $ cj 2 tfv_trpl >>
      simp[]) >>
  ‘(srpl i new s)= s’  by metis_tac[trpl_id] >>
@@ -3814,7 +3829,7 @@ Proof
  rw[SUBSET_DEF] (* 2 *)
  >- (gs[PULL_EXISTS] >> qexists ‘t’ >>
     gs[] >> Cases_on ‘x’ >> irule sfv_tfv >>
-    simp[] >> CCONTR_TAC >> gs[is_bound_alt,wft_def]) >>
+    simp[] >> CCONTR_TAC >> gs[is_bon_alt,wft_def]) >>
  gs[PULL_EXISTS] >> rename [‘x ∈ sfv s’] >>
  gs[SUBSET_DEF,PULL_EXISTS] >>
  ‘∃t'. x ∈ tfv t' ∧ MEM t' tl’ suffices_by metis_tac[] >>
@@ -3831,7 +3846,7 @@ Proof
 QED 
      
 (*        
-Theorem tbounds_tinst:
+Theorem tbons_tinst:
 (∀)
 *)
 
@@ -3849,10 +3864,10 @@ strip_tac >>
 Induct_on ‘tl’
 >- (Cases_on ‘sl’ >> simp[wfabsap_def]) >>
 rw[] >> gs[] >>
-drule_then assume_tac wfabsap_sfv_sbounds >>
+drule_then assume_tac wfabsap_sfv_sbons >>
 Cases_on ‘sl’ >> gs[wfabsap_def,MEM_MAP] >>
 reverse (rw[]) (* 5 *)
->- (drule_then assume_tac wfcod_no_bound >>
+>- (drule_then assume_tac wfcod_no_bon >>
    last_x_assum
     (qspecl_then [‘(specsl 0 h t)’] assume_tac)>>
    gs[] >>
@@ -3863,7 +3878,7 @@ reverse (rw[]) (* 5 *)
    specsl 0 (tinst σ h) (MAP (sinst σ) t) ’
     by (irule MAP_sinst_specsl >> rw[] (* 3 *)
        >- metis_tac[]
-       >- gs[no_bound_def] >>
+       >- gs[no_bon_def] >>
        irule SUBSET_TRANS >>
        first_x_assum $ irule_at Any >>
        rev_drule wfabsap_sfv_SUBSET >>
@@ -3885,16 +3900,16 @@ reverse (rw[]) (* 5 *)
    irule SUBSET_TRANS >>
    qexists ‘tfv h’ >> rw[SUBSET_DEF] (* 2 *)
    >- (Cases_on ‘x’ >> irule sfv_tfv >>
-   simp[] >> CCONTR_TAC >> gs[is_bound_alt,wft_def]) >>
+   simp[] >> CCONTR_TAC >> gs[is_bon_alt,wft_def]) >>
    metis_tac[]) 
 >- (irule $ GSYM cstt_sort_of_tinst >> simp[] >>
-   drule_then assume_tac wfcod_no_bound >> simp[] >>
-   metis_tac[wft_no_bound])
+   drule_then assume_tac wfcod_no_bon >> simp[] >>
+   metis_tac[wft_no_bon])
 >- (irule $ cj 1 wft_tinst >>
    simp[] >> gs[SUBSET_DEF]) >> 
 rename [‘wfabsap Σf (specsl 0 t sl) tl’] >>
 drule_then assume_tac $ cj 2 tfv_sinst >>
-drule_then assume_tac wfcod_no_bound >> gs[] >> 
+drule_then assume_tac wfcod_no_bon >> gs[] >> 
 ‘sfv y ⊆ FDOM σ’
   by (irule SUBSET_TRANS >>
      first_x_assum $ irule_at Any >>
@@ -3915,9 +3930,9 @@ first_x_assum (qspecl_then [‘y’] assume_tac) >>
 gs[] >> rename [‘(n,st) ∈ sfv y’]  >>
 CCONTR_TAC >> gs[GSYM MEMBER_NOT_EMPTY] >>
 gs[GSYM Bound_tsubtm] >>
-‘x ∈ tbounds (σ ' (n,st))’ suffices_by
- (gs[no_bound_def] >>
- ‘tbounds (σ ' (n,st)) = ∅’
+‘x ∈ tbons (σ ' (n,st))’ suffices_by
+ (gs[no_bon_def] >>
+ ‘tbons (σ ' (n,st)) = ∅’
   suffices_by metis_tac[MEMBER_NOT_EMPTY] >>
  first_x_assum irule >> gs[SUBSET_DEF]) >>
 gs[GSYM Bound_tsubtm] >>
@@ -3927,10 +3942,10 @@ QED
        
 
 
-Definition slbounds_def:
-slbounds [] = {} ∧
-slbounds (h :: t) =
-sbounds h ∪ (IMAGE PRE (slbounds t DELETE 0))
+Definition slbons_def:
+slbons [] = {} ∧
+slbons (h :: t) =
+sbons h ∪ (IMAGE PRE (slbons t DELETE 0))
 End
 
 
@@ -3951,18 +3966,18 @@ End
 
 Theorem trpl_tabs:
 (∀tm i new n s.
-(i ∉ tbounds tm) ∧
+(i ∉ tbons tm) ∧
 (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ (n,s) ∉ sfv s1) ∧
-(∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = {}) ⇒
+(∀n s. (n,s) ∈ tfv tm ⇒ sbons s = {}) ⇒
 trpl i new (tabs (n,s) i tm) = tsubst (n,s) new tm) ∧
 (∀st i new n s.
-(i ∉ sbounds st) ∧
+(i ∉ sbons st) ∧
 (∀n1 s1. (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧
-(∀n s. (n,s) ∈ sfv st ⇒ sbounds s = {}) ⇒
+(∀n s. (n,s) ∈ sfv st ⇒ sbons s = {}) ⇒
 srpl i new (sabs (n,s) i st) = ssubst (n,s) new st)
 Proof
 ho_match_mp_tac better_tm_induction >>
-gs[tbounds_thm,trpl_def,tsubst_def,SF ETA_ss,PULL_EXISTS,tabs_def,MAP_EQ_f,MAP_MAP_o] >> rw[]
+gs[tbons_thm,trpl_def,tsubst_def,SF ETA_ss,PULL_EXISTS,tabs_def,MAP_EQ_f,MAP_MAP_o] >> rw[]
 (* 4 *)
 >- (Cases_on ‘n = s0 ∧ s = st’ >>
    simp[trpl_def]>> metis_tac[tsubst_id])
@@ -3988,8 +4003,8 @@ QED
         
 Theorem specsl_abssl:
 ∀l i n0 s0 new.
-(∀m. m < LENGTH l ⇒ i + m ∉ sbounds (EL m l)) ∧
-(∀n s st. MEM st l ∧ (n,s) ∈ sfv st ⇒ sbounds s = {}) ∧
+(∀m. m < LENGTH l ⇒ i + m ∉ sbons (EL m l)) ∧
+(∀n s st. MEM st l ∧ (n,s) ∈ sfv st ⇒ sbons s = {}) ∧
 (∀n s st. MEM st l ∧ (n,s) ∈ sfv st ⇒ (n0,s0) ∉ sfv s) ⇒
 specsl i new (abssl (n0,s0) i l) =
 MAP (ssubst (n0,s0) new) l
@@ -4007,11 +4022,11 @@ QED
 
 
 
-Theorem slbounds_sbounds:
-∀l i. i ∉ slbounds l ⇔
-      (∀m. m < LENGTH l ⇒ i + m ∉ sbounds (EL m l))
+Theorem slbons_sbons:
+∀l i. i ∉ slbons l ⇔
+      (∀m. m < LENGTH l ⇒ i + m ∉ sbons (EL m l))
 Proof
-Induct_on ‘l’ >> simp[slbounds_def] >> rw[EQ_IMP_THM] (* 3 *)
+Induct_on ‘l’ >> simp[slbons_def] >> rw[EQ_IMP_THM] (* 3 *)
 >- (Cases_on ‘m’ >> gs[] >>
 first_x_assum (qspecl_then [‘SUC i’] assume_tac) >> gs[]>>
 first_x_assum $ drule_then assume_tac >>
@@ -4027,7 +4042,7 @@ QED
 
 Theorem tinst_tsubst:
 (∀tm i σ.
-cstt σ ∧ no_bound σ ∧
+cstt σ ∧ no_bon σ ∧
 tfv tm DELETE (n,s) ⊆ FDOM σ ∧
 (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ (n,s) ∉ sfv s1) ∧
 (∀n1 s1. (n1,s1) ∈ FDOM σ ⇒ (nn,sinst σ s) ∉ tfv (σ ' (n1,s1))) ∧
@@ -4036,7 +4051,7 @@ tinst σ (tsubst (n,s) (Bound i) tm) =
 tsubst (nn,sinst σ s) (Bound i)
 (tinst (σ |+ ((n,s),Var nn (sinst σ s))) tm)) ∧
 (∀st i σ.
-cstt σ ∧ no_bound σ ∧
+cstt σ ∧ no_bon σ ∧
 sfv st DELETE (n,s) ⊆ FDOM σ ∧
 (∀n1 s1. (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧
 (∀n1 s1. (n1,s1) ∈ FDOM σ ⇒ (nn,sinst σ s) ∉ tfv (σ ' (n1,s1))) ∧
@@ -4066,7 +4081,7 @@ ho_match_mp_tac better_tm_induction >> rw[] (* 4 *)
        CCONTR_TAC >>
        qspecl_then [‘Var s0 st’,‘σ’] assume_tac $ cj 1 tfv_sinst >>
        simp[Excl "tfv_thm",Excl "tinst_def"] >>
-       ‘cstt σ ∧ tfv (Var s0 st) ⊆ FDOM σ ∧ no_bound σ’
+       ‘cstt σ ∧ tfv (Var s0 st) ⊆ FDOM σ ∧ no_bon σ’
         by gs[SUBSET_DEF]  >>
        first_x_assum $ drule_all_then assume_tac >> simp[] >>
        rw[] >>
@@ -4093,7 +4108,7 @@ QED
 
 Theorem tinst_tabs:
 (∀tm i σ.
-cstt σ ∧ no_bound σ ∧
+cstt σ ∧ no_bon σ ∧
 tfv tm DELETE (n,s) ⊆ FDOM σ ∧
 (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ (n,s) ∉ sfv s1) ∧
 (∀n1 s1. (n1,s1) ∈ FDOM σ ⇒ (nn,sinst σ s) ∉ tfv (σ ' (n1,s1))) ∧
@@ -4102,7 +4117,7 @@ tinst σ (tabs (n,s) i tm) =
 tabs (nn,sinst σ s) i
 (tinst (σ |+ ((n,s),Var nn (sinst σ s))) tm)) ∧
 (∀st i σ.
-cstt σ ∧ no_bound σ ∧
+cstt σ ∧ no_bon σ ∧
 sfv st DELETE (n,s) ⊆ FDOM σ ∧
 (∀n1 s1. (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧
 (∀n1 s1. (n1,s1) ∈ FDOM σ ⇒ (nn,sinst σ s) ∉ tfv (σ ' (n1,s1))) ∧
@@ -4132,7 +4147,7 @@ ho_match_mp_tac better_tm_induction >> rw[] (* 4 *)
        CCONTR_TAC >>
        qspecl_then [‘Var s0 st’,‘σ’] assume_tac $ cj 1 tfv_sinst >>
        simp[Excl "tfv_thm",Excl "tinst_def"] >>
-       ‘cstt σ ∧ tfv (Var s0 st) ⊆ FDOM σ ∧ no_bound σ’
+       ‘cstt σ ∧ tfv (Var s0 st) ⊆ FDOM σ ∧ no_bon σ’
         by gs[SUBSET_DEF]  >>
        first_x_assum $ drule_all_then assume_tac >> simp[] >>
        rw[] >>
@@ -4222,7 +4237,7 @@ QED
 Theorem cstt_FUPDATE:
 FINITE vs ∧
 (∀n s. (n,s) ∈ vs ⇒ (en,es) ∉ sfv s) ∧
-¬(is_bound t) ∧
+¬(is_bon t) ∧
 sort_of t = es ⇒
 cstt (cvmap vs |+ ((en,es),t))
 Proof 
@@ -4251,117 +4266,117 @@ Proof
 QED 
 
 
-Theorem slbounds_specsl_DELETE:
+Theorem slbons_specsl_DELETE:
   ∀sl i t.
-  (∀n s st. MEM st sl ∧ (n,s) ∈ sfv st ⇒ sbounds s = ∅)  ∧
-  tbounds t = {} ⇒
-  slbounds (specsl i t sl) =
-  slbounds sl DELETE i
+  (∀n s st. MEM st sl ∧ (n,s) ∈ sfv st ⇒ sbons s = ∅)  ∧
+  tbons t = {} ⇒
+  slbons (specsl i t sl) =
+  slbons sl DELETE i
 Proof
-Induct_on ‘sl’ >- simp[slbounds_def,specsl_def] >>
+Induct_on ‘sl’ >- simp[slbons_def,specsl_def] >>
 rw[] >> first_x_assum $ drule_at_then Any assume_tac>>
-‘slbounds (specsl (i+1) t sl) = slbounds sl DELETE (i+1)’
+‘slbons (specsl (i+1) t sl) = slbons sl DELETE (i+1)’
  by metis_tac[] >> 
-simp[slbounds_def,specsl_def] >>
-‘IMAGE PRE (slbounds sl DELETE (i + 1) DELETE 0) =
- IMAGE PRE (slbounds sl DELETE 0) DELETE i’
+simp[slbons_def,specsl_def] >>
+‘IMAGE PRE (slbons sl DELETE (i + 1) DELETE 0) =
+ IMAGE PRE (slbons sl DELETE 0) DELETE i’
   by
   (rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
    >- metis_tac[] >- (Cases_on ‘x'’ >> gs[]) >>
    qexists ‘x'’ >> simp[]) >>
 simp[] >>
 drule_at_then Any assume_tac $ cj 2 trpl_eliminate >>
-‘sbounds (srpl i t h) = sbounds h DELETE i’ by metis_tac[] >>
+‘sbons (srpl i t h) = sbons h DELETE i’ by metis_tac[] >>
 simp[] >> rw[EXTENSION] >> metis_tac[]
 QED
 
 
 
-Theorem wfabsap_slbounds:
-  ∀tl sl. wfabsap Σf sl tl ⇒ slbounds sl = ∅
+Theorem wfabsap_slbons:
+  ∀tl sl. wfabsap Σf sl tl ⇒ slbons sl = ∅
 Proof
 Induct_on ‘tl’ (* 2 *)
->- (Cases_on ‘sl’ >> simp[slbounds_def,wfabsap_def]) >>
-Cases_on ‘sl’ >> simp[slbounds_def,wfabsap_def] >>
+>- (Cases_on ‘sl’ >> simp[slbons_def,wfabsap_def]) >>
+Cases_on ‘sl’ >> simp[slbons_def,wfabsap_def] >>
 rw[] (* 2 *)
->- metis_tac[wft_no_bound] >>
+>- metis_tac[wft_no_bon] >>
 rename [‘(specsl 0 t sl)’] >>
 first_x_assum $ drule_then assume_tac >>
-metis_tac[slbounds_specsl_DELETE,wft_no_bound] 
+metis_tac[slbons_specsl_DELETE,wft_no_bon] 
 QED
 
 
-Theorem tsubst_tbounds_in:
+Theorem tsubst_tbons_in:
   (∀tm n s i.
      (n,s) ∈ tfv tm ⇒
-     i ∈ tbounds (tsubst (n,s) (Bound i) tm)) ∧
+     i ∈ tbons (tsubst (n,s) (Bound i) tm)) ∧
   (∀st n s i.
      (n,s) ∈ sfv st ⇒
-     i ∈ sbounds (ssubst (n,s) (Bound i) st))
+     i ∈ sbons (ssubst (n,s) (Bound i) st))
 Proof     
 ho_match_mp_tac better_tm_induction >>
-simp[tbounds_thm,tsubst_def,tfv_thm,MEM_MAP,PULL_EXISTS] >>
+simp[tbons_thm,tsubst_def,tfv_thm,MEM_MAP,PULL_EXISTS] >>
 rw[] (* 5 *)
->- rw[tbounds_thm]
->- (Cases_on ‘n = s0 ∧ s = st’ >> simp[tbounds_thm])
+>- rw[tbons_thm]
+>- (Cases_on ‘n = s0 ∧ s = st’ >> simp[tbons_thm])
 >> metis_tac[]
 QED        
 
 
-Theorem tbounds_tsubst_SUBSET:
+Theorem tbons_tsubst_SUBSET:
   (∀tm n s i.
-     (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbounds s1 = {}) ⇒ 
-     tbounds tm ⊆ tbounds (tsubst (n,s) (Bound i) tm)) ∧
+     (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbons s1 = {}) ⇒ 
+     tbons tm ⊆ tbons (tsubst (n,s) (Bound i) tm)) ∧
   (∀st n s i.
-     (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbounds s1 = {}) ⇒ 
-     sbounds st ⊆ sbounds (ssubst (n,s) (Bound i) st))
+     (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbons s1 = {}) ⇒ 
+     sbons st ⊆ sbons (ssubst (n,s) (Bound i) st))
 Proof
 ho_match_mp_tac better_tm_induction >>
-rw[tbounds_thm,tsubst_def] (* 3 *)
+rw[tbons_thm,tsubst_def] (* 3 *)
 >> (gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[])
 QED 
 
 
-Theorem tbounds_tabs_SUBSET:
+Theorem tbons_tabs_SUBSET:
   (∀tm n s i.
-     (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbounds s1 = {}) ⇒ 
-     tbounds tm ⊆ tbounds (tabs (n,s) i tm)) ∧
+     (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbons s1 = {}) ⇒ 
+     tbons tm ⊆ tbons (tabs (n,s) i tm)) ∧
   (∀st n s i.
-     (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbounds s1 = {}) ⇒ 
-     sbounds st ⊆ sbounds (sabs (n,s) i st))
+     (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbons s1 = {}) ⇒ 
+     sbons st ⊆ sbons (sabs (n,s) i st))
 Proof
 ho_match_mp_tac better_tm_induction >>
-rw[tbounds_thm,tabs_def] (* 3 *)
+rw[tbons_thm,tabs_def] (* 3 *)
 >> (gs[SUBSET_DEF,MEM_MAP,PULL_EXISTS] >> metis_tac[])
 QED     
 
-Theorem tbounds_tsubst:
+Theorem tbons_tsubst:
  (∀tm n s i.
  (n,s) ∈ tfv tm ∧
- (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbounds s1 = {}) ⇒
- tbounds (tsubst (n,s) (Bound i) tm) =
- {i} ∪ tbounds tm) ∧
+ (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbons s1 = {}) ⇒
+ tbons (tsubst (n,s) (Bound i) tm) =
+ {i} ∪ tbons tm) ∧
  (∀st n s i.
  (n,s) ∈ sfv st ∧
- (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbounds s1 = {}) ⇒
- sbounds (ssubst (n,s) (Bound i) st) =
- {i} ∪ sbounds st)              
+ (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbons s1 = {}) ⇒
+ sbons (ssubst (n,s) (Bound i) st) =
+ {i} ∪ sbons st)              
 Proof             
  ho_match_mp_tac better_tm_induction >>
- simp[tbounds_thm,tsubst_def,tfv_thm,PULL_EXISTS,
+ simp[tbons_thm,tsubst_def,tfv_thm,PULL_EXISTS,
       MEM_MAP] >>
  rw[] (* 5 *)
- >- rw[tbounds_thm]
- >- (Cases_on ‘n = s0 ∧ s = st’ >> simp[tbounds_thm] >>
-    ‘sbounds st = {}’ by metis_tac[] >> gs[] >>
+ >- rw[tbons_thm]
+ >- (Cases_on ‘n = s0 ∧ s = st’ >> simp[tbons_thm] >>
+    ‘sbons st = {}’ by metis_tac[] >> gs[] >>
     first_x_assum irule >> metis_tac[])
- >- (‘BIGUNION {tbounds t | (∃a. t = tsubst (n,s) (Bound i) a ∧ MEM a l)} =
-     {i} ∪ BIGUNION {tbounds t | MEM t l}’
+ >- (‘BIGUNION {tbons t | (∃a. t = tsubst (n,s) (Bound i) a ∧ MEM a l)} =
+     {i} ∪ BIGUNION {tbons t | MEM t l}’
      by
      (rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
       >- (Cases_on ‘(n,s) ∈ tfv a’ (* 2 *)
-          >- (‘tbounds (tsubst (n,s) (Bound i) a) =
-              {i} ∪ tbounds a’
+          >- (‘tbons (tsubst (n,s) (Bound i) a) =
+              {i} ∪ tbons a’
                by (first_x_assum irule >> metis_tac[]) >>
               pop_assum SUBST_ALL_TAC >> gs[UNION_DEF] >>
               metis_tac[]) >>
@@ -4370,26 +4385,26 @@ Proof
           irule $ cj 1 tsubst_id >> metis_tac[])
       >- (gs[PULL_EXISTS,EXTENSION] >> metis_tac[]) >>
       gs[PULL_EXISTS] >> qexists ‘t'’ >> simp[] >>
-      ‘tbounds t' ⊆ tbounds (tsubst (n,s) (Bound i) t')’
+      ‘tbons t' ⊆ tbons (tsubst (n,s) (Bound i) t')’
        suffices_by metis_tac[SUBSET_DEF] >>
-      irule $ cj 1 tbounds_tsubst_SUBSET >>
+      irule $ cj 1 tbons_tsubst_SUBSET >>
       metis_tac[]) >>
      simp[] >>
      Cases_on ‘(n,s) ∈ sfv st’ (* 2 *)
      >- (gs[EXTENSION] >> metis_tac[]) >>
      gs[EXTENSION] >> metis_tac[tsubst_id])
->- (‘sbounds (ssubst (n,s) (Bound i) st) =
-    {i} ∪ sbounds st’
+>- (‘sbons (ssubst (n,s) (Bound i) st) =
+    {i} ∪ sbons st’
      by metis_tac[] >> simp[] >>
    Cases_on ‘∃t1. MEM t1 l ∧ (n,s) ∈ tfv t1’ (* 2 *) 
    >- (gs[] >>
-       ‘BIGUNION {tbounds t | (∃a. t = tsubst (n,s) (Bound i) a ∧ MEM a l)} =
-        {i} ∪ BIGUNION {tbounds t | MEM t l}’
+       ‘BIGUNION {tbons t | (∃a. t = tsubst (n,s) (Bound i) a ∧ MEM a l)} =
+        {i} ∪ BIGUNION {tbons t | MEM t l}’
      by
      (rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
       >- (Cases_on ‘(n,s) ∈ tfv a’ (* 2 *)
-          >- (‘tbounds (tsubst (n,s) (Bound i) a) =
-              {i} ∪ tbounds a’
+          >- (‘tbons (tsubst (n,s) (Bound i) a) =
+              {i} ∪ tbons a’
                by (first_x_assum irule >> metis_tac[]) >>
               pop_assum SUBST_ALL_TAC >> gs[UNION_DEF] >>
               metis_tac[]) >>
@@ -4398,19 +4413,19 @@ Proof
           irule $ cj 1 tsubst_id >> metis_tac[])
       >- (gs[PULL_EXISTS,EXTENSION] >> metis_tac[]) >>
       gs[PULL_EXISTS] >> qexists ‘t’ >> simp[] >>
-      ‘tbounds t ⊆ tbounds (tsubst (n,s) (Bound i) t)’
+      ‘tbons t ⊆ tbons (tsubst (n,s) (Bound i) t)’
        suffices_by metis_tac[SUBSET_DEF] >>
-      irule $ cj 1 tbounds_tsubst_SUBSET >>
+      irule $ cj 1 tbons_tsubst_SUBSET >>
       metis_tac[])  >>
       gs[EXTENSION] >> metis_tac[]) >>
-   ‘BIGUNION {tbounds t | (∃a. t = tsubst (n,s) (Bound i) a ∧ MEM a l)} = BIGUNION {tbounds t | MEM t l}’
+   ‘BIGUNION {tbons t | (∃a. t = tsubst (n,s) (Bound i) a ∧ MEM a l)} = BIGUNION {tbons t | MEM t l}’
     by (AP_TERM_TAC >> rw[Once EXTENSION,EQ_IMP_THM] >>
        metis_tac[tsubst_id]) >>
    gs[EXTENSION] >> metis_tac[]) >>
 (rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
       >- (Cases_on ‘(n,s) ∈ tfv a’ (* 2 *)
-          >- (‘tbounds (tsubst (n,s) (Bound i) a) =
-              {i} ∪ tbounds a’
+          >- (‘tbons (tsubst (n,s) (Bound i) a) =
+              {i} ∪ tbons a’
                by (first_x_assum irule >> metis_tac[]) >>
               pop_assum SUBST_ALL_TAC >> gs[UNION_DEF] >>
               metis_tac[]) >>
@@ -4419,17 +4434,17 @@ Proof
           irule $ cj 1 tsubst_id >> metis_tac[])
       >- (gs[PULL_EXISTS,EXTENSION] >> metis_tac[]) >>
       gs[PULL_EXISTS] >> qexists ‘t'’ >> simp[] >>
-      ‘tbounds t' ⊆ tbounds (tsubst (n,s) (Bound i) t')’
+      ‘tbons t' ⊆ tbons (tsubst (n,s) (Bound i) t')’
        suffices_by metis_tac[SUBSET_DEF] >>
-      irule $ cj 1 tbounds_tsubst_SUBSET >>
+      irule $ cj 1 tbons_tsubst_SUBSET >>
       metis_tac[])
 QED                  
 
 
-Theorem IN_slbounds:
-∀l i. i ∈ slbounds l ⇔ ∃m. m < LENGTH l ∧ i + m ∈ sbounds (EL m l)
+Theorem IN_slbons:
+∀l i. i ∈ slbons l ⇔ ∃m. m < LENGTH l ∧ i + m ∈ sbons (EL m l)
 Proof
-metis_tac[slbounds_sbounds]
+metis_tac[slbons_sbons]
 QED 
 
 
@@ -4450,21 +4465,21 @@ QED
 
         
 
-Theorem tabs_tbounds_in:
+Theorem tabs_tbons_in:
   (∀tm n s i.
      (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ (n,s) ∉ sfv s1) ∧
      (n,s) ∈ tfv tm ⇒
-     i ∈ tbounds (tabs (n,s) i tm)) ∧
+     i ∈ tbons (tabs (n,s) i tm)) ∧
   (∀st n s i.
      (∀n1 s1. (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧
      (n,s) ∈ sfv st ⇒
-     i ∈ sbounds (sabs (n,s) i st))
+     i ∈ sbons (sabs (n,s) i st))
 Proof     
 ho_match_mp_tac better_tm_induction >>
-simp[tbounds_thm,tabs_def,tfv_thm,MEM_MAP,PULL_EXISTS] >>
+simp[tbons_thm,tabs_def,tfv_thm,MEM_MAP,PULL_EXISTS] >>
 rw[] (* 5 *)
->- rw[tbounds_thm]
->- (Cases_on ‘n = s0 ∧ s = st’ >> simp[tbounds_thm] >>
+>- rw[tbons_thm]
+>- (Cases_on ‘n = s0 ∧ s = st’ >> simp[tbons_thm] >>
    metis_tac[])
 >> metis_tac[]
 QED        
@@ -4480,22 +4495,22 @@ Cases_on ‘m’ >> simp[abssl_def,arithmeticTheory.ADD1]
 QED 
 
 
-Theorem tbounds_tabs:
+Theorem tbons_tabs:
  (∀tm n s i.
  (n,s) ∈ tfv tm ∧
  (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ (n,s) ∉ sfv s1) ∧
- (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbounds s1 = {}) ⇒
- tbounds (tabs (n,s) i tm) =
- {i} ∪ tbounds tm) ∧
+ (∀n1 s1. (n1,s1) ∈ tfv tm ⇒ sbons s1 = {}) ⇒
+ tbons (tabs (n,s) i tm) =
+ {i} ∪ tbons tm) ∧
  (∀st n s i.
  (n,s) ∈ sfv st ∧
  (∀n1 s1. (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧
- (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbounds s1 = {}) ⇒
- sbounds (sabs (n,s) i st) =
- {i} ∪ sbounds st)              
+ (∀n1 s1. (n1,s1) ∈ sfv st ⇒ sbons s1 = {}) ⇒
+ sbons (sabs (n,s) i st) =
+ {i} ∪ sbons st)              
 Proof
 rw[] (* 2 *)
->> metis_tac[tbounds_tsubst,tabs_tsubst]
+>> metis_tac[tbons_tsubst,tabs_tsubst]
 QED                  
 
     
@@ -4506,20 +4521,20 @@ Proof
 Induct_on ‘l’ >> simp[abssl_def]
 QED
 
-Theorem slbounds_abssl:
+Theorem slbons_abssl:
  ∀n s m i l.
  m < LENGTH l ∧ (n,s) ∈ sfv (EL m l) ∧
  (∀n1 s1 st. MEM st l ∧ (n1,s1) ∈ sfv st ⇒ (n,s) ∉ sfv s1) ∧
  (∀n1 s1. (n1,s1) ∈ BIGUNION {sfv s0 | MEM s0 l} ⇒
-          sbounds s1 = {}) ⇒
- slbounds (abssl (n,s) i l) = {i} ∪ slbounds l
+          sbons s1 = {}) ⇒
+ slbons (abssl (n,s) i l) = {i} ∪ slbons l
 Proof
  Induct_on ‘l’ >> simp[PULL_EXISTS] >> rw[EXTENSION] >>
- rw[IN_slbounds,LENGTH_abssl] >> rw[EQ_IMP_THM] (* 3 *)
+ rw[IN_slbons,LENGTH_abssl] >> rw[EQ_IMP_THM] (* 3 *)
  >- (Cases_on ‘m'’ >> gs[abssl_def] (* 2 *)
     >- (Cases_on ‘(n,s) ∈ sfv h’ (* 2 *)
-        >- (‘sbounds (sabs (n,s) i h) = {i} ∪ sbounds h’
-              by (irule $ cj 2 tbounds_tabs >>
+        >- (‘sbons (sabs (n,s) i h) = {i} ∪ sbons h’
+              by (irule $ cj 2 tbons_tabs >>
                   gs[] >> rw[] (* 3 *) >>
                   metis_tac[MEMBER_NOT_EMPTY,EXTENSION]) >>
             pop_assum SUBST_ALL_TAC >> gs[] >>
@@ -4529,8 +4544,8 @@ Proof
         gs[] >> disj2_tac>> qexists ‘0’ >> simp[]) >>
      drule_then assume_tac abssl_EL >> gs[] >>
     Cases_on ‘(n,s) ∈ sfv (EL n' l)’ (* 2 *)
-    >- (‘sbounds (sabs (n,s) (i + (n' + 1)) (EL n' l)) = {(i + (n' + 1))} ∪ sbounds (EL n' l)’
-        by (irule $ cj 2 tbounds_tabs >>
+    >- (‘sbons (sabs (n,s) (i + (n' + 1)) (EL n' l)) = {(i + (n' + 1))} ∪ sbons (EL n' l)’
+        by (irule $ cj 2 tbons_tabs >>
            metis_tac[MEMBER_NOT_EMPTY,MEM_EL]) >>
        pop_assum SUBST_ALL_TAC >>
        gs[] >> disj2_tac >>
@@ -4543,14 +4558,14 @@ Proof
     ‘m < LENGTH (h :: l)’ by simp[] >>
     drule_then assume_tac abssl_EL >>
     simp[] >>
-    irule $ cj 2 tabs_tbounds_in >> simp[] >>
+    irule $ cj 2 tabs_tbons_in >> simp[] >>
     ‘(EL m (h :: l)) = h ∨ MEM (EL m (h :: l)) l’
      suffices_by metis_tac[] >>
      ‘MEM (EL m (h :: l)) (h :: l)’ suffices_by simp[] >>
      metis_tac[MEM_EL]) >>
  qexists ‘m'’ >> simp[] >> rw[abssl_EL] >>
- ‘sbounds (EL m' (h::l)) ⊆ sbounds (sabs (n,s) (i + m') (EL m' (h::l)))’ suffices_by metis_tac[SUBSET_DEF] >>
- irule $ cj 2 tbounds_tabs_SUBSET >>
+ ‘sbons (EL m' (h::l)) ⊆ sbons (sabs (n,s) (i + m') (EL m' (h::l)))’ suffices_by metis_tac[SUBSET_DEF] >>
+ irule $ cj 2 tbons_tabs_SUBSET >>
  ‘m' < LENGTH (h :: l)’ by simp[] >>
  rw[EXTENSION] >>
  first_x_assum irule >> qexistsl [‘n1’,‘(EL m' (h::l))’] >>
@@ -4559,19 +4574,19 @@ Proof
 QED
 
 
-Theorem slbounds_slabs:
+Theorem slbons_slabs:
  ∀n s m i l.
  m < LENGTH l ∧ (n,s) ∈ sfv (EL m l) ∧
  (∀n1 s1. (n1,s1) ∈ BIGUNION {sfv s0 | MEM s0 l} ⇒
-          sbounds s1 = {}) ⇒
- slbounds (slabs (n,s) i l) = {i} ∪ slbounds l
+          sbons s1 = {}) ⇒
+ slbons (slabs (n,s) i l) = {i} ∪ slbons l
 Proof
  Induct_on ‘l’ >> simp[PULL_EXISTS] >> rw[EXTENSION] >>
- rw[IN_slbounds,LENGTH_slabs] >> rw[EQ_IMP_THM] (* 3 *)
+ rw[IN_slbons,LENGTH_slabs] >> rw[EQ_IMP_THM] (* 3 *)
  >- (Cases_on ‘m'’ >> gs[slabs_def] (* 2 *)
     >- (Cases_on ‘(n,s) ∈ sfv h’ (* 2 *)
-        >- (‘sbounds (ssubst (n,s) (Bound i) h) = {i} ∪ sbounds h’
-              by (irule $ cj 2 tbounds_tsubst >>
+        >- (‘sbons (ssubst (n,s) (Bound i) h) = {i} ∪ sbons h’
+              by (irule $ cj 2 tbons_tsubst >>
                   gs[] >> metis_tac[MEMBER_NOT_EMPTY]) >>
             pop_assum SUBST_ALL_TAC >> gs[] >>
             disj2_tac >> qexists ‘0’ >> simp[]) >>
@@ -4580,8 +4595,8 @@ Proof
         gs[] >> disj2_tac>> qexists ‘0’ >> simp[]) >>
      drule_then assume_tac slabs_EL >> gs[] >>
     Cases_on ‘(n,s) ∈ sfv (EL n' l)’ (* 2 *)
-    >- (‘sbounds (ssubst (n,s) (Bound (i + (n' + 1))) (EL n' l)) = {(i + (n' + 1))} ∪ sbounds (EL n' l)’
-        by (irule $ cj 2 tbounds_tsubst >>
+    >- (‘sbons (ssubst (n,s) (Bound (i + (n' + 1))) (EL n' l)) = {(i + (n' + 1))} ∪ sbons (EL n' l)’
+        by (irule $ cj 2 tbons_tsubst >>
            metis_tac[MEMBER_NOT_EMPTY,MEM_EL]) >>
        pop_assum SUBST_ALL_TAC >>
        gs[] >> disj2_tac >>
@@ -4594,10 +4609,10 @@ Proof
     ‘m < LENGTH (h :: l)’ by simp[] >>
     drule_then assume_tac slabs_EL >>
     simp[] >>
-    irule $ cj 2 tsubst_tbounds_in >> simp[]) >>
+    irule $ cj 2 tsubst_tbons_in >> simp[]) >>
  qexists ‘m'’ >> simp[] >> rw[slabs_EL] >>
- ‘sbounds (EL m' (h::l)) ⊆ sbounds (ssubst (n,s) (Bound (i + m')) (EL m' (h::l)))’ suffices_by metis_tac[SUBSET_DEF] >>
- irule $ cj 2 tbounds_tsubst_SUBSET >>
+ ‘sbons (EL m' (h::l)) ⊆ sbons (ssubst (n,s) (Bound (i + m')) (EL m' (h::l)))’ suffices_by metis_tac[SUBSET_DEF] >>
+ irule $ cj 2 tbons_tsubst_SUBSET >>
  ‘m' < LENGTH (h :: l)’ by simp[] >>
  rw[EXTENSION] >>
  first_x_assum irule >> qexistsl [‘n1’,‘(EL m' (h::l))’] >>
@@ -4606,52 +4621,52 @@ Proof
 QED
         
 
-Theorem BIGUNION_tbounds:
-(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbounds s1 = ∅) ∧
+Theorem BIGUNION_tbons:
+(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbons s1 = ∅) ∧
 MEM y l0 ∧ (n,s) ∈ tfv y ⇒
-BIGUNION {tbounds t | (∃y. t = tsubst (n,s) (Bound i) y ∧ MEM y l0)} =
-        {i} ∪ BIGUNION {tbounds t | MEM t l0}
+BIGUNION {tbons t | (∃y. t = tsubst (n,s) (Bound i) y ∧ MEM y l0)} =
+        {i} ∪ BIGUNION {tbons t | MEM t l0}
 Proof
 rw[] >> rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
 >- (Cases_on ‘(n,s) ∈ tfv y'’ (* 2 *)
-          >- (‘tbounds (tsubst (n,s) (Bound i) y') =
-              {i} ∪ tbounds y'’
-               by metis_tac[tbounds_tsubst] >> 
+          >- (‘tbons (tsubst (n,s) (Bound i) y') =
+              {i} ∪ tbons y'’
+               by metis_tac[tbons_tsubst] >> 
               pop_assum SUBST_ALL_TAC >> gs[UNION_DEF] >>
               metis_tac[]) >>
           ‘tsubst (n,s) (Bound i) y' = y'’ suffices_by
             metis_tac[] >>
           irule $ cj 1 tsubst_id >> metis_tac[])
 >- (gs[PULL_EXISTS,Once EXTENSION] >>
-    qexists ‘y’ >> metis_tac[tsubst_tbounds_in]) >>
+    qexists ‘y’ >> metis_tac[tsubst_tbons_in]) >>
 gs[PULL_EXISTS] >> qexists ‘t’ >> simp[] >>
-      ‘tbounds t ⊆ tbounds (tsubst (n,s) (Bound i) t)’
+      ‘tbons t ⊆ tbons (tsubst (n,s) (Bound i) t)’
        suffices_by metis_tac[SUBSET_DEF] >>
-      irule $ cj 1 tbounds_tsubst_SUBSET >>
+      irule $ cj 1 tbons_tsubst_SUBSET >>
       metis_tac[]
 QED
-Theorem BIGUNION_tbounds:
-(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbounds s1 = ∅) ∧
+Theorem BIGUNION_tbons:
+(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbons s1 = ∅) ∧
 MEM y l0 ∧ (n,s) ∈ tfv y ⇒
-BIGUNION {tbounds t | (∃y. t = tsubst (n,s) (Bound i) y ∧ MEM y l0)} =
-        {i} ∪ BIGUNION {tbounds t | MEM t l0}
+BIGUNION {tbons t | (∃y. t = tsubst (n,s) (Bound i) y ∧ MEM y l0)} =
+        {i} ∪ BIGUNION {tbons t | MEM t l0}
 Proof
 rw[] >> rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
 >- (Cases_on ‘(n,s) ∈ tfv y'’ (* 2 *)
-          >- (‘tbounds (tsubst (n,s) (Bound i) y') =
-              {i} ∪ tbounds y'’
-               by metis_tac[tbounds_tsubst] >> 
+          >- (‘tbons (tsubst (n,s) (Bound i) y') =
+              {i} ∪ tbons y'’
+               by metis_tac[tbons_tsubst] >> 
               pop_assum SUBST_ALL_TAC >> gs[UNION_DEF] >>
               metis_tac[]) >>
           ‘tsubst (n,s) (Bound i) y' = y'’ suffices_by
             metis_tac[] >>
           irule $ cj 1 tsubst_id >> metis_tac[])
 >- (gs[PULL_EXISTS,Once EXTENSION] >>
-    qexists ‘y’ >> metis_tac[tsubst_tbounds_in]) >>
+    qexists ‘y’ >> metis_tac[tsubst_tbons_in]) >>
 gs[PULL_EXISTS] >> qexists ‘t’ >> simp[] >>
-      ‘tbounds t ⊆ tbounds (tsubst (n,s) (Bound i) t)’
+      ‘tbons t ⊆ tbons (tsubst (n,s) (Bound i) t)’
        suffices_by metis_tac[SUBSET_DEF] >>
-      irule $ cj 1 tbounds_tsubst_SUBSET >>
+      irule $ cj 1 tbons_tsubst_SUBSET >>
       metis_tac[]
 QED
 
@@ -4659,54 +4674,54 @@ QED
 
 
 
-Theorem BIGUNION_tbounds':
+Theorem BIGUNION_tbons':
 (∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ (n,s) ∉ sfv s1) ∧
-(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbounds s1 = ∅) ∧
+(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbons s1 = ∅) ∧
 MEM y l0 ∧ (n,s) ∈ tfv y ⇒
-BIGUNION {tbounds t | (∃y. t = tabs (n,s) i y ∧ MEM y l0)} =
-        {i} ∪ BIGUNION {tbounds t | MEM t l0}
+BIGUNION {tbons t | (∃y. t = tabs (n,s) i y ∧ MEM y l0)} =
+        {i} ∪ BIGUNION {tbons t | MEM t l0}
 Proof
 rw[] >> rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
 >- (Cases_on ‘(n,s) ∈ tfv y'’ (* 2 *)
-          >- (‘tbounds (tabs (n,s) i y') =
-              {i} ∪ tbounds y'’
-               by metis_tac[tbounds_tabs] >> 
+          >- (‘tbons (tabs (n,s) i y') =
+              {i} ∪ tbons y'’
+               by metis_tac[tbons_tabs] >> 
               pop_assum SUBST_ALL_TAC >> gs[UNION_DEF] >>
               metis_tac[]) >>
           ‘tabs (n,s) i y' = y'’ suffices_by
             metis_tac[] >>
           irule $ cj 1 tabs_id >> metis_tac[])
 >- (gs[PULL_EXISTS,Once EXTENSION] >>
-    qexists ‘y’ >> metis_tac[tabs_tbounds_in]) >>
+    qexists ‘y’ >> metis_tac[tabs_tbons_in]) >>
 gs[PULL_EXISTS] >> qexists ‘t’ >> simp[] >>
-      ‘tbounds t ⊆ tbounds (tabs (n,s) i t)’
+      ‘tbons t ⊆ tbons (tabs (n,s) i t)’
        suffices_by metis_tac[SUBSET_DEF] >>
-      irule $ cj 1 tbounds_tabs_SUBSET >>
+      irule $ cj 1 tbons_tabs_SUBSET >>
       metis_tac[]
 QED
         
-Theorem BIGUNION_tbounds:
-(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbounds s1 = ∅) ∧
+Theorem BIGUNION_tbons:
+(∀n1 s1. (n1,s1) ∈ BIGUNION {tfv y | MEM y l0} ⇒ sbons s1 = ∅) ∧
 MEM y l0 ∧ (n,s) ∈ tfv y ⇒
-BIGUNION {tbounds t | (∃y. t = tsubst (n,s) (Bound i) y ∧ MEM y l0)} =
-        {i} ∪ BIGUNION {tbounds t | MEM t l0}
+BIGUNION {tbons t | (∃y. t = tsubst (n,s) (Bound i) y ∧ MEM y l0)} =
+        {i} ∪ BIGUNION {tbons t | MEM t l0}
 Proof
 rw[] >> rw[Once EXTENSION,EQ_IMP_THM] (* 3 *)
 >- (Cases_on ‘(n,s) ∈ tfv y'’ (* 2 *)
-          >- (‘tbounds (tsubst (n,s) (Bound i) y') =
-              {i} ∪ tbounds y'’
-               by metis_tac[tbounds_tsubst] >> 
+          >- (‘tbons (tsubst (n,s) (Bound i) y') =
+              {i} ∪ tbons y'’
+               by metis_tac[tbons_tsubst] >> 
               pop_assum SUBST_ALL_TAC >> gs[UNION_DEF] >>
               metis_tac[]) >>
           ‘tsubst (n,s) (Bound i) y' = y'’ suffices_by
             metis_tac[] >>
           irule $ cj 1 tsubst_id >> metis_tac[])
 >- (gs[PULL_EXISTS,Once EXTENSION] >>
-    qexists ‘y’ >> metis_tac[tsubst_tbounds_in]) >>
+    qexists ‘y’ >> metis_tac[tsubst_tbons_in]) >>
 gs[PULL_EXISTS] >> qexists ‘t’ >> simp[] >>
-      ‘tbounds t ⊆ tbounds (tsubst (n,s) (Bound i) t)’
+      ‘tbons t ⊆ tbons (tsubst (n,s) (Bound i) t)’
        suffices_by metis_tac[SUBSET_DEF] >>
-      irule $ cj 1 tbounds_tsubst_SUBSET >>
+      irule $ cj 1 tbons_tsubst_SUBSET >>
       metis_tac[]
 QED
         
@@ -4715,7 +4730,7 @@ QED
         
 
 
-Theorem NOTIN_slbounds_abssl:
+Theorem NOTIN_slbons_abssl:
  (∀s1. MEM s1 l ⇒ (n,s) ∉ sfv s1) ⇒
  (abssl (n,s) i l) = l
 Proof
@@ -4725,7 +4740,7 @@ Proof
 QED
 
 
-Theorem NOTIN_slbounds_slabs:
+Theorem NOTIN_slbons_slabs:
  (∀s1. MEM s1 l ⇒ (n,s) ∉ sfv s1) ⇒
  (slabs (n,s) i l) = l
 Proof
@@ -4940,7 +4955,7 @@ Theorem tprpl_FMAP_MAP_tabs:
    sabs (n,s) i (sprpl bmap st))
 Proof
 ho_match_mp_tac better_tm_induction >>
-simp[tbounds_def,tprpl_def,tabs_def,
+simp[tbons_def,tprpl_def,tabs_def,
      MAP_MAP_o,MAP_EQ_f,MEM_MAP] >> rw[] (* 7 *)
 >- (‘¬(n = s0 ∧ s = st)’ by metis_tac[] >> simp[])
 >- metis_tac[] 
@@ -5126,7 +5141,7 @@ Induct_on ‘l’>> rw[ok_abs_def,LENGTH_slabs](* 2 *)
   pop_assum SUBST_ALL_TAC >>
   ‘0 < LENGTH (h :: l)’ by simp[] >>
   drule_all_then assume_tac slabs_EL >> simp[] >>
-  drule_all_then assume_tac $ cj 2 tsubst_tbounds_in >>
+  drule_all_then assume_tac $ cj 2 tsubst_tbons_in >>
   metis_tac[MEMBER_NOT_EMPTY]) >>
 drule_then assume_tac $ iffLR MEM_EL>>
 gs[] >>
@@ -5135,10 +5150,10 @@ qexists ‘SUC n'’   >> simp[] >>
 drule_then assume_tac slabs_EL >>
 simp[] >>
 ‘i + SUC n' ∈
- sbounds (ssubst (n,s) (Bound (i + SUC n')) (EL n' l))’
+ sbons (ssubst (n,s) (Bound (i + SUC n')) (EL n' l))’
  suffices_by (rw[SUBSET_DEF,count_def] >>
              qexists ‘i + SUC n'’ >> simp[]) >>
-irule $ cj 2 tsubst_tbounds_in >> simp[]      
+irule $ cj 2 tsubst_tbons_in >> simp[]      
 QED            
 
 
@@ -5156,7 +5171,7 @@ Induct_on ‘l’>> rw[ok_abs_def,LENGTH_abssl](* 2 *)
   pop_assum SUBST_ALL_TAC >>
   ‘0 < LENGTH (h :: l)’ by simp[] >>
   drule_all_then assume_tac abssl_EL >> simp[] >>
-  ‘i ∈ sbounds (sabs (n,s) i h)’ by metis_tac[tabs_tbounds_in] >>
+  ‘i ∈ sbons (sabs (n,s) i h)’ by metis_tac[tabs_tbons_in] >>
   metis_tac[MEMBER_NOT_EMPTY]) >>
 drule_then assume_tac $ iffLR MEM_EL>>
 gs[] >>
@@ -5165,10 +5180,10 @@ qexists ‘SUC n'’   >> simp[] >>
 drule_then assume_tac abssl_EL >>
 simp[] >>
 ‘i + SUC n' ∈
- sbounds (sabs (n,s) (i + SUC n') (EL n' l))’
+ sbons (sabs (n,s) (i + SUC n') (EL n' l))’
  suffices_by (rw[SUBSET_DEF,count_def] >>
              qexists ‘i + SUC n'’ >> simp[]) >>
-irule $ cj 2 tabs_tbounds_in >>  metis_tac[]  
+irule $ cj 2 tabs_tbons_in >>  metis_tac[]  
 QED            
                
 
@@ -5220,16 +5235,16 @@ QED
 
 Theorem tfv_tprpl:
  (∀tm bmap.
- (∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = {}) ⇒
- tfv (tprpl bmap tm) = tfv tm ∪ BIGUNION {tfv (bmap ' i) | i|i ∈ FDOM bmap ∩ tbounds tm}) ∧
+ (∀n s. (n,s) ∈ tfv tm ⇒ sbons s = {}) ⇒
+ tfv (tprpl bmap tm) = tfv tm ∪ BIGUNION {tfv (bmap ' i) | i|i ∈ FDOM bmap ∩ tbons tm}) ∧
  (∀st bmap.
- (∀n s. (n,s) ∈ sfv st ⇒ sbounds s = {}) ⇒
- sfv (sprpl bmap st) = sfv st ∪ BIGUNION {tfv (bmap ' i) | i|i ∈ FDOM bmap ∩ sbounds st}) 
+ (∀n s. (n,s) ∈ sfv st ⇒ sbons s = {}) ⇒
+ sfv (sprpl bmap st) = sfv st ∪ BIGUNION {tfv (bmap ' i) | i|i ∈ FDOM bmap ∩ sbons st}) 
 Proof 
 ho_match_mp_tac better_tm_induction >>
-simp[tfv_thm,tprpl_def,tbounds_def,MEM_MAP] >> rw[] (* 4 *)
+simp[tfv_thm,tprpl_def,tbons_def,MEM_MAP] >> rw[] (* 4 *)
 >- (‘sfv (sprpl bmap st) =
-   sfv st ∪ BIGUNION {tfv (bmap ' i) | i| i ∈ FDOM bmap ∧ i ∈ sbounds st}’ by metis_tac[]  >>
+   sfv st ∪ BIGUNION {tfv (bmap ' i) | i| i ∈ FDOM bmap ∧ i ∈ sbons st}’ by metis_tac[]  >>
     simp[] >>
    ‘BIGUNION {tfv t | (∃a. t = tprpl bmap a ∧ MEM a l)} =
     BIGUNION {tfv (tprpl bmap a) | MEM a l}’
@@ -5237,11 +5252,11 @@ simp[tfv_thm,tprpl_def,tbounds_def,MEM_MAP] >> rw[] (* 4 *)
    simp[] >>
    ‘{tfv (tprpl bmap a) | MEM a l} =
     {tfv tm ∪
-            BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbounds tm} | MEM tm l}’
+            BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbons tm} | MEM tm l}’
     by (rw[Once EXTENSION] >> rw[EQ_IMP_THM] (* 2 *)
        >- (qexists ‘a’ >> simp[] >>
           first_x_assum $ drule_then assume_tac >>
-          ‘(∀n s. (n,s) ∈ tfv a ⇒ sbounds s = ∅)’
+          ‘(∀n s. (n,s) ∈ tfv a ⇒ sbons s = ∅)’
            by metis_tac[] >>
           first_x_assum $ drule_then assume_tac >>
           first_x_assum (qspecl_then [‘bmap’] assume_tac) >>
@@ -5249,28 +5264,28 @@ simp[tfv_thm,tprpl_def,tbounds_def,MEM_MAP] >> rw[] (* 4 *)
        qexists ‘tm’ >>
        simp[] >>
        first_x_assum $ drule_then assume_tac >>
-‘(∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = ∅)’
+‘(∀n s. (n,s) ∈ tfv tm ⇒ sbons s = ∅)’
   by metis_tac[] >>
 first_x_assum $ drule_then assume_tac >> simp[]) >>
 simp[] >> simp[PULL_EXISTS] >>
 ‘BIGUNION
           {tfv tm ∪
-           BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbounds tm} |
+           BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbons tm} |
            MEM tm l} =
 BIGUNION
           {tfv tm | MEM tm l}  ∪
-BIGUNION {tfv (bmap ' i) | i | ∃tm.i ∈ FDOM bmap ∧ i ∈ tbounds tm ∧  MEM tm l}’
+BIGUNION {tfv (bmap ' i) | i | ∃tm.i ∈ FDOM bmap ∧ i ∈ tbons tm ∧  MEM tm l}’
 by (rw[Once EXTENSION,EQ_IMP_THM,PULL_EXISTS] (* 4 *)
     >>  metis_tac[]) >>
 simp[] >>
 ‘BIGUNION
           {tfv (bmap ' i) |
            i |
-           i ∈ FDOM bmap ∧ ((∃a. i ∈ tbounds a ∧ MEM a l) ∨ i ∈ sbounds st)} =
+           i ∈ FDOM bmap ∧ ((∃a. i ∈ tbons a ∧ MEM a l) ∨ i ∈ sbons st)} =
  BIGUNION
           {tfv (bmap ' i) |
            i |
-           (∃tm. i ∈ FDOM bmap ∧ i ∈ tbounds tm ∧ MEM tm l)}∪ BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ sbounds st}’
+           (∃tm. i ∈ FDOM bmap ∧ i ∈ tbons tm ∧ MEM tm l)}∪ BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ sbons st}’
 by (rw[Once EXTENSION,EQ_IMP_THM,PULL_EXISTS] (* 4 *) >>
     metis_tac[]) >>
 simp[] >>
@@ -5288,11 +5303,11 @@ simp[PULL_EXISTS] >>
 simp[] >>
    ‘{tfv (tprpl bmap a) | MEM a l} =
     {tfv tm ∪
-            BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbounds tm} | MEM tm l}’
+            BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbons tm} | MEM tm l}’
     by (rw[Once EXTENSION] >> rw[EQ_IMP_THM] (* 2 *)
        >- (qexists ‘a’ >> simp[] >>
           first_x_assum $ drule_then assume_tac >>
-          ‘(∀n s. (n,s) ∈ tfv a ⇒ sbounds s = ∅)’
+          ‘(∀n s. (n,s) ∈ tfv a ⇒ sbons s = ∅)’
            by metis_tac[] >>
           first_x_assum $ drule_then assume_tac >>
           first_x_assum (qspecl_then [‘bmap’] assume_tac) >>
@@ -5300,17 +5315,17 @@ simp[] >>
        qexists ‘tm’ >>
        simp[] >>
        first_x_assum $ drule_then assume_tac >>
-‘(∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = ∅)’
+‘(∀n s. (n,s) ∈ tfv tm ⇒ sbons s = ∅)’
   by metis_tac[] >>
 first_x_assum $ drule_then assume_tac >> simp[]) >>
 simp[] >> simp[PULL_EXISTS] >>
 ‘BIGUNION
           {tfv tm ∪
-           BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbounds tm} |
+           BIGUNION {tfv (bmap ' i) | i | i ∈ FDOM bmap ∧ i ∈ tbons tm} |
            MEM tm l} =
 BIGUNION
           {tfv tm | MEM tm l}  ∪
-BIGUNION {tfv (bmap ' i) | i | ∃tm.i ∈ FDOM bmap ∧ i ∈ tbounds tm ∧  MEM tm l}’
+BIGUNION {tfv (bmap ' i) | i | ∃tm.i ∈ FDOM bmap ∧ i ∈ tbons tm ∧  MEM tm l}’
 by (rw[Once EXTENSION,EQ_IMP_THM,PULL_EXISTS] (* 4 *)
     >>  metis_tac[]) >>
 simp[]
@@ -5365,11 +5380,11 @@ QED
 
 
 Theorem tprpl_id:
-(∀t bmap. tbounds t ∩ FDOM bmap = {} ⇒ tprpl bmap t = t) ∧
-(∀s bmap. sbounds s ∩ FDOM bmap = {} ⇒ sprpl bmap s = s)
+(∀t bmap. tbons t ∩ FDOM bmap = {} ⇒ tprpl bmap t = t) ∧
+(∀s bmap. sbons s ∩ FDOM bmap = {} ⇒ sprpl bmap s = s)
 Proof
 ho_match_mp_tac better_tm_induction >>
-gs[tbounds_thm,tprpl_def,MAP_fix] >> rw[] (* 4 *)
+gs[tbons_thm,tprpl_def,MAP_fix] >> rw[] (* 4 *)
 >> (gs[EXTENSION] >> metis_tac[])
 QED
 
@@ -5395,10 +5410,10 @@ drule_then assume_tac EL_REVERSE >> gs[]
 QED        
 
 Theorem tprpl_mk_bmap_CONS:
-(∀t tm tl. tbounds tm = {} ⇒
+(∀t tm tl. tbons tm = {} ⇒
  tprpl (mk_bmap (REVERSE tl ⧺ [tm])) t =
  tprpl (mk_bmap (REVERSE tl)) (trpl (LENGTH tl) tm t)) ∧
-(∀s tm tl. tbounds tm = {} ⇒
+(∀s tm tl. tbons tm = {} ⇒
  sprpl (mk_bmap (REVERSE tl ⧺ [tm])) s =
  sprpl (mk_bmap (REVERSE tl)) (srpl (LENGTH tl) tm s)) 
 Proof
@@ -5464,7 +5479,5 @@ gs[tfv_thm,tabs_def,PULL_EXISTS,MEM_MAP] >> rw[] (* 5 *)
 QED
 
         
-
-                       
 val _ = export_theory();
 
