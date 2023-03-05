@@ -372,6 +372,8 @@ Proof
 metis_tac[EL_specslwtl]
 QED
 
+        
+(*
 Theorem EL_specslwtl_alt:
 
 Proof        
@@ -440,7 +442,7 @@ wfabsap0 Σ sl tl ⇒
 Proof
 cheat
 QED
-        
+*)        
 
 Definition absvl_def:
 absvl i v [] = [] ∧
@@ -1040,6 +1042,84 @@ irule $ cj 1 tabs_tpv2b >> simp[FDOM_mk_v2b] >>
 gs[] >> gs[ALL_DISTINCT_APPEND]
 QED
 
+
+Theorem mk_FALLL_fVar1:
+ALL_DISTINCT vl ⇒
+     mk_FALLL vl (fVar P sl (MAP Var' vl)) =
+     FALLL (vl2sl vl) (fVar P sl (MAP (vpv2b (mk_v2b (REVERSE vl))) vl))
+Proof     
+metis_tac[mk_FALLL_fVar |> Q.SPECL [‘LENGTH vl’,‘REVERSE vl’]
+              |> SRULE [EQ_REFL]]
+QED              
+
+
+
+Theorem vpv2b_mk_v2b_EL:
+ALL_DISTINCT vl ∧ x < LENGTH vl ⇒
+vpv2b (mk_v2b vl) (EL x vl) = Bound x
+Proof
+rw[] >> Cases_on ‘EL x vl’ >> rw[vpv2b_def,FDOM_mk_v2b] (* 2 *)
+>- (drule_all_then assume_tac FAPPLY_mk_v2b >> gs[]) >>
+gs[MEM_EL]
+QED
+        
+
+
+Theorem fVar_MAP_vpv2b:
+ALL_DISTINCT vl ⇒ (MAP (vpv2b (mk_v2b vl)) (REVERSE vl)) =
+(MAP Bound (REVERSE (COUNT_LIST (LENGTH vl))))
+Proof
+rw[] >> 
+irule LIST_EQ >> simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+rw[] >> simp[EL_MAP] >>
+‘LENGTH (COUNT_LIST (LENGTH vl)) = LENGTH vl’ by
+simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+‘LENGTH (REVERSE (COUNT_LIST (LENGTH vl))) = LENGTH vl’ by simp[] >>
+simp[EL_MAP] >>
+drule_all_then assume_tac vpv2b_mk_v2b_EL >> gs[] >>
+simp[EL_REVERSE] >> simp[Once EQ_SYM_EQ] >>
+‘(PRE (LENGTH vl − x)) < LENGTH vl’ by simp[] >>
+drule_all_then assume_tac vpv2b_mk_v2b_EL >> gs[] >>
+irule rich_listTheory.EL_COUNT_LIST >> simp[]
+QED
+
+
+Theorem fVar_MAP_vpv2b1:
+ALL_DISTINCT vl ⇒ (MAP (vpv2b (mk_v2b vl)) (REVERSE vl)) =
+(MAP Bound (REVERSE (COUNT_LIST (LENGTH vl))))
+Proof
+rw[] >> 
+irule LIST_EQ >> simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+rw[] >> simp[EL_MAP] >>
+‘LENGTH (COUNT_LIST (LENGTH vl)) = LENGTH vl’ by
+simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+‘LENGTH (REVERSE (COUNT_LIST (LENGTH vl))) = LENGTH vl’ by simp[] >>
+simp[EL_MAP] >>
+drule_all_then assume_tac vpv2b_mk_v2b_EL >> gs[] >>
+simp[EL_REVERSE] >> simp[Once EQ_SYM_EQ] >>
+‘(PRE (LENGTH vl − x)) < LENGTH vl’ by simp[] >>
+drule_all_then assume_tac vpv2b_mk_v2b_EL >> gs[] >>
+irule rich_listTheory.EL_COUNT_LIST >> simp[]
+QED
+
+
+Theorem wfabsaps_Var'_vl2sl:
+wfabsap0 Σ sl (MAP Var' vl) ∧ ALL_DISTINCT vl ⇒
+vl2sl vl = sl
+Proof
+
+
+
+Theorem mk_FALLL_wfabsap:
+ALL_DISTINCT vl ∧ LENGTH sl = LENGTH vl ⇒
+mk_FALLL vl (fVar P sl (MAP Var' vl)) =
+FALLL sl (plainfV (P,sl))
+Proof
+rw[] >> drule_then assume_tac mk_FALLL_fVar1 >>
+gs[] >> simp[plainfV_def] >> 
+qspecl_then [‘LENGTH (vl)’,‘(vl)’] assume_tac mk_FALLL_fVar >
+> gs[] >>c
+simmp[]
 
 
         
