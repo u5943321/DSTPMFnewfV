@@ -1103,12 +1103,69 @@ irule rich_listTheory.EL_COUNT_LIST >> simp[]
 QED
 
 
+Theorem tfv_trpl1:
+(∀t i new. tfv (trpl i new t) ⊆ tfv new ∪ tfv t) ∧
+(∀s i new. sfv (srpl i new s) ⊆ tfv new ∪ sfv s)
+Proof 
+ho_match_mp_tac better_tm_induction >>
+gs[tfv_thm,trpl_def,MAP_EQ_f,MEM_MAP] >> rw[] (* 4 *)
+>- gs[SUBSET_DEF]
+>- (simp[SUBSET_DEF,PULL_EXISTS] >> rw[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[SUBSET_DEF] >> metis_tac[])
+>- (gs[SUBSET_DEF] >> metis_tac[]) >>
+simp[SUBSET_DEF,PULL_EXISTS] >> rw[] >>
+first_x_assum $ drule_then assume_tac >> gs[SUBSET_DEF] >>
+metis_tac[]
+QED
+      
+Theorem slfv_specsl:
+∀i t sl. slfv (specsl i t sl) ⊆ tfv t ∪ slfv sl
+Proof
+simp[SUBSET_DEF] >> rw[] >> Cases_on ‘x’ >>
+gs[IN_slfv,MEM_EL,PULL_EXISTS,LENGTH_specsl] >>
+drule_then assume_tac specsl_EL >> gs[] >>
+qspecl_then [‘EL n sl’,‘i + n’,‘t’] assume_tac $ cj 2 tfv_trpl1 >>
+gs[SUBSET_DEF] >> metis_tac[]
+QED
+
+
+
+
+
+
 Theorem wfabsaps_Var'_vl2sl:
-wfabsap0 Σ sl (MAP Var' vl) ∧ ALL_DISTINCT vl ⇒
+∀sl. wfabsap0 Σ sl (MAP Var' vl) ∧ ALL_DISTINCT vl ∧
+(∀v. MEM v vl ⇒ v ∉ slfv sl) ⇒
 vl2sl vl = sl
 Proof
+Induct_on ‘LENGTH vl’
+>- (rw[] >> Cases_on ‘sl’ >> gs[wfabsap0_def,vl2sl_EMPTY]) >>
+Cases_on ‘vl’ >> gs[] >> rw[] >>
+simp[vl2sl_CONS] >>
+Cases_on ‘sl’ >> gs[wfabsap0_def] >>
+first_x_assum $ drule_at_then Any assume_tac >> gs[] >>
+first_x_assum $ drule_then assume_tac >> gs[] >>
+Cases_on ‘h’ >> gs[sort_of_def] >>
+‘(∀v. MEM v t ⇒ v ∉ slfv (specsl 0 (Var q r) t'))’
+ by (rw[] >>
+    ‘v ≠ (q,h')’ by metis_tac[] >>
+    ‘slfv (specsl 0 (Var q h') t') ⊆ {(q,h')} ∪ sfv h' ∪ slfv t'’
+     by (qspecl_then [‘0’,‘Var q h'’,‘t'’] assume_tac slfv_specsl >>
+        gs[]) >>
+    ‘v ∉ slfv t'’ by
+    (first_x_assum $ qspecl_then [‘v’] assume_tac >> gs[] >>
+    Cases_on ‘v’ >> gs[IN_slfv] >> metis_tac[]) >>
+    ‘v ∉ sfv h'’
+      by (first_x_assum $ qspecl_then [‘v’] assume_tac >>
+         Cases_on ‘v’ >> gs[IN_slfv] >> metis_tac[]) >> 
+    gs[SUBSET_DEF] >> metis_tac[]) >> gs[] >>
+irule abssl_specsl >>  rw[] >>
+last_x_assum $ qspecl_then [‘(q,h')’] assume_tac >> gs[IN_slfv] >>
+metis_tac[]
+QED
 
-
+        
 
 Theorem mk_FALLL_wfabsap:
 ALL_DISTINCT vl ∧ LENGTH sl = LENGTH vl ⇒
@@ -1119,7 +1176,7 @@ rw[] >> drule_then assume_tac mk_FALLL_fVar1 >>
 gs[] >> simp[plainfV_def] >> 
 qspecl_then [‘LENGTH (vl)’,‘(vl)’] assume_tac mk_FALLL_fVar >
 > gs[] >>c
-simmp[]
+simp[]
 
 
         
