@@ -670,9 +670,462 @@ simp[fVslfv_mk_FALLL] >> rw[] (* 2 *)
 first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]
 QED    
 
+(*parallel variable to bound*)
+Definition tpv2b_def:
+(tpv2b v2b (Var n s) = if (n,s) ∈ FDOM v2b then Bound (v2b ' (n,s))
+                     else Var n s) ∧
+(tpv2b v2b (Fn f s tl) =
+Fn f (spv2b v2b s) (MAP (tpv2b v2b) tl)) ∧
+(tpv2b v2b (Bound i) = Bound i) ∧
+spv2b v2b (St n tl) = St n (MAP (tpv2b v2b) tl)
+Termination
+WF_REL_TAC
+   ‘measure
+    (λs. case s of
+           INL (_,t) => term_size t
+         | INR (_,st) => sort_size st)’   
+End
+
+
+
+(*parallel variable to bound*)
+
+           
+Definition vpv2b_def:
+(vpv2b v2b (n,s) = if (n,s) ∈ FDOM v2b then Bound (v2b ' (n,s))
+                     else Var n s)
+End                     
+
+
+(*                        
+Definition mk_v2b_def:
+mk_v2b vl = TO_FMAP (ZIP (vl,COUNT_LIST (LENGTH vl)))
+End
+
+
+Theorem FAPPLY_mk_v2b:
+ALL_DISTINCT vl ⇒
+∀n. n < LENGTH vl ⇒ (mk_v2b vl) ' (EL n vl) = n
+Proof
+rw[mk_v2b_def] >> irule TO_FMAP_MEM >>
+simp[MEM_EL,PULL_EXISTS] >> qexists ‘n’ >>
+‘LENGTH (COUNT_LIST (LENGTH vl)) = LENGTH vl’
+ by simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+pop_assum $ assume_tac o GSYM >>  
+drule_then assume_tac EL_ZIP >>
+first_x_assum $ drule_then assume_tac >> gs[] >>
+simp[rich_listTheory.EL_COUNT_LIST] >>
+‘(MAP FST (ZIP (vl,COUNT_LIST (LENGTH vl)))) = vl’
+ suffices_by metis_tac[] >>
+‘ MAP (I ∘ FST) (ZIP (vl,COUNT_LIST (LENGTH vl))) = MAP I vl’
+ by (irule $ cj 3 MAP_ZIP >> simp[]) >> gs[]
+QED 
+*)
+
+
+(*
+Definition mk_v2b_def:
+mk_v2b vl = TO_FMAP (ZIP (REVERSE vl,COUNT_LIST (LENGTH vl)))
+End
+
+
+Theorem FAPPLY_mk_v2b:
+ALL_DISTINCT vl ⇒
+∀n. n < LENGTH vl ⇒ (mk_v2b vl) ' (EL n vl) = LENGTH vl - SUC n
+Proof
+rw[mk_v2b_def] >> irule TO_FMAP_MEM >>
+simp[MEM_EL,PULL_EXISTS] >> qexists ‘LENGTH vl - SUC n’ >>
+‘LENGTH (COUNT_LIST (LENGTH vl)) = LENGTH (REVERSE vl)’
+ by simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+pop_assum $ assume_tac o GSYM >>  
+drule_then assume_tac EL_ZIP >>
+first_x_assum $ drule_then assume_tac >> gs[] >>
+simp[rich_listTheory.EL_COUNT_LIST] >>
+‘(MAP FST (ZIP (vl,COUNT_LIST (LENGTH vl)))) = vl’
+ suffices_by metis_tac[] >>
+‘ MAP (I ∘ FST) (ZIP (vl,COUNT_LIST (LENGTH vl))) = MAP I vl’
+ by (irule $ cj 3 MAP_ZIP >> simp[]) >> gs[]
+QED 
+*)
+
+        
+Definition wfabsvlof_def:
+wfabsvlof Σ vl f ⇔
+(∀n. n < LENGTH vl ⇒
+     ∀m. n < m ∧ m < LENGTH vl ⇒
+         ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ EL n vl ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
+(∀n. n < LENGTH vl ⇒ ∀n1 s1. (n1,s1) ∈ ffv f ⇒ EL n vl ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ EL n vl ∉ fVslfv f)
+End
+
+Definition fpv2b_def:
+fpv2b v2b (Pred p tl) = Pred p (MAP (tpv2b v2b) tl) ∧
+fpv2b v2b (IMP f1 f2) = IMP (fpv2b v2b f1) (fpv2b v2b f2) ∧
+fpv2b v2b (fVar p sl tl) = fVar p sl (MAP (tpv2b v2b) tl) ∧
+fpv2b v2b (FALL s b) = FALL (spv2b v2b s) (fpv2b v2b b)
+End
+
+
+(*        
+Theorem mk_FALLL_FALLL:
+  wfabsvlof Σ vl f ⇒
+  mk_FALLL vl ( = FALLL (vl2sl vl) (
+Proof
+*)
+
+
+Theorem vl2sl_EMPTY:
+vl2sl [] = []
+Proof
+simp[vl2sl_def,vl2sl0_def]
+QED 
+
+
+Theorem TAKE_LAST:
+l ≠ [] ⇒ TAKE (LENGTH l − 1) l ⧺ [LAST l] = l
+Proof
+rw[] >>
+‘LENGTH l ≠ 0’ by simp[] >>
+‘1 + (LENGTH l - 1) = LENGTH l’ by simp[] >>
+drule_then assume_tac rich_listTheory.APPEND_TAKE_LASTN >>
+drule_then assume_tac rich_listTheory.LASTN_1 >> gs[]
+QED
+
+Theorem mk_FALL_FALLL:
+mk_FALL n s (FALLL sl b) =
+FALLL (s :: (abssl (n,s) 0 sl)) (fabs (n,s) (LENGTH sl) b)
+Proof
+qspecl_then [‘LENGTH sl’,‘n’,‘s’,‘sl’,‘b’,‘0’] assume_tac
+mk_FALL_FALLL0 >> gs[mk_FALL_def,abst_def] >>
+simp[FALLL_def]
+QED
+
+Theorem MAP_SND_absvl0:
+∀k l v i. LENGTH l = k ⇒
+          MAP SND (absvl i v l) = abssl v i (MAP SND l)
+Proof
+Induct_on ‘k’
+>- (rw[] >> Cases_on ‘v’ >> simp[absvl_def,abssl_def])
+>- (Cases_on ‘l’ >>  gs[] >> Cases_on ‘v’ >>  Cases_on ‘h’ >> 
+   simp[absvl_def,abssl_def])
+QED   
+
+
+Theorem MAP_SND_absvl:
+∀l v i. MAP SND (absvl i v l) = abssl v i (MAP SND l)
+Proof
+rw[] >>
+qspecl_then [‘LENGTH l’,‘l’,‘v’,‘i’] assume_tac MAP_SND_absvl0 >>
+gs[]
+QED   
+
+
+      
+Theorem vl2sl_CONS:
+vl2sl (v :: vl) = (SND v) :: (abssl v 0 (vl2sl vl))
+Proof
+Cases_on ‘v’ >> simp[vl2sl_def,vl2sl0_def] >>
+Cases_on ‘vl’
+>- simp[vl2sl0_def,absvl_def,abssl_def] >>
+simp[vl2sl0_def,absvl_def] >> Cases_on ‘h’ >>
+simp[absvl_def] >> simp[abssl_def] >>
+simp[MAP_SND_absvl]
+QED
+
+
+Theorem LENGTH_absvl:
+∀i v.LENGTH (absvl i v l) = LENGTH l
+Proof        
+Induct_on ‘LENGTH l’ >> rw[] >> gs[absvl_def] >>
+Cases_on ‘l’
+>- simp[absvl_def] >>
+Cases_on ‘v'’ >> simp[absvl_def] >> gs[] >>
+Cases_on ‘h’ >> simp[absvl_def]
+QED
+
+Theorem LENGTH_vl2sl0:
+LENGTH (vl2sl0 l) = LENGTH l
+Proof
+Induct_on ‘LENGTH l’ >> gs[vl2sl0_def] >>
+Cases_on ‘l’ >- gs[] >>
+gs[] >> simp[vl2sl0_def,LENGTH_absvl]
+QED 
+
+Theorem LENGTH_vl2sl:
+∀l.LENGTH (vl2sl l) = LENGTH l
+Proof
+strip_tac >> Induct_on ‘LENGTH l’ >> rw[vl2sl_def,vl2sl0_def] >>
+Cases_on ‘l’ >> gs[] >> Cases_on ‘h’ >>
+rw[vl2sl_def,vl2sl0_def] >> simp[LENGTH_absvl] >>
+simp[LENGTH_vl2sl0]
+QED
+
+
+
+Theorem tabs_tpv2b:
+(∀tm v2b n s i.
+   (n,s) ∉ FDOM v2b ⇒
+   tabs (n,s) i (tpv2b v2b tm) =
+   tpv2b (v2b |+ ((n,s),i)) tm) ∧
+(∀st v2b n s i.
+   (n,s) ∉ FDOM v2b ⇒ 
+   sabs (n,s) i (spv2b v2b st) =
+   spv2b (v2b |+ ((n,s),i)) st)   
+Proof   
+ho_match_mp_tac better_tm_induction>>
+gs[tabs_def,tpv2b_def,MAP_MAP_o,MAP_EQ_f] >> rw[] >>
+Cases_on ‘(s0,st) ∈ FDOM v2b’ >> gs[tabs_def,FAPPLY_FUPDATE_THM]
+(* 2 *)
+>-  (‘¬(s0 = n ∧ st = s)’ by (CCONTR_TAC >> gs[]) >>simp[]) >>
+Cases_on ‘n = s0 ∧ s = st’ >> simp[] >>
+Cases_on ‘ s0 = n ∧ st = s’ >> simp[] >> gs[]
+QED
+
+
+
+Theorem vpv2b_tpv2b:
+vpv2b v2b (n,s) = tpv2b v2b (Var n s)
+Proof
+rw[vpv2b_def,tpv2b_def]
+QED
+        
+        
+Theorem FDOM_mk_v2b:
+FDOM (mk_v2b l) = set l
+Proof
+simp[mk_v2b_def,FDOM_TO_FMAP] >> 
+‘LENGTH l  = LENGTH (COUNT_LIST (LENGTH l))’
+ by simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+AP_TERM_TAC >>
+‘ MAP (I o FST) (ZIP (l,COUNT_LIST (LENGTH l))) = MAP I l’
+ suffices_by simp[] >>
+irule $ cj 3 MAP_ZIP >> simp[] 
+QED 
+
+
+Theorem FAPPLY_mk_v2b_APPEND:
+n < LENGTH l1 ∧ ALL_DISTINCT (l1 ++ l2) ⇒
+mk_v2b (l1 ++ l2) ' (EL n l1) = mk_v2b l1 ' (EL n l1)
+Proof
+rw[]>>
+‘ALL_DISTINCT l1’ by gs[ALL_DISTINCT_APPEND] >>
+drule_then assume_tac FAPPLY_mk_v2b >>
+first_x_assum $ drule_then assume_tac >>
+rev_drule_then assume_tac FAPPLY_mk_v2b >>
+first_x_assum $ qspecl_then [‘n’] assume_tac >> gs[] >>
+drule_then assume_tac rich_listTheory.EL_APPEND1 >> gs[]
+QED
+
+Theorem mk_v2b_FUPDATE:
+ALL_DISTINCT vl ∧ ¬ MEM h vl ⇒ mk_v2b (vl ++ [h]) = (mk_v2b vl) |+ (h,LENGTH vl)
+Proof
+simp[fmap_EXT,FDOM_mk_v2b] >>
+‘h INSERT set vl = {h} ∪ set vl’ by simp[Once INSERT_SING_UNION] >>
+simp[] >> simp[SimpLHS,Once UNION_COMM] >> strip_tac >>
+‘ALL_DISTINCT (vl ++ [h])’ by simp[ALL_DISTINCT_APPEND] >>
+drule_then assume_tac FAPPLY_mk_v2b >>
+simp[MEM_EL,PULL_EXISTS] >> rw[] (* 2 *)
+>- (first_x_assum $ qspecl_then [‘n’] assume_tac >> gs[] >>
+   ‘MEM (EL n vl) vl’ by (simp[MEM_EL] >> metis_tac[]) >>
+   ‘EL n vl ≠ h’ by metis_tac[] >>
+   simp[FAPPLY_FUPDATE_THM] >> metis_tac[FAPPLY_mk_v2b_APPEND]) >>
+simp[FAPPLY_FUPDATE_THM] >>
+‘LENGTH vl < LENGTH (vl ++ [h])’ by simp[] >>
+drule_then assume_tac FAPPLY_mk_v2b >>
+first_x_assum $ drule_then assume_tac >>
+‘(EL (LENGTH vl) (vl ⧺ [h])) = h’ suffices_by metis_tac[] >>
+‘LENGTH vl ≤ LENGTH vl’ by simp[] >>
+drule_then assume_tac rich_listTheory.EL_APPEND2 >>
+first_x_assum $ qspecl_then [‘[h]’] assume_tac>> gs[]
+QED
+   
+        
 
 
         
+Theorem mk_v2b_EMPTY_FUPDATE:
+(mk_v2b [] |+ ((q,r),0)) = (mk_v2b [(q,r)])
+Proof
+simp[fmap_EXT,FDOM_mk_v2b,mk_v2b_def] >>
+‘LENGTH [(q,r)] = LENGTH (COUNT_LIST 1)’
+ by simp[rich_listTheory.LENGTH_COUNT_LIST] >>
+irule TO_FMAP_MEM >>
+qspecl_then [‘COUNT_LIST 1’,‘[(q,r)]’,‘I’] assume_tac
+(GEN_ALL $ cj 3 $ MAP_ZIP) >>
+gs[] >>
+‘COUNT_LIST 1 = [0]’ by EVAL_TAC >>
+gs[]
+QED
+
+Theorem ALL_DISTINCT_TAKE:
+ALL_DISTINCT l ⇒ ∀n. n < LENGTH l ⇒ ALL_DISTINCT (TAKE n l)
+Proof
+simp[EL_ALL_DISTINCT_EL_EQ] >> rw[] >>
+qspecl_then [‘n’,‘n1’] assume_tac EL_TAKE >>
+qspecl_then [‘n’,‘n2’] assume_tac EL_TAKE >>
+gs[]
+QED
+
+
+        
+Theorem mk_FALLL_fVar:
+∀k vl0.
+LENGTH vl0 = k ∧ ALL_DISTINCT vl0 ⇒ 
+mk_FALLL (REVERSE vl0) (fVar P sl (MAP Var' vl)) =
+FALLL (vl2sl (REVERSE vl0))
+(fVar P sl (MAP (vpv2b (mk_v2b vl0)) vl))
+Proof
+Induct_on ‘k’
+>- (simp[mk_v2b_def,rich_listTheory.COUNT_LIST_def,mk_FALLL_def,
+        FALLL_def,vl2sl_EMPTY] >>
+   simp[MAP_EQ_f] >> rw[] >> Cases_on ‘e’ >>
+   simp[vpv2b_def,FDOM_TO_FMAP]) >>
+Cases_on ‘vl0’ >> gs[] >> rw[] >>
+Cases_on ‘t= []’ >> gs[]
+>- (Cases_on ‘h’ >>
+   simp[mk_FALLL_def,FALLL_def,vl2sl_EMPTY,vl2sl_def,mk_FALL_def,
+        vl2sl0_def,absvl_def,abst_def,fabs_def,
+        MAP_MAP_o,MAP_EQ_f] >> rw[] >> Cases_on ‘e’ >>
+   simp[vpv2b_tpv2b] >>
+   qspecl_then [‘(Var q' r')’,‘(mk_v2b [])’,‘q’,‘r’,‘0’]
+   assume_tac $ cj 1 tabs_tpv2b >>
+   gs[FDOM_mk_v2b] >> simp[mk_v2b_EMPTY_FUPDATE]) >> 
+‘LENGTH t ≠ 0’ by simp[] >>
+‘SUC (LENGTH t − 1) = LENGTH t’ by simp[] >>
+gs[] >>
+qabbrev_tac ‘t1 = (TAKE (LENGTH t − 1) t)’ >> 
+‘(REVERSE t ⧺ [h]) = LAST t :: (REVERSE t1 ⧺ [h])’
+by (simp[Abbr‘t1’] >>
+‘REVERSE (REVERSE t) = REVERSE
+(LAST t::REVERSE (TAKE (LENGTH t − 1) t))’
+by (REWRITE_TAC[REVERSE_REVERSE] >>
+   simp[REVERSE_DEF] >>
+   simp[TAKE_LAST]) >> gs[]) >>
+gs[] >>
+qabbrev_tac ‘v = LAST t’ >> Cases_on ‘v’ >>
+simp[mk_FALLL_def] >>
+first_x_assum $ qspecl_then [‘h :: t1’] assume_tac >>
+‘¬MEM h t1 ∧ ALL_DISTINCT t1’
+ by (simp[Abbr‘t1’] >> rw[] (* 2 *)
+    >- (CCONTR_TAC >> gs[] >>
+       drule rich_listTheory.MEM_TAKE >> gs[]) >>
+    irule ALL_DISTINCT_TAKE >> simp[]) >> gs[] >> 
+‘LENGTH (h::t1) = LENGTH t ’ by simp[Abbr‘t1’] >> gs[] >>
+simp[mk_FALL_FALLL] >> simp[vl2sl_CONS] >>
+simp[LENGTH_vl2sl] >>
+AP_TERM_TAC >> simp[fabs_def,MAP_MAP_o,MAP_EQ_f] >> rw[] >>
+Cases_on ‘e’ >> simp[vpv2b_tpv2b] >>
+‘t = t1 ++ [(q,r)]’
+ by (simp[Abbr‘t1’] >>
+    qpat_x_assum ‘LAST t = (q,r)’ (assume_tac o GSYM) >> simp[] >>
+    simp[TAKE_LAST]) >>
+simp[] >>
+‘(h::(t1 ⧺ [(q,r)])) = (h::t1) ⧺ [(q,r)]’ by simp[] >>
+pop_assum SUBST_ALL_TAC >> 
+‘(mk_v2b (h::t1 ⧺ [(q,r)])) =
+ (mk_v2b (h::t1)) |+ ((q,r),LENGTH (h :: t1))’
+ by (irule mk_v2b_FUPDATE >> simp[ALL_DISTINCT] >> rw[] (* 2 *)
+    >- (CCONTR_TAC >> gs[]) >>
+    ‘ALL_DISTINCT (REVERSE (t1 ⧺ [(q,r)]))’
+     by simp[ALL_DISTINCT_REVERSE] >>
+    qpat_x_assum ‘ALL_DISTINCT (t1 ⧺ [(q,r)])’ (K all_tac) >>
+    qpat_x_assum ‘REVERSE (t1 ⧺ [(q,r)]) = (q,r)::REVERSE t1’
+    SUBST_ALL_TAC >>
+    gs[ALL_DISTINCT]) >>
+pop_assum SUBST_ALL_TAC >>
+‘LENGTH (h::t1) = LENGTH t1 + 1’ by simp[] >>
+pop_assum SUBST_ALL_TAC >>
+irule $ cj 1 tabs_tpv2b >> simp[FDOM_mk_v2b] >>
+gs[] >> gs[ALL_DISTINCT_APPEND]
+QED
+
+
+
+        
+Theorem mk_FALLL_fVar:
+∀k vl0.
+LENGTH vl0 = k ⇒ 
+mk_FALLL (REVERSE vl0) (fVar P sl (MAP Var' vl)) =
+FALLL (vl2sl (REVERSE vl0))
+(fVar P sl (MAP (vpv2b (mk_v2b vl0)) vl))
+Proof
+Induct_on ‘k’
+>- simp[mk_v2b_def,rich_listTheory.COUNT_LIST_def,mk_FALLL_def,
+        FALLL_def,vl2sl_EMPTY] >> cheat >>
+Cases_on ‘vl0’ >> gs[] >> rw[] >>
+Cases_on ‘t= []’ >> gs[] >- cheat >> 
+‘LENGTH t ≠ 0’ by simp[] >>
+‘SUC (LENGTH t − 1) = LENGTH t’ by simp[] >>
+gs[] >>
+qabbrev_tac ‘t1 = (TAKE (LENGTH t − 1) t)’ >> 
+‘(REVERSE t ⧺ [h]) = LAST t :: (REVERSE t1 ⧺ [h])’
+by (simp[Abbr‘t1’] >>
+‘REVERSE (REVERSE t) = REVERSE
+(LAST t::REVERSE (TAKE (LENGTH t − 1) t))’
+by (REWRITE_TAC[REVERSE_REVERSE] >>
+   simp[REVERSE_DEF] >>
+   simp[TAKE_LAST]) >> gs[]) >>
+gs[] >>
+qabbrev_tac ‘v = LAST t’ >> Cases_on ‘v’ >>
+simp[mk_FALLL_def] >>
+first_x_assum $ qspecl_then [‘h :: t1’] assume_tac >>
+‘LENGTH (h::t1) = LENGTH t ’ by cheat >> gs[] >>
+simp[mk_FALL_FALLL] >> simp[vl2sl_CONS] >>
+simp[LENGTH_vl2sl] >> 
+AP_TERM_TAC >> simp[fabs_def,MAP_MAP_o,MAP_EQ_f] >> rw[] >>
+Cases_on ‘e’ >> simp[vpv2b_tpv2b] >>
+‘t = t1 ++ [(q,r)]’
+ by (simp[Abbr‘t1’] >>
+    qpat_x_assum ‘LAST t = (q,r)’ (assume_tac o GSYM) >> simp[] >>
+    simp[TAKE_LAST]) >>
+simp[] >>
+‘(h::(t1 ⧺ [(q,r)])) = (h::t1) ⧺ [(q,r)]’ by simp[] >>
+pop_assum SUBST_ALL_TAC >> 
+‘(mk_v2b (h::t1 ⧺ [(q,r)])) =
+ (mk_v2b (h::t1)) |+ ((q,r),LENGTH (h :: t1))’
+ by (irule mk_v2b_FUPDATE >> cheat) >>
+pop_assum SUBST_ALL_TAC >>
+‘LENGTH (h::t1) = LENGTH t1 + 1’ by simp[] >>
+pop_assum SUBST_ALL_TAC >>
+irule $ cj 1 tabs_tpv2b >> simp[FDOM_mk_v2b]
+
+
+
+          
+‘(h::t) = h :: t1 ++ [LAST t]’
+ by simp[]
+tabs_tpv2b
+
+  
+
+
+            
+first_x_assum $ qspecl_then [‘h :: TAKE (LENGTH t - 1) t’]
+assume_tac >> gs[] >>
+
+
+
+
+           
+qabbrev_tac ‘v = LAST t’ >> Cases_on ‘v’ >>
+
+first_x_assum $ qspecl_then [‘h :: TAKE (LENGTH t - 1) t’]
+assume_tac >> gs[] >>
+
+
+                              
+simp[vl2sl0_def,vl2sl_def]
+
+Cases_on ‘h’ >> simp[mk_FALLL_def] >> 
+Induct_on ‘k’ 
+>- (Cases_on ‘vl’ >> Cases_on ‘sl’ >> gs[mk_FALLL_def,plainfV_def,
+    rich_listTheory.COUNT_LIST_def]) >>
+Cases_on ‘vl’ >> Cases_on ‘sl’ >> gs[] >>
+Cases_on ‘h’ >> rename [‘(n,s)’] >> rw[] >>
+first_x_assum $ qspecl_then [‘t’,‘t'’] assume_tac >> gs[] >>
+simp[mk_FALLL_def] >>   
+
         
 
 Definition fabsl_def:
