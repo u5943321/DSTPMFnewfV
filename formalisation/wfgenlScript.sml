@@ -731,62 +731,107 @@ rw[] (* 3 *)
 metis_tac[]
 QED
 
+(*
+Theorem wfdpvl_alt:
+wfdpvl [] f = T ∧
+wfdpvl         
+*)
 
 
+Definition okvnames_def:
+okvnames vl ⇔
+∀m n. m < n ∧ n < LENGTH vl ⇒ EL n vl ∉ sfv (SND (EL m vl))
+End
 
-
-Theorem wfdpvl_ffv_mk_FALLL:
-∀f. wfdpvl vl f ⇒
-ffv (mk_FALLL vl f) = slfv (vl2sl vl) ∪ (ffv f DIFF set vl)
+Theorem okvnames_CONS:
+okvnames (h :: t) ⇔ okvnames t ∧
+∀v. MEM v t ⇒ v ∉ sfv (SND h)
 Proof
-Induct_on ‘LENGTH vl’
->- (rw[] >>
-    simp[mk_FALLL_def,slfv_def,vl2sl_EMPTY,Uof_EMPTY]) >>
-Cases_on ‘vl’ >> simp[] >>
-Cases_on ‘h’ >> simp[mk_FALLL_def,wfdpvl_def] >>
-rw[] >>
-first_x_assum $ qspecl_then [‘t’] assume_tac >>
-gs[] >>
-reverse (Cases_on ‘(q,r) ∈ slfv (vl2sl t)’)
->- simp[vl2sl_CONS] >>
-   ‘abssl (q,r) 0 (vl2sl t) = vl2sl t’
-    by (irule abssl_id >> gs[IN_slfv] >> metis_tac[]) >>
-    simp[] >>
-    first_x_assum $ drule_then assume_tac >>
-    qspecl_then [‘(mk_FALLL t f)’,‘q’,‘r’] assume_tac
-    ffv_mk_FALL >> gs[] >>
-    
-first_x_assum $ drule_then assume_tac >>
-qspecl_then [‘(mk_FALLL t f)’,‘q’,‘r’] assume_tac
-ffv_mk_FALL >> gs[] >>
-‘ffv (mk_FALL q r (mk_FALLL t f)) =
-        slfv (vl2sl t) ∪ (ffv f DIFF set t) ∪ sfv r DELETE (q,r)’ suffices_by
- (rw[] >> simp[vl2sl_CONS] >>
- simp[slfv_CONS] >>
- ‘sfv r ∪ slfv (abssl (q,r) 0 (vl2sl t)) ∪
-        (ffv f DIFF ((q,r) INSERT set t)) =
- sfv r ∪ (sfv r ∪ slfv (abssl (q,r) 0 (vl2sl t))) ∪
-        (ffv f DIFF ((q,r) INSERT set t))’
-    by (rw[Once EXTENSION] >> metis_tac[]) >>
- pop_assum SUBST_ALL_TAC >>
- ‘sfv r ∪ slfv (abssl (q,r) 0 (vl2sl t)) =
- (slfv (vl2sl t) DELETE (q,r))’ suffices_by
-  (rw[]>> irule $ iffLR SUBSET_ANTISYM_EQ >>
-  simp[SUBSET_DEF,PULL_EXISTS] >> rw[] (* 4 *)
-     >- metis_tac[]
-     >- metis_tac[]
-     >- metis_tac[] >>
-     metis_tac[tm_tree_WF]) >>
-  gs[DISJ_IMP_THM] >>
-  cheat) >>
-first_x_assum irule >> simp[fVars_mk_FALLL]>>
+simp[okvnames_def,EQ_IMP_THM] >>
 rw[] (* 3 *)
->- (gs[IN_fVslfv] >> metis_tac[]) >>
+>- (first_x_assum $ qspecl_then [‘SUC m’,‘SUC n’] assume_tac
+   >> gs[])
+>- (gs[MEM_EL] >>
+   first_x_assum $ qspecl_then [‘0’,‘SUC n’] assume_tac >>
+   gs[]) >>
+Cases_on ‘n < LENGTH t’ (* 2 *)
+>- (Cases_on ‘m’ >> gs[] >> Cases_on ‘n’ >> gs[MEM_EL] >>
+   first_x_assum irule >> qexists ‘n'’ >> simp[]) >>
+Cases_on ‘m’ >> Cases_on ‘n’ >>  gs[MEM_EL] >>
 metis_tac[]
 QED
 
         
+Theorem wfdpvl_expand:
+∀f. wfdpvl vl f ∧ okvnames vl ⇒
+∀f1. (∀n s. (n,s) ∈ ffv f1 DIFF ffv f ⇒
+            ∀v. MEM v vl ⇒ v ∉ sfv s) ∧
+     (∀v. MEM v vl ⇒ v ∉ fVslfv f1) ⇒
+wfdpvl vl f1
+Proof
+Induct_on ‘vl’
+>- simp[okvnames_def,wfdpvl_def] >>
+Cases_on ‘h’ >> simp[wfdpvl_def,okvnames_CONS] >>
+rw[] (* 2 *)
+>- (first_x_assum irule >> simp[] >>
+   metis_tac[]) >>
+‘wfdpvl vl f1’ by
+  (first_x_assum irule >> simp[] >>
+   metis_tac[]) >>
+‘ffv (mk_FALLL vl f) = slfv (vl2sl vl) ∪ (ffv f DIFF set vl)’
+ by metis_tac[wfdpvl_ffv_mk_FALLL] >>
+pop_assum SUBST_ALL_TAC >>
+gs[DISJ_IMP_THM] >>
+‘ffv (mk_FALLL vl f1) = slfv (vl2sl vl) ∪ (ffv f1 DIFF set vl)’
+ by metis_tac[wfdpvl_ffv_mk_FALLL] >>
+pop_assum SUBST_ALL_TAC >> gs[]
+>- metis_tac[] >>
+metis_tac[]
+QED
+
+Theorem wfdpvl_NOTIN_slfv:
+∀f. wfdpvl vl f ∧ okvnames vl ⇒ ∀v. MEM v vl ⇒ v ∉ slfv (vl2sl vl)
+Proof
+Induct_on ‘LENGTH vl’
+>- rw[vl2sl_EMPTY] >>
+Cases_on ‘vl’ >> simp[] >>
+Cases_on ‘h’ >> simp[wfdpvl_def,vl2sl_CONS,slfv_CONS] >>
+rw[] (* 4 *)
+>- simp[tm_tree_WF]
+>- cheat
+>- 
+
+
      
+Theorem wfdpvl_ffv:
+wfdpvl vl TRUE ∧ ALL_DISTINCT vl ⇒
+∀sl. (∀v. MEM v vl ⇒ v ∉ slfv sl) ⇒
+wfdpvl vl TRUE
+∀n. n ≤ LENGTH vl ⇒ wfdpvl (DROP n vl) (fVar P sl (MAP Var' vl))
+Proof
+Induct_on ‘LENGTH vl’
+>- cheat >>
+Cases_on ‘vl’ >> simp[] >>
+Cases_on ‘h’ >> simp[wfdpvl_def] >> rw[] >>
+Cases_on ‘n = SUC (LENGTH t)’ >> gs[] (* 2 *)
+>- simp[rich_listTheory.DROP_LENGTH_NIL,wfdpvl_def] >>
+Cases_on ‘n’ >> simp[] (* 2 *)
+>- simp[wfdpvl_def] >> 
+simp[rich_listTheory.DROP] 
+
+   
+Induct_on ‘LENGTH vl’
+>- cheat >>
+Cases_on ‘vl’ >> simp[] >> Cases_on ‘h’ >>
+simp[wfdpvl_def] >> rw[] >>
+‘wfdpvl t f’
+ by (first_x_assum irule >> metis_tac[]) >>
+Cases_on ‘(n,s) ∈ (ffv f DIFF set vl)’
+>- 
+        
+     
+
+
 Theorem wfdpvl_ffv:
 wfdpvl vl TRUE ∧ ALL_DISTINCT vl ⇒
 ∀f. (∀v. MEM v vl ⇒ v ∉ fVslfv f) ⇒
