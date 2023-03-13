@@ -954,7 +954,7 @@ QED
 
 
 
-Theorem wfdpvl_ffv:
+Theorem wfdpvl_TRUE_fVar:
 wfdpvl vl TRUE ∧ ALL_DISTINCT vl ∧ okvnames vl ⇒
 wfdpvl vl (fVar P (vl2sl vl) (MAP Var' vl))
 Proof
@@ -1036,83 +1036,212 @@ metis_tac[wfdpvl_NOTIN_slfv,SUBSET_DEF]
 QED
  
 
-
-
-
-
-
-Theorem wfdpvl_ffv:
-wfdpvl vl TRUE ∧ ALL_DISTINCT vl ∧ okvnames vl ⇒
-wfdpvl vl (fVar P (vl2sl vl) (MAP Var' vl))
+Theorem wfdpvl_ALL_DISTINCT_okvnames_wff:
+wfvl (FST Σ) vl TRUE ∧ ALL_DISTINCT vl ∧ okvnames vl ⇒
+wff Σ (FALLL (vl2sl vl) (plainfV (P,vl2sl vl)))
 Proof
-Induct_on ‘LENGTH vl’ >- cheat >>
-Cases_on ‘vl’ >> simp[] >>
-Cases_on ‘h’ >> simp[wfdpvl_def,vl2sl_CONS,okvnames_CONS] >>
-strip_tac >> strip_tac >>
-simp[fVslfv_fVar,slfv_CONS,tm_tree_WF] >>
-gs[ffv_mk_FALLL_TRUE,ffv_FALLL,PULL_EXISTS,ffv_TRUE] >>
-‘(q,r) ∉ slfv (abssl (q,r) 0 (vl2sl t))’
- by (irule NOTIN_slfv_abssl >> simp[IN_slfv] >>
-    metis_tac[]) >> simp[] >> 
-‘wfdpvl t (fVar P (r::abssl (q,r) 0 (vl2sl t)) (Var q r::MAP Var' t))’
- suffices_by
-  rw[] >> mk_FALLL_fVar
-  
-  drule_then assume_tac wfdpvl_ffv_mk_FALLL >>
-  pop_assum SUBST_ALL_TAC >>
-  ‘ffv (fVar P (r::abssl (q,r) 0 (vl2sl t)) (Var q r::MAP Var' t)) = tlfv (Var q r::MAP Var' t)’ by cheat >>
-  pop_assum SUBST_ALL_TAC >>
-  
-  gs[] (* 2 *)
-  >- (gs[IN_slfv] >> metis_tac[]) >>
-  gs[okvnames_def] >> gs[tlfv_CONS,tm_tree_WF] (* 2 *)
-  >- metis_tac[vsort_tfv_closed,tm_tree_WF] >>
-  gs[tlfv_def,MEM_MAP] >> Cases_on ‘y’ >> gs[]>>
-  gvs[]
+rw[] >> 
+‘wfdpvl vl TRUE’ by metis_tac[wfvl_def] >>
+drule_then assume_tac $ GSYM mk_FALLL_fVar_FALLL >>
+simp[] >>
+irule mk_FALLL_fVar_wff >> reverse (rw[wfvl_def]) (* 3 *)
+>- gs[wfvl_def]
+>- (irule wfdpvl_TRUE_fVar >> simp[]) >>
+cheat
+QED
 
-     
-Theorem wfdpvl_ffv:
-wfdpvl vl TRUE ∧ ALL_DISTINCT vl ⇒
-∀sl. (∀v. MEM v vl ⇒ v ∉ slfv sl) ⇒
-wfdpvl vl TRUE
-∀n. n ≤ LENGTH vl ⇒ wfdpvl (DROP n vl) (fVar P sl (MAP Var' vl))
+
+Theorem wff_fVar:
+wff (Σf,Σp,Σe) (fVar P sl tl) ⇔
+wfabsap Σf sl tl ∧
+∃vl. wfvl Σf vl TRUE ∧ vl2sl vl = sl ∧ ALL_DISTINCT vl ∧
+     okvnames vl
 Proof
-Induct_on ‘LENGTH vl’
->- cheat >>
-Cases_on ‘vl’ >> simp[] >>
-Cases_on ‘h’ >> simp[wfdpvl_def] >> rw[] >>
-Cases_on ‘n = SUC (LENGTH t)’ >> gs[] (* 2 *)
->- simp[rich_listTheory.DROP_LENGTH_NIL,wfdpvl_def] >>
-Cases_on ‘n’ >> simp[] (* 2 *)
->- simp[wfdpvl_def] >> 
-simp[rich_listTheory.DROP] 
+cheat
+QED
 
-   
-Induct_on ‘LENGTH vl’
->- cheat >>
-Cases_on ‘vl’ >> simp[] >> Cases_on ‘h’ >>
-simp[wfdpvl_def] >> rw[] >>
-‘wfdpvl t f’
- by (first_x_assum irule >> metis_tac[]) >>
-Cases_on ‘(n,s) ∈ (ffv f DIFF set vl)’
->- 
+Definition wffstl_def:
+wffstl Σf sl tl ⇔
+wfabsap Σf sl tl ∧
+∃vl. wfvl Σf vl TRUE ∧ vl2sl vl = sl ∧ ALL_DISTINCT vl ∧
+     okvnames vl
+End          
+
+
+(*
+okvnames: when select the names of the variables ,look at the whole list and avoid any name in the variables in a sort.
+
+all distinct easy
+prove vl2sl (sl2vl l) = l under some condition.
+
+                
+*)
+
+
+
+Definition sl2vl_def:
+sl2vl [] [] = [] ∧
+sl2vl (n :: nl) (s :: sl) =
+(n,s) :: sl2vl nl (specsl 0 (Var n s) sl)
+End
+
+
+Definition fresh_to_def:
+fresh_to ns vs ⇔ ns ∩ IMAGE FST vs = {}
+End
+
+Theorem slfv_EMPTY:
+slfv [] = {}
+Proof
+simp[slfv_alt]
+QED                
+
+Definition tnames_def:
+tnames (Var n s) = {n:string} ∪ snames s ∧
+tnames (Fn f s l) =
+snames s ∪ BIGUNION (set (MAP tnames l)) ∧
+tnames (Bound i) = {} ∧
+snames (St n tl) = BIGUNION (set (MAP tnames tl))
+Termination
+WF_REL_TAC ‘measure (λs. case s of INL t => term_size t
+                                | INR s => sort_size s)’             
+End
+
+
+Definition slnames_def:
+slnames sl = Uof snames (set sl)
+End
+
+
+Theorem slnames_alt:
+slnames sl = BIGUNION {snames s | MEM s sl}
+Proof
+simp[Once EXTENSION,slnames_def,Uof_def]
+QED
+ 
+Definition tlnames_def:
+tlnames tl = Uof tnames (set tl)
+End        
+
+
+
+Theorem tlnames_alt:
+tlnames tl = BIGUNION {tnames t | MEM t tl}
+Proof
+simp[Once EXTENSION,tlnames_def,Uof_def]
+QED           
+
+Theorem tnames_thm:
+tnames (Var n s) = {n:string} ∪ snames s ∧
+tnames (Fn f s l) =
+snames s ∪ BIGUNION {tnames t | MEM t l} ∧
+tnames (Bound i) = {} ∧
+snames (St n tl) = BIGUNION {tnames t | MEM t tl}
+Proof
+simp[tnames_def,PULL_EXISTS] >> simp[Once EXTENSION,PULL_EXISTS,MEM_MAP,LIST_TO_SET_MAP,IMAGE_DEF,EXTENSION]
+QED
+           
+Theorem tnames_trpl_SUBSET:
+(∀tm i t. tnames (trpl i t tm) ⊆ tnames t ∪ tnames tm) ∧
+(∀st i t. snames (srpl i t st) ⊆ tnames t ∪ snames st) 
+Proof
+ho_match_mp_tac better_tm_induction >>
+gs[tnames_thm,trpl_def,MEM_MAP] >> rw[] (* 5 *)
+>> TRY (gs[SUBSET_DEF] >> metis_tac[]) >>
+gs[tnames_def]
+QED
+
         
-     
-
-
-Theorem wfdpvl_ffv:
-wfdpvl vl TRUE ∧ ALL_DISTINCT vl ⇒
-∀f. (∀v. MEM v vl ⇒ v ∉ fVslfv f) ⇒
-wfdpvl vl f
+Theorem vl2sl_sl2vl_names_lemma:
+∀sl t i. slnames (specsl i t sl) ⊆ (tnames t) ∪ slnames sl
 Proof
-Induct_on ‘LENGTH vl’
->- cheat >>
-Cases_on ‘vl’ >> simp[] >> Cases_on ‘h’ >>
-simp[wfdpvl_def] >> rw[] >>
-‘wfdpvl t f’
- by (first_x_assum irule >> metis_tac[]) >>
-Cases_on ‘(n,s) ∈ (ffv f DIFF set vl)’
->- 
+rw[] >> 
+simp[SUBSET_DEF,PULL_EXISTS,slnames_alt]>>
+rw[] >> gs[LENGTH_specsl] >> gs[MEM_EL,LENGTH_specsl] >>
+drule_then assume_tac specsl_EL >>
+gs[PULL_EXISTS] >>
+qspecl_then [‘EL n sl’,‘i + n’,‘t’] assume_tac
+            $ cj 2 tnames_trpl_SUBSET >> gs[] >>
+gs[SUBSET_DEF] >> metis_tac[]
+QED            
+
+
+
+Theorem slnames_CONS:
+slnames (h :: t) = snames h ∪ slnames t
+Proof
+simp[slnames_alt,Once EXTENSION] >> metis_tac[]
+QED
+
+Theorem tfv_tnames:
+(∀tm n s. (n,s) ∈ tfv tm ⇒ n ∈ tnames tm) ∧
+(∀st n s. (n,s) ∈ sfv st ⇒ n ∈ snames st)
+Proof
+ho_match_mp_tac better_tm_induction >>
+gs[tfv_thm,tnames_thm,PULL_EXISTS] >> rw[] >>
+TRY (gs[] >> metis_tac[])
+QED
+ 
+Theorem vl2sl_sl2vl:
+∀nl. LENGTH nl = LENGTH sl ∧ ALL_DISTINCT nl ∧
+     (set nl) ∩ (slnames sl) = {} ⇒ vl2sl (sl2vl nl sl) = sl
+Proof
+Induct_on ‘LENGTH sl’
+>- rw[slfv_EMPTY,sl2vl_def,vl2sl_EMPTY] >>
+Cases_on ‘sl’ >> simp[] >> rw[] >>
+Cases_on ‘nl’ >> gs[] >>
+simp[sl2vl_def,vl2sl_CONS] >>
+‘(vl2sl (sl2vl t' (specsl 0 (Var h' h) t))) =
+(specsl 0 (Var h' h) t)’
+ by (first_x_assum irule >> simp[LENGTH_specsl] >>
+    qspecl_then [‘t’,‘Var h' h’,‘0’] assume_tac
+    vl2sl_sl2vl_names_lemma >>
+    ‘set t' ∩ (tnames (Var h' h) ∪ slnames t) = ∅’
+      suffices_by (gs[SUBSET_DEF,EXTENSION] >> metis_tac[])>>
+    gs[slnames_CONS] >>
+    simp[tnames_def] >> gs[Once EXTENSION] >>
+    gs[Once EXTENSION] >> metis_tac[]) >>
+simp[] >>
+irule abssl_specsl >> rw[] >>
+‘h' ∉ slnames t’ by
+(gs[Once EXTENSION] >> gs[Once EXTENSION] >>
+gs[slnames_CONS] >> metis_tac[]) >>
+gs[slnames_alt] >> metis_tac[tfv_tnames]
+QED
+
+
+
+
+
+
+             
+
+Theorem tinst_wffstl:
+wffstl Σf sl tl ∧
+(∀fsym.
+            isfsym Σf fsym ⇒
+            sfv (fsymout Σf fsym) ⊆
+            BIGUNION {tfv (Var n s) | MEM (n,s) (fsymin Σf fsym)}) ∧
+cstt σ ∧ wfcod Σf σ ∧ tlfv tl ⊆ FDOM σ ⇒
+wffstl Σf (MAP (sinst σ) sl) (MAP (tinst σ) tl)
+Proof
+rw[] >> simp[wffstl_def] >> 
+‘wfabsap Σf (MAP (sinst σ) sl) (MAP (tinst σ) tl)’
+  by (irule wfabsap_sinst_tinst >> simp[] >>
+     gs[tlfv_def,wffstl_def]) >> simp[] >>
+gs[wffstl_def] >>      
+qexists ‘sl2vl nl (MAP (sinst σ) sl)’ >> 
+     
+‘wfabsap_sinst_tinst’
+rw[] >- cheat >>
+qexists ‘sl2vl (MAP (sinst σ) (vl2sl vl)) names’ >>
+wfvl_def
+
+
+
+        
+     mk_FALLL_fVar_wff mk_FALLL_fVar_FALLL
+
 
 
 
