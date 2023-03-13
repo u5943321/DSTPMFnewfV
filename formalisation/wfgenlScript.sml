@@ -964,7 +964,7 @@ Cases_on ‘vl’ >> simp[] >>
 Cases_on ‘h’ >> simp[wfdpvl_def,vl2sl_CONS,okvnames_CONS] >>
 strip_tac >> strip_tac >>
 simp[fVslfv_fVar,slfv_CONS,tm_tree_WF] >>
-gs[ffv_mk_FALLL_TRUE,ffv_FALLL,PULL_EXISTS,ffv_TRUE] >>
+gs[mk_FALLL_TRUE,ffv_FALLL,PULL_EXISTS,ffv_TRUE] >>
 ‘(q,r) ∉ slfv (abssl (q,r) 0 (vl2sl t))’
  by (irule NOTIN_slfv_abssl >> simp[IN_slfv] >>
     metis_tac[]) >> simp[] >>    
@@ -1214,8 +1214,121 @@ QED
 
 
 
-             
+Theorem fVars_TRUE:
+fVars TRUE = {}
+Proof
+simp[TRUE_def,fVars_def]
+QED             
 
+
+Theorem fVslfv_TRUE:
+fVslfv TRUE = {}
+Proof
+simp[fVslfv_def,Uof_def,fVars_TRUE]
+QED
+
+             
+Theorem wfdpvl_TRUE:
+(wfdpvl [] TRUE ⇔ T) ∧
+(wfdpvl (h :: t) TRUE ⇔
+ wfdpvl t TRUE ∧
+ ∀n s. (n,s) ∈ slfv (vl2sl t) ⇒ h ∉ sfv s)
+Proof
+ simp[wfdpvl_def,fVslfv_TRUE] >>
+ rw[EQ_IMP_THM] (* 2 *)
+ >> (drule_then assume_tac wfdpvl_ffv_mk_FALLL >>
+    gs[mk_FALLL_TRUE,ffv_FALLL,ffv_TRUE,slfv_alt] >>
+    metis_tac[])
+QED    
+     
+
+Theorem MAP_FST_sl2vl:
+∀nl. LENGTH nl = LENGTH sl ⇒ MAP FST (sl2vl nl sl) = nl
+Proof
+Induct_on ‘LENGTH sl’ >> simp[sl2vl_def] >>
+Cases_on ‘sl’ >> simp[] >> rw[] >>
+Cases_on ‘nl’ >> gs[sl2vl_def] >>
+first_x_assum irule >> simp[LENGTH_specsl]
+QED 
+
+     
+
+
+
+Theorem ALL_DISTINCT_sl2vl:
+∀nl. LENGTH nl = LENGTH sl ∧ ALL_DISTINCT nl ∧
+     (set nl) ∩ (slnames sl) = {} ⇒
+     ALL_DISTINCT (sl2vl nl sl)
+Proof
+Induct_on ‘LENGTH sl’ >- simp[sl2vl_def] >>
+Cases_on ‘sl’ >> simp[slnames_CONS] >> rw[] >>
+Cases_on ‘nl’ >> gs[sl2vl_def] >>
+‘ALL_DISTINCT (sl2vl t' (specsl 0 (Var h' h) t))’
+ by (first_x_assum irule >> simp[LENGTH_specsl] >>
+    qspecl_then [‘t’,‘Var h' h’,‘0’] assume_tac
+                vl2sl_sl2vl_names_lemma >>
+    ‘set t' ∩ (tnames (Var h' h) ∪ slnames t) = {}’
+     suffices_by (gs[SUBSET_DEF,Once EXTENSION] >>
+     gs[Once EXTENSION] >>  gs[EXTENSION] >>
+     metis_tac[]) >>
+    gs[tnames_def] >> gs[slnames_alt,EXTENSION] >>
+    metis_tac[]) >>
+simp[] >> strip_tac >>
+‘h' ∈ set (MAP FST (sl2vl t' (specsl 0 (Var h' h) t)))’
+  by (gs[MEM_MAP] >> qexists ‘(h',h)’ >> simp[]) >>
+‘(MAP FST (sl2vl t' (specsl 0 (Var h' h) t))) =
+ t'’ suffices_by (strip_tac >> gs[]) >>
+irule MAP_FST_sl2vl >> simp[LENGTH_specsl]
+QED
+
+
+
+Theorem ALL_DISTINCT_EMPTY_INTER_lemma:
+¬MEM h' t' ∧ 
+ALL_DISTINCT t' ∧
+ (h' INSERT set t') ∩ (snames h ∪ slnames t) = ∅ ⇒
+        set t' ∩ slnames (specsl i (Var h' h) t) = ∅
+Proof
+rw[] >>
+qspecl_then [‘t’,‘Var h' h’,‘i’] assume_tac
+                vl2sl_sl2vl_names_lemma >>
+    ‘set t' ∩ (tnames (Var h' h) ∪ slnames t) = {}’
+     suffices_by (gs[SUBSET_DEF,Once EXTENSION] >>
+     gs[Once EXTENSION] >>  gs[EXTENSION] >>
+     metis_tac[]) >>
+    gs[tnames_def] >> gs[slnames_alt,EXTENSION] >>
+    gs[SUBSET_DEF] >>
+    metis_tac[]
+QED    
+
+Theorem okvnames_sl2vl:
+∀nl. LENGTH nl = LENGTH sl ∧ ALL_DISTINCT nl ∧
+     (set nl) ∩ (slnames sl) = {} ⇒
+     okvnames (sl2vl nl sl)
+Proof
+Induct_on ‘LENGTH sl’
+>- (rw[] >> simp[sl2vl_def,okvnames_def]) >>
+Cases_on ‘sl’ >> simp[] >> rw[] >>
+Cases_on ‘nl’ >> gs[slnames_CONS,sl2vl_def] >>
+simp[okvnames_CONS] >>
+‘okvnames (sl2vl t' (specsl 0 (Var h' h) t))’
+ by (first_x_assum irule >> simp[LENGTH_specsl] >>
+    metis_tac[ALL_DISTINCT_EMPTY_INTER_lemma]) >>
+simp[] >> rw[] >> Cases_on ‘v’ >>
+strip_tac >> ‘q ∈ snames h’ by metis_tac[tfv_tnames] >>
+‘MAP FST (sl2vl t' (specsl 0 (Var h' h) t)) = t'’
+ by (irule MAP_FST_sl2vl >> simp[LENGTH_specsl]) >>
+‘q ∈ set (MAP FST (sl2vl t' (specsl 0 (Var h' h) t)))’ 
+ by (simp[MEM_MAP] >> qexists ‘(q,r)’ >> simp[]) >>
+‘q ∈ set t'’ suffices_by
+(strip_tac >> gs[EXTENSION]>> metis_tac[]) >>
+gs[]
+QED
+ 
+ 
+        
+ 
+             
 Theorem tinst_wffstl:
 wffstl Σf sl tl ∧
 (∀fsym.
@@ -1230,7 +1343,8 @@ rw[] >> simp[wffstl_def] >>
   by (irule wfabsap_sinst_tinst >> simp[] >>
      gs[tlfv_def,wffstl_def]) >> simp[] >>
 gs[wffstl_def] >>      
-qexists ‘sl2vl nl (MAP (sinst σ) sl)’ >> 
+qexists ‘sl2vl nl (MAP (sinst σ) sl)’ >>
+
      
 ‘wfabsap_sinst_tinst’
 rw[] >- cheat >>
@@ -1318,7 +1432,7 @@ strip_tac >> reverse (rw[])
 >- simp[fVslfv_def,fVars_def,Uof_Sing] >>
    simp[vl2sl_CONS] >> Cases_on ‘h’ >> simp[] >>
    ‘ffv (mk_FALLL t TRUE) = slfv (vl2sl t)’
-     by simp[ffv_mk_FALLL_TRUE,ffv_FALLL,ffv_TRUE,
+     by simp[mk_FALLL_TRUE,ffv_FALLL,ffv_TRUE,
           slfv_alt] >>
    pop_assum SUBST_ALL_TAC >> simp[slfv_CONS,tm_tree_WF] >>
    cheat >>
@@ -1328,7 +1442,7 @@ strip_tac >> reverse (rw[])
 
    
    
-   gs[ffv_mk_FALLL_TRUE,ffv_FALLL,PULL_EXISTS,ffv_TRUE] >>
+   gs[mk_FALLL_TRUE,ffv_FALLL,PULL_EXISTS,ffv_TRUE] >>
    simp[slfv_alt] >> rw[] >>
    Cases_on ‘(q,r) ∉ s’ >> gs[] >> rw[] (* 2 *)
    >- metis_tac[tm_tree_WF] >>
