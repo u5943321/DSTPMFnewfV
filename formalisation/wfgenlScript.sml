@@ -1398,7 +1398,6 @@ QED
 
 
 
-
 Theorem sl2vl_sinst:
 ∀nl. LENGTH nl = LENGTH sl ∧
      ALL_DISTINCT nl ∧
@@ -1410,7 +1409,8 @@ Theorem sl2vl_sinst:
 sl2vl nl (MAP (sinst σ) sl) =
 MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl sl)
 Proof
-Induct_on ‘LENGTH sl’ >- cheat >>
+Induct_on ‘LENGTH sl’
+>- (rw[] >> simp[sl2vl_def]) >>
 Cases_on ‘sl’ >> simp[] >> rw[] >>
 Cases_on ‘nl’ >> gs[sl2vl_def] >>
 ‘(specsl 0 (Var h' (sinst σ h)) (MAP (sinst σ) t)) =
@@ -1443,52 +1443,236 @@ simp[] >>
      first_x_assum $ drule_then assume_tac >>
      gs[MEM_EL] (* 3 *) >- metis_tac[]
      >- metis_tac[ok_abs_HD] >> metis_tac[])
-     >- cheat >>
+     >- (gs[ok_abs_def,PULL_EXISTS,SUBSET_DEF,
+           LENGTH_specsl] >>
+        rw[] >>
+        drule_then assume_tac specsl_EL >>
+        gs[] >>
+        ‘sbounds (srpl n (Var h' h) (EL n t)) =
+         sbounds (EL n t) DELETE n’
+         suffices_by
+         (rw[] >> gs[] >>
+         last_x_assum $
+         qspecl_then [‘SUC n’] assume_tac >> gs[] >>
+         first_x_assum $ drule_then assume_tac >>
+         gs[]) >>
+       irule $ cj 2 trpl_eliminate >> rw[] (* 2 *)
+       >- metis_tac[MEM_EL] >>
+       simp[tbounds_def] >>
+       last_x_assum $ qspecl_then [‘0’] assume_tac >>
+       gs[] >> metis_tac[MEMBER_NOT_EMPTY]
+       ) >>
      gs[EXTENSION] >> metis_tac[])
 QED 
 
 
 
 
-Theorem sl2vl_sinst:
-∀nl. LENGTH nl = LENGTH sl ∧
-     ALL_DISTINCT nl ∧
-     (∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = ∅) ∧
-     (∀n s st. MEM st sl ∧ (n,s) ∈ sfv st ⇒ sbounds s = ∅) 
-     ⇒
-sl2vl nl (MAP (sinst σ) sl) =
-MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl sl)
+Theorem vl2sl_no_vbound:
+(∀v. MEM v vl ⇒ ∀n s. (n,s) ∈ sfv (SND v) ⇒
+sbounds s = {}) ⇒ 
+(∀n s st. MEM st (vl2sl vl) ∧ (n,s) ∈ sfv st ⇒ sbounds s = ∅)
 Proof
-Induct_on ‘LENGTH sl’ >- cheat >>
-Cases_on ‘sl’ >> simp[] >> rw[] >>
-Cases_on ‘nl’ >> gs[sl2vl_def] >>
-‘(specsl 0 (Var h' (sinst σ h)) (MAP (sinst σ) t)) =
- MAP (sinst σ) (specsl 0 (Var h' h) t)’
- by
-(‘(Var h' (sinst σ h)) = tinst σ (Var h' h)’
- by cheat >> pop_assum SUBST_ALL_TAC >>
- irule $ GSYM MAP_sinst_specsl1 >>
- rw[](* 2 *)
- >- metis_tac[] >>
-(gs[SUBSET_DEF] >> metis_tac[])) >>
-simp[] >>
-‘sl2vl t' (MAP (sinst σ) (specsl 0 (Var h' h) t)) =
- MAP (λ(n,s). (n,sinst σ s))
- (sl2vl t' (specsl 0 (Var h' h) t))’
- by (first_x_assum irule >> simp[LENGTH_specsl] >>
-     simp[MEM_EL,LENGTH_specsl,PULL_EXISTS] >>
-     rw[] >>
-     drule_then assume_tac specsl_EL >> gs[] >>
-     qspecl_then [‘EL n' t’,‘n'’,‘(Var h' h)’]
-     assume_tac $ cj 2 tfv_trpl_SUBSET2 >>
-     gs[SUBSET_DEF] >>
-     first_x_assum $ drule_then assume_tac >>
-     gs[MEM_EL] (* 3 *) >- metis_tac[]
-     >- (*ok_abs?*) cheat >> metis_tac[])
-QED 
+Induct_on ‘LENGTH vl’ >> simp[vl2sl_EMPTY] >>
+Cases_on ‘vl’ >> simp[vl2sl_CONS] >>
+rw[] (* 2 *)
+>- metis_tac[] >>
+Cases_on ‘h’ >> 
+gs[MEM_EL,LENGTH_abssl] >>
+drule_then assume_tac abssl_EL >> gs[] >>
+pop_assum (K all_tac) >>
+qspecl_then [‘EL n' (vl2sl t)’,‘q’,‘r’,‘n'’]
+assume_tac $ cj 2 tfv_tabs_SUBSET1 >>
+gs[SUBSET_DEF] >>
+first_x_assum $ drule_then assume_tac >>
+last_x_assum irule >> simp[PULL_EXISTS] >>
+first_x_assum $ irule_at Any >> simp[LENGTH_vl2sl] >>
+metis_tac[]
+QED
 
-Theorem wfs_sl2vl:
-∀s. MEM              
+Theorem tbounds_tabs_SUBSET1:
+(∀tm m s n. tbounds (tabs (m,s) n tm) ⊆ tbounds tm ∪ {n})∧
+∀st m s n. sbounds (sabs (m,s) n st) ⊆ sbounds st ∪ {n}
+Proof
+ho_match_mp_tac better_tm_induction >>
+gs[tbounds_thm,tabs_def,PULL_EXISTS,MEM_MAP] >>
+rw[] >> gs[SUBSET_DEF,tabs_def] >>
+TRY (metis_tac[]) >>
+Cases_on ‘m = s0 ∧ s = st’ >> simp[] >>
+simp[tbounds_thm] >> TRY (metis_tac[])
+QED
+
+Theorem ok_abs_vl2sl:
+(∀v. MEM v vl ⇒ sbounds (SND v) = {}) ⇒
+ok_abs (vl2sl vl)
+Proof
+Induct_on ‘LENGTH vl’
+>- simp[vl2sl_EMPTY,ok_abs_def] >>
+Cases_on ‘vl’ >> simp[] >> rw[] >>
+simp[vl2sl_CONS] >>
+simp[ok_abs_def,PULL_EXISTS] >>
+Cases_on ‘h’ >> simp[LENGTH_abssl,LENGTH_vl2sl] >>
+rw[] >>
+Cases_on ‘n’ >> gs[] (* 2 *)
+>- (first_x_assum
+   $ qspecl_then [‘(q,r)’] assume_tac>>
+   gs[]) >>
+‘n' < LENGTH (vl2sl t)’ by gs[LENGTH_vl2sl] >>
+drule_then assume_tac abssl_EL >> gs[] >>
+qspecl_then [‘EL n' (vl2sl t)’,‘q’,‘r’,‘n'’]
+assume_tac $ cj 2 tbounds_tabs_SUBSET1 >>
+gs[SUBSET_DEF] >>
+rw[] >> first_x_assum $ drule_then assume_tac >>
+gs[] >>
+‘ok_abs (vl2sl t)’
+  by (first_x_assum irule >> simp[]) >>
+last_x_assum $ K all_tac >>
+gs[ok_abs_def,LENGTH_vl2sl] >>
+first_x_assum $ drule_then assume_tac >>
+gs[SUBSET_DEF] >>
+first_x_assum $ drule_then assume_tac >> gs[]
+QED
+
+cstt_EXT
+wft_tinst
+
+
+
+
+Theorem tfv_tpsubtm:
+(∀tm n s t0. (n,s) ∈ tfv tm ∧ t0 ∈ ssubtm s ⇒
+         term_size t0 < term_size tm) ∧
+(∀st n s t0. (n,s) ∈ sfv st ∧ t0 ∈ ssubtm s ⇒
+         term_size t0 < sort_size st)         
+Proof
+ho_match_mp_tac better_tm_induction >>
+gs[term_size_def,PULL_EXISTS] >> rw[] (* 5 *)
+>-  
+Induct_on ‘t’ >>
+simp[tfv_def,tpsubtm_def,tsubtm_def] (* 2 *)
+ 
+>- rw[] >> Cases_on ‘s’ >> gs[tsubtm_def,MEM_MAP](*4*)
+   >- (simp[PULL_EXISTS] >> disj2_tac >>
+      qexists ‘t0’ >> simp[tsubtm_REFL])
+   >- 
+
+        
+Theorem tfv_tpsubtm:
+(∀n s t0. (n,s) ∈ tfv t ∧ MEM t0 (stms s) ⇒
+         t0 ∈ tpsubtm t)
+Proof
+Induct_on ‘t’ >>
+simp[tfv_def,tpsubtm_def,tsubtm_def] (* 2 *)
+>- rw[] >> Cases_on ‘s’ >> gs[tsubtm_def,MEM_MAP](*4*)
+   >- (simp[PULL_EXISTS] >> disj2_tac >>
+      qexists ‘t0’ >> simp[tsubtm_REFL])
+   >- 
+        
+Theorem wft_tinst1:
+(∀fsym.
+        isfsym Σf fsym ⇒
+        sfv (fsymout Σf fsym) ⊆
+        BIGUNION {tfv (Var n s) | MEM (n,s) (fsymin Σf fsym)}) ⇒
+     (∀t. wft Σf t ⇒
+          ∀σ. cstt σ ∧ wfcod Σf σ ⇒ wft Σf (tinst σ t))
+Proof
+disch_tac >>
+completeInduct_on ‘term_size t’ >> rw[] >>
+drule_then assume_tac cstt_EXT1 >>
+   first_x_assum $ qspecl_then [‘tfv t’] assume_tac>>
+   gs[] >>
+   ‘(tinst σ t) = (tinst σ1 t)’
+   by (irule $ cj 1 inst_eff_tinst >> metis_tac[]) >>
+   simp[] >>
+   irule $ cj 1 wft_tinst >> simp[] >>
+   ‘gcont (tfv t) = tfv t’
+    by metis_tac[gcont_of_cont,tfv_is_cont] >>
+   gs[] >>
+   simp[wfcod_def,PULL_EXISTS] >>
+   rw[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[inst_eff_def] >>
+   Cases_on ‘(n,s) ∈ FDOM σ’ (* 2 *) >> simp[] 
+   >- gs[wfcod_def] >>
+   simp[wft_def] >>
+   Cases_on ‘s’ >>
+   simp[tinst_def,wft_def,EVERY_MEM,MEM_MAP,
+        PULL_EXISTS] >>
+   rw[] >>
+   first_x_assum irule >>
+   simp[] >>
+   drule_then assume_tac $ cj 1 wft_wfs >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[wft_def,EVERY_MEM] >>
+   drule_then assume_tac $ cj 1 tm_tree_size_less >>
+   ‘term_size a' ≤ sort_size (St s' l)’
+    suffices_by
+    metis_tac[arithmeticTheory.LESS_EQ_LESS_TRANS] >>
+    simp[term_size_def,term_size_eq] >>
+    ‘term_size a' ≤ list_size term_size l’
+      suffices_by simp[] >>
+    irule MEM_list_size_leq >> simp[]
+QED    
+       
+   irule tpsubtm_size_LESS >>
+   
+
+Theorem wft_tinst1:
+(∀fsym.
+        isfsym Σf fsym ⇒
+        sfv (fsymout Σf fsym) ⊆
+        BIGUNION {tfv (Var n s) | MEM (n,s) (fsymin Σf fsym)}) ⇒
+     (∀t. wft Σf t ⇒
+          ∀σ. cstt σ ∧ wfcod Σf σ ⇒ wft Σf (tinst σ t)) ∧
+     ∀s. wfs Σf s ⇒
+         ∀σ. cstt σ ∧ wfcod Σf σ ⇒ wfs Σf (sinst σ s)
+Proof
+disch_tac >>
+ho_match_mp_tac better_tm_induction >>
+simp[wft_def,tinst_def,MEM_MAP,PULL_EXISTS] >>
+rw[] (* 4 *)
+>- (gs[] >>
+   Cases_on ‘(s0,s) ∉ FDOM σ’ >> simp[wft_def] >>
+   gs[wfcod_def])
+>- gs[]   
+
+        
+rw[] (* 2 *) 
+>- drule_then assume_tac cstt_EXT1 >>
+   first_x_assum $ qspecl_then [‘tfv t’] assume_tac>>
+   gs[] >>
+   ‘(tinst σ t) = (tinst σ1 t)’
+   by (irule $ cj 1 inst_eff_tinst >> metis_tac[]) >>
+   simp[] >>
+   irule $ cj 1 wft_tinst >> simp[] >>
+   ‘gcont (tfv t) = tfv t’
+    by metis_tac[gcont_of_cont,tfv_is_cont] >>
+   gs[] >>
+   simp[wfcod_def,PULL_EXISTS] >>
+   rw[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[inst_eff_def] >>
+   Cases_on ‘(n,s) ∈ FDOM σ’ (* 2 *) >> simp[] 
+   >- gs[wfcod_def] >>
+   simp[wft_def] >>
+   ‘(sinst σ s)= (sinst σ1 s)’
+    suffices_by
+     rw[] >>
+     simp[wft_def] >> irule $ cj 2 wft_tinst >>
+     si
+   
+    
+   
+
+drule_then assume_tac DRESTRICT_cstt >>
+   first_x_assum $ qspecl_then [‘tfv t’] assume_tac>>
+   gs[]
+
+drule_then assume_tac cstt_EXT >>
+   first_x_assum $ qspecl_then [‘’]
+        
+
+Theorem sinst_sl2vl_vl2sl_wf:
 
 
 Theorem tinst_wffstl:
@@ -1507,12 +1691,34 @@ rw[] >> simp[wffstl_def] >>
 gs[wffstl_def] >>
 ‘∃nl.ALL_DISTINCT nl ∧
      LENGTH nl = LENGTH sl ∧
-     (set nl) ∩ (slnames (MAP (sinst σ) sl)) = {}’
+     (set nl) ∩ (slnames (MAP (sinst σ) sl)) = {} ∧
+     (set nl) ∩ IMAGE FST (FDOM σ) = {}’
  by cheat >>
 qexists ‘sl2vl nl (MAP (sinst σ) sl)’ >>
 rw[] (* 4 *)
 >- (simp[wfvl_def] >> rw[] (* 2 *)
    >- (irule wfdpvl_sl2vl >> simp[]) >>
+   ‘sl2vl nl (MAP (sinst σ) (vl2sl vl)) =
+MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl (vl2sl vl)) ’
+    by
+    (irule sl2vl_sinst >> simp[LENGTH_vl2sl] >>
+    rw[] (* 3 *)
+    >- (irule vl2sl_no_vbound >>
+    first_x_assum $ irule_at Any >>
+    first_x_assum $ irule_at Any >>
+    gs[wfvl_def] >>
+    rw[] >> metis_tac[wft_no_vbound])
+    >- metis_tac[wfcod_no_bound,no_bound_def] >>
+    irule ok_abs_vl2sl >> gs[wfvl_def] >>
+    metis_tac[wft_no_bound]) >>
+    gs[] >> 
+
+wft_tinst 
+    
+    
+    simp[vl2sl_no_vbound]
+    
+    
    cheat)
 >- (irule vl2sl_sl2vl >> simp[])
 >- (irule ALL_DISTINCT_sl2vl >> simp[]) >>
