@@ -1047,7 +1047,7 @@ simp[] >>
 irule mk_FALLL_fVar_wff >> reverse (rw[wfvl_def]) (* 3 *)
 >- gs[wfvl_def]
 >- (irule wfdpvl_TRUE_fVar >> simp[]) >>
-cheat
+cheat (*need to redefine wff*)
 QED
 
 
@@ -2742,56 +2742,7 @@ Proof
    first_x_assum $ drule_then assume_tac >> gs[]
 QED   
    
-         
-     
 
-
-
-Theorem wfvl_sl2vl_vl2sl:
-  ∀nl n s.
-    wfvl Σf vl TRUE ∧ LENGTH nl = LENGTH vl ∧
-    ALL_DISTINCT nl ∧
-    MEM (n,s) (sl2vl nl (vl2sl vl)) ⇒
-    wfs Σf s
-Proof
-  Induct_on ‘vl’
-  >- simp[vl2sl_def,vl2sl0_def,sl2vl_def] >>
-  simp[vl2sl_CONS,pairTheory.FORALL_PROD] >>
-  rw[] >> Cases_on ‘nl’ >>
-  gvs[sl2vl_def,wfvl_def,DISJ_IMP_THM,FORALL_AND_THM]
-  >>
-  pop_assum mp_tac >>
-  dep_rewrite.DEP_REWRITE_TAC[specsl_abssl] >>
-  simp[tsubst_trename1] >>
-  reverse (rw[]) (* 4 *)
-  >- Cases_on ‘MEM (p_1,p_2) vl’
-     >- (‘(MAP (srename (p_1,p_2) h) (vl2sl vl)) =
-         vl2sl vl’ by cheat >>
-        gs[] >>
-        first_x_assum irule >>
-        gs[wfdpvl_TRUE] >> metis_tac[]) >>
-     qspecl_then [‘p_1’,‘p_2’,‘h’] assume_tac
-     srename_vl2sl >>
-     gs[] >>
-     ‘MAP (srename (p_1,p_2) h) (vl2sl vl) =
-        vl2sl (MAP (λ(n0,s0). (n0,srename (p_1,p_2) h s0)) vl)’ by cheat >>
-     gs[] >>
-     
-     dep_rewrite.DEP_REWRITE_TAC[srename_vl2sl]
-           ssubst_vl2sl
-  
-
-
-
-    cheat >- cheat >- cheat >>
-  
-  QSPECL_then [‘’] assume_tac specsl_abssl 
-  gs[wfvl_def]
-  rw[sl2vl_def]
-
-
-
-     
 Theorem tinst_wffstl:
 wffstl Σf sl tl ∧
 (∀fsym.
@@ -2809,7 +2760,8 @@ gs[wffstl_def] >>
 ‘∃nl.ALL_DISTINCT nl ∧
      LENGTH nl = LENGTH sl ∧
      (set nl) ∩ (slnames (MAP (sinst σ) sl)) = {} ∧
-     (set nl) ∩ IMAGE FST (FDOM σ) = {}’
+     (set nl) ∩ IMAGE FST (FDOM σ) = {} ∧
+     set nl ∩ tlnames (MAP Var' vl) = ∅’
  by cheat >>
 qexists ‘sl2vl nl (MAP (sinst σ) sl)’ >>
 rw[] (* 4 *)
@@ -2828,37 +2780,16 @@ MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl (vl2sl vl)) ’
     >- metis_tac[wfcod_no_bound,no_bound_def] >>
     irule ok_abs_vl2sl >> gs[wfvl_def] >>
     metis_tac[wft_no_bound]) >>
-    gs[MEM_MAP] >> pairarg_tac >> gvs[] >>
-    wft_tinst
-
-wft_tinst 
-    
-    
-    simp[vl2sl_no_vbound]
-    
-    
-   cheat)
+    gs[MEM_MAP] >>
+    Cases_on ‘y’ >> gs[] >>
+    irule $ cj 2 wft_tinst >> simp[] >>
+    ‘sfv r ⊆ FDOM σ’ by cheat >> gs[] >>
+    irule wfvl_sl2vl_vl2sl >>
+    qexistsl [‘q’,‘nl’,‘vl’] >> gs[LENGTH_vl2sl])
 >- (irule vl2sl_sl2vl >> simp[])
 >- (irule ALL_DISTINCT_sl2vl >> simp[]) >>
 irule okvnames_sl2vl >> simp[]
 QED
-
-
-
-     
-‘wfabsap_sinst_tinst’
-rw[] >- cheat >>
-qexists ‘sl2vl (MAP (sinst σ) (vl2sl vl)) names’ >>
-wfvl_def
-
-
-
-        
-     mk_FALLL_fVar_wff mk_FALLL_fVar_FALLL
-
-
-
-
 
         
         
