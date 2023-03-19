@@ -2263,7 +2263,7 @@ QED
 
 
 Theorem tfv_trename1:
-(∀tm n s nn v.
+(∀tm n s nn.
 (n,s) ∈ tfv tm ⇒
 tfv (trename (n,s) nn tm) =
 {(nn,s)} ∪
@@ -2352,133 +2352,27 @@ assume_tac $ cj 1 tfv_tinst >>
  simp[]
 QED 
 
-     
 
-
-
-                
-Theorem tfv_trename1:
-(∀tm n s nn v.
-(n,s) ∈ tfv tm ⇒
-tfv (trename (n,s) nn tm) =
-{(nn,s)} ∪ sfv s ∪ {(n1,srename (n,s) nn s1) | (n1,s1) | (n1,s1) ∈ tfv tm DIFF tfv (Var n s)}) ∧
-(∀st n s nn v.
-(n,s) ∈ sfv st ⇒
-sfv (srename (n,s) nn st) =
-{(nn,s)} ∪ sfv s ∪ {(n1,srename (n,s) nn s1) | (n1,s1) | (n1,s1) ∈ sfv st DIFF tfv (Var n s)})
-Proof
-ho_match_mp_tac better_tm_induction >>
-gs[tfv_thm,trename_alt,PULL_EXISTS,MEM_MAP] >>
-rw[] (* 5 *)
->- (‘{(n1,srename (n,s) nn s1) |
-         (n1,s1) |
-         (n1 = n ∧ s1 = s ∨ (n1,s1) ∈ sfv s) ∧ (n1 = n ⇒ s1 ≠ s) ∧
-         (n1,s1) ∉ sfv s} = {}’
-     by (simp[EXTENSION] >> metis_tac[]) >> simp[])
->- (‘¬(s0 = n ∧ st = s)’
-     by (strip_tac >> gs[tm_tree_WF]) >>
-   simp[] >>
-   ‘{(s0,srename (n,s) nn st)} ∪
-   {(n1,srename (n,s) nn s1) |
-          (n1,s1) |
-          (n1,s1) ∈ sfv st ∧ (n1 = n ⇒ s1 ≠ s) ∧ (n1,s1) ∉ sfv s} =
-   {(n1,srename (n,s) nn s1) |
-         (n1,s1) |
-         (n1 = s0 ∧ s1 = st ∨ (n1,s1) ∈ sfv st) ∧ (n1 = n ⇒ s1 ≠ s) ∧
-         (n1,s1) ∉ sfv s}’ suffices_by
-   (simp[EXTENSION] >> metis_tac[]) >>
-   rw[Once EXTENSION] >> Cases_on ‘x’ >>
-   simp[] >> rw[EQ_IMP_THM] (* 3 *)
-   >- (qexists ‘st’ >>  simp[] >>
-      metis_tac[vsort_tfv_closed,tm_tree_WF])
-   >- (qexists ‘s1’ >> simp[]) >>
-   metis_tac[vsort_tfv_closed,tm_tree_WF])
->- cheat 
-
-
-Cases_on ‘x’ >> simp[] >>
-   metis_tac[]
-        
-Theorem tfv_trename1:
-(∀tm v.
-(n,s) ∈ tfv tm ⇒
-(v ∈ tfv (trename (n,s) nn tm) ⇔
-v = (nn,s) ∨
-∃n0 s0. (n0,s0) ∈ tfv tm DELETE (n,s) ∧
-v = (n0,srename (n,s) nn s0))) ∧
-(∀st v.
-(n,s) ∈ sfv st ⇒
-(v ∈ sfv (srename (n,s) nn st) ⇔
-v = (nn,s) ∨
-∃n0 s0. (n0,s0) ∈ sfv st DELETE (n,s) ∧
-v = (n0,srename (n,s) nn s0)))
-Proof
-rw[] >>
-rw[trename_tinst_tfv] >>
-qspecl_then [‘tm’,‘rnmap (n,s) nn (tfv tm)’]
-assume_tac $ cj 1 tfv_sinst >>
-‘cstt (rnmap (n,s) nn (tfv tm)) ∧
-        tfv tm ⊆ FDOM (rnmap (n,s) nn (tfv tm)) ∧
-        no_bound (rnmap (n,s) nn (tfv tm))’
- by cheat >> gs[] >>
-Cases_on ‘v’ >> gs[] >>
-‘∀n0 st0.
- (n0,st0) ∈ tfv tm ⇒
- (rnmap (n,s) nn (tfv tm) ' (n0,st0)) =
- (trename (n,s) nn (Var n0 st0))’
- by simp[FAPPLY_rnmap] >>
- ‘(∃n0 st0.
-           (n0,st0) ∈ tfv tm ∧
-           (q,r) ∈ tfv (rnmap (n,s) nn (tfv tm) ' (n0,st0))) ⇔
- ∃n0 st0.
- (n0,st0) ∈ tfv tm ∧
- (q,r) ∈ tfv (trename (n,s) nn (Var n0 st0)) ’
- by metis_tac[] >>
- simp[] >>
- ‘(∃n0 st0.
-           (n0,st0) ∈ tfv tm ∧ (q,r) ∈ tfv (trename (n,s) nn (Var n0 st0))) ⇔
-  ((n,s) ∈ tfv tm ∧ (q,r) ∈ {(nn,s)} ∪ sfv s) ∨       
-  ∃n0 st0.
-    (n0,st0) ∈ tfv tm ∧ (n0,st0) ≠ (n,s) ∧
-    (q,r) ∈ tfv (Var n0 (srename (n,s) nn st0))’
- simp[EQ_IMP_THM] >> rw[] (* 5 *)
- >- (Cases_on ‘(n,s) = (n0,st0)’ >> gs[]
-    >- gs[trename_alt] >>
-    disj2_tac >> gs[trename_alt] >>
-    ‘(q,r) ∈
-        tfv
-           (Var n0 (srename (n,s) nn st0))’
-     by cheat >>
-    gs[] >> metis_tac[])
-  >- first_x_assum $ irule o iffLR >>
-     
-rnmap_def
-rw[EQ_IMP_THM] (* 3 *)
->- 
-gs[FAPPLY_rnmap,trename_alt] >>
-Cases_on ‘n0 = n ∧ st0 = s’ >> gs[]          
-ho_match_mp_tac better_tm_induction >>
-gs[tfv_thm,trename_alt,PULL_EXISTS,MEM_MAP] >>
-rw[] (* 4 *)
->- Cases_on ‘ v = (nn,s)’ >> simp[] >>
-   tfv_sinst rnmap_def
-   
-
-
-Cases_on ‘s0 = n ∧ st = s’ >> simp[] (* 2 *)
-   >- Cases_on ‘v = (nn,s)’
-
-        
-Theorem tfv_trename1:
-(∀tm n s nn.
-tfv (trename (n,s) nn tm) =
-IMAGE (dest_var o (trename (n,s) nn) o Var') (tfv tm)) ∧
+Theorem sfv_srename1:
 (∀st n s nn.
+(n,s) ∈ sfv st ⇒
 sfv (srename (n,s) nn st) =
-IMAGE (dest_var o (trename (n,s) nn) o Var') (sfv tm))
+{(nn,s)} ∪
+IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1))
+    (sfv st DELETE (n,s)))
 Proof
+cheat
+QED 
+     
         
-        
+Theorem vname_tfv_closed:
+(∀h n s n0. (n,s) ∈ tfv h ∧ n0 ∈ snames s ⇒ n0 ∈ tnames h) ∧
+∀st n s n0. (n,s) ∈ sfv st ∧ n0 ∈ snames s ⇒ n0 ∈ snames st
+Proof
+cheat
+QED
+
+
 Theorem wfdpvl_rename:
 wfdpvl vl TRUE ∧ okvnames vl ∧
 nn ∉ tlnames (MAP Var' vl) ∧
@@ -2495,6 +2389,71 @@ rw[] >> Cases_on ‘h’ >> gs[] >>
 ‘(vl2sl (MAP (λ(n0,s0). (n0,srename (n,s) nn s0)) t)) = MAP (srename (n,s) nn) (vl2sl t)’ by cheat >>
 gs[] >>
 gvs[slfv_alt,MEM_MAP,PULL_EXISTS] >>
+Cases_on ‘(n,s) ∈ sfv y’ (* 2 *)
+>- (drule_then assume_tac sfv_srename1 >>
+gvs[] (* 2 *)
+>- (strip_tac >>
+   ‘(n,s) ∉ sfv r’
+        suffices_by (strip_tac >> gs[trename_fix] >>
+             metis_tac[]) >>
+      strip_tac >>
+      ‘n' ∈ snames (srename (n,s) n' r)’ by cheat >>
+      ‘n' ∈ snames s’
+       by metis_tac[vname_tfv_closed]>>
+      ‘n' ∈ snames y’
+       by metis_tac[vname_tfv_closed]>>
+      cheat) >>
+Cases_on ‘x’ >> gvs[]>>
+strip_tac >>
+‘(q,r) ∈ sfv r'’ suffices_by metis_tac[] >>
+Cases_on ‘(n,s) ∈ sfv r'’ 
+>- (drule_then assume_tac sfv_srename1  >> gs[]
+   >- cheat >>
+   Cases_on ‘x’ >> gvs[] >>
+   ‘r'' = r’ suffices_by metis_tac[] >>
+   cheat
+   (*trename_reflect  *)) >>
+gs[trename_fix] >>
+‘(n,s) ∉ sfv r’ by cheat  >>
+gs[trename_fix]) >>
+gs[trename_fix] >> strip_tac >>
+‘(n,s) ∉ sfv r’ suffices_by metis_tac[trename_fix] >>
+
+
+         
+>- strip_tac >> gs[trename_fix] >>
+   drule_then assume_tac $ cj 2
+   tfv_trename1
+   ‘(n,s) ∉ sfv r’
+reverse (Cases_on ‘(n,s) ∈ sfv r’)
+
+>- strip_tac >>
+   qspecl_then [‘y’,‘n’,‘s’,‘nn’] assume_tac sfv_srename1 >> gvs[] (* 2 *)
+   >- ‘(n,s) ∉ sfv r’
+        suffices_by (strip_tac >> gs[trename_fix] >>
+             metis_tac[]) >>
+      strip_tac >>
+      ‘n' ∈ snames (srename (n,s) n' r)’ by cheat >>
+      ‘n' ∈ snames s’
+       by metis_tac[vname_tfv_closed]>>
+      ‘n' ∈ snames y’
+       by metis_tac[vname_tfv_closed]>>
+      cheat >>
+   Cases_on ‘x’ >> gvs[] >>
+   ‘(q,r) ∈ sfv r'’ suffices_by metis_tac[] >>
+   Cases_on ‘(n,s) ∈ sfv r'’ 
+   drule_then assume_tac sfv_srename1  >> gs[]
+   >- cheat >>
+   Cases_on ‘x’ >> gvs[] >>
+   
+      
+   
+   rev_drule_then assume_tac 
+   gs[trename_fix] >>
+   
+   first_x_assum irule >>
+   qexistsl [‘n'’,‘y’] >> simp[] >>
+   
 
 
           
