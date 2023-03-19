@@ -2357,7 +2357,20 @@ Theorem Uof_eq_lemma:
 Proof
 rw[Uof_def,EXTENSION] >> metis_tac[]
 QED
-    
+
+(*        
+Theorem sfv_srename1:
+(∀sn n s nn.
+(n,s) ∈ sfv (St sn tl) ⇒
+sfv (srename (n,s) nn (St sn tl)) =
+{(nn,s)} ∪
+IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1))
+    (sfv (St sn tl) DELETE (n,s)))
+Proof
+Induct_on ‘tl’ >> simp[PULL_EXISTS] >>
+rw[]  
+*)
+        
 Theorem sfv_srename1:
 (∀st n s nn.
 (n,s) ∈ sfv st ⇒
@@ -2402,30 +2415,52 @@ simp[] >>
  {(nn,s)}  ∪
  Uof  (λt. IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1))
                  (tfv t DELETE (n,s))) {t | (n,s) ∈ tfv t ∧ MEM t l}’
-  by cheat >> simp[] >>
-simp[IMAGE_BIGUNION] >>
+  by (simp[Uof_def,Once EXTENSION]  >>
+     rw[] >> Cases_on ‘x’ >> simp[] >>
+      simp[PULL_EXISTS] >>
+      simp[pairTheory.EXISTS_PROD] >>
+      simp[PULL_EXISTS] >>
+      rw[EQ_IMP_THM] (* 3 *)
+      >- metis_tac[] 
+      >- (gs[tfv_def,MEM_MAP] >> metis_tac[]) >>
+      metis_tac[]) >> simp[] >>
 ‘(BIGUNION {tfv t | MEM t l} DELETE (n,s)) =
  BIGUNION {tfv t | (n,s) ∉ tfv t ∧ MEM t l} ∪
  (BIGUNION {tfv t | (n,s) ∈ tfv t ∧ MEM t l}
   DELETE (n,s))’
-  by cheat >>simp[] >>
+  by (rw[EXTENSION] >> metis_tac[]) >>
+  pop_assum SUBST_ALL_TAC >>
+last_x_assum mp_tac >>    
+POP_ASSUM_LIST (map_every (K all_tac)) >>
+rw[UNION_ASSOC]>>
 simp[IMAGE_BIGUNION] >>
-‘(IMAGE (IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1)))
-              {tfv t | (n,s) ∉ tfv t ∧ MEM t l}) =
- {tfv t | (n,s) ∉ tfv t ∧ MEM t l} ’
- by cheat >> simp[] >>
-‘BIGUNION {tfv t | (n,s) ∉ tfv t ∧ MEM t l} =
-Uof tfv {t | (n,s) ∉ tfv t ∧ MEM t l}’
- by simp[Uof_def] >> simp[] >>
-simp[UNION_ASSOC] >>
-‘IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1))
-          (BIGUNION {tfv t | (n,s) ∈ tfv t ∧ MEM t l} DELETE (n,s))’
-(*‘Uof
+‘BIGUNION
+          (IMAGE (IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1)))
+             {tfv t | (n,s) ∉ tfv t ∧ MEM t l}) =
+BIGUNION {tfv t | (n,s) ∉ tfv t ∧ MEM t l}’
+ by (rw[Once EXTENSION] >>
+    Cases_on ‘x’ >> simp[pairTheory.EXISTS_PROD,PULL_EXISTS] >> rw[EQ_IMP_THM] (* 2 *) >> gs[trename_fix]
+    >- (‘(n,s) ∉ sfv p_2’
+         by metis_tac[vsort_tfv_closed] >>
+       simp[trename_fix] >> metis_tac[]) >>
+    qexistsl [‘t'’,‘r’] >> simp[] >>
+    metis_tac[vsort_tfv_closed,trename_fix]) >>
+pop_assum SUBST_ALL_TAC >>
+‘Uof
           (λt.
                IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1))
                  (tfv t DELETE (n,s))) {t | (n,s) ∈ tfv t ∧ MEM t l} =
-                 ’*)
- cheat
+IMAGE (λ(n1,s1). (n1,srename (n,s) nn s1))
+          (BIGUNION {tfv t | (n,s) ∈ tfv t ∧ MEM t l} DELETE (n,s))’
+suffices_by (rw[] >> gs[Uof_def] >>
+   gs[EXTENSION] >> metis_tac[]) >>
+simp[Uof_def,Once EXTENSION,PULL_EXISTS] >>
+rw[] >>
+Cases_on ‘x’ >> simp[] >>
+simp[pairTheory.EXISTS_PROD] >>
+rw[EQ_IMP_THM] (* 2 *)
+>- (qexistsl [‘p_2’,‘t'’] >> simp[]) >>
+qexistsl [‘t'’,‘p_2’] >> simp[]
 QED 
      
         
