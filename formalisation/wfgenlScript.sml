@@ -2739,8 +2739,25 @@ QED
 
 
 
+Theorem tnames_trename_SUBSET:
+(∀tm. tnames (trename (n,s) nn tm) ⊆
+            {nn} ∪ tnames tm) ∧
+(∀st. snames (srename (n,s) nn st) ⊆
+            {nn} ∪ snames st)
+Proof
+ho_match_mp_tac better_tm_induction >>
+gs[tnames_thm,trename_alt,PULL_EXISTS,MEM_MAP] >>
+gs[SUBSET_DEF] >> rw[] >> TRY (metis_tac[]) >>
+Cases_on ‘s0 = n ∧ st = s’ >> gs[tnames_thm] >>
+metis_tac[]
+QED
 
+    
 Theorem wfvl_sl2vl_vl2sl:
+ (∀fsym.
+           isfsym Σf fsym ⇒
+           sfv (fsymout Σf fsym) ⊆
+           BIGUNION {tfv (Var n s) | MEM (n,s) (fsymin Σf fsym)}) ⇒
   ∀nl n s.
     wfvl Σf vl TRUE ∧ LENGTH nl = LENGTH vl ∧
     ALL_DISTINCT nl ∧
@@ -2749,6 +2766,7 @@ Theorem wfvl_sl2vl_vl2sl:
     MEM (n,s) (sl2vl nl (vl2sl vl)) ⇒
     wfs Σf s
 Proof
+  disch_tac >> 
   Induct_on ‘LENGTH vl’
   >- simp[vl2sl_def,vl2sl0_def,sl2vl_def] >>
   Cases_on ‘vl’ >> simp[] >> 
@@ -2762,7 +2780,16 @@ Proof
   reverse (rw[]) (* 4 *)
   >- (Cases_on ‘MEM (q,r) t’
      >- (‘(MAP (srename (q,r) h') (vl2sl t)) =
-         vl2sl t’ by cheat >>
+         vl2sl t’ by
+          (drule_at_then Any assume_tac
+          wfdpvl_NOTIN_slfv >>
+          gs[okvnames_CONS,wfdpvl_TRUE] >>
+          first_x_assum
+          $ qspecl_then [‘TRUE’] assume_tac >>
+          gs[] >>
+          simp[MAP_fix] >>
+          rw[] >> gs[slfv_alt] >>
+          metis_tac[trename_fix]) >>
         gs[] >>
         first_x_assum irule >>
         gs[wfdpvl_TRUE] >>
@@ -2774,7 +2801,12 @@ Proof
      gs[] >>
      ‘MAP (srename (q,r) h') (vl2sl t) =
         vl2sl (MAP (λ(n0,s0). (n0,srename (q,r) h' s0)) t)’ by (irule $ srename_vl2sl >> simp[] >>
-          gs[wfdpvl_TRUE] >> cheat) >>
+          gs[wfdpvl_TRUE] >> rw[] (* 2 *)
+          >- (first_x_assum $ qspecl_then [‘(vn,vs)’]
+             assume_tac >> gs[] >>
+             metis_tac[wft_no_bound]) >>
+          gs[EXTENSION,tlnames_CONS] >>
+          metis_tac[]) >>
      gs[] >>
      first_x_assum $ qspecl_then
      [‘(MAP (λ(n0,s0). (n0,srename (q,r) h' s0)) t)’]
@@ -2798,10 +2830,39 @@ Proof
         last_x_assum $ drule_then assume_tac >>
         gs[] >> 
         metis_tac[wft_no_vbound])
-     >- (simp[MAP_MAP_o] >> cheat)
-     >- cheat >>
+     >- (simp[MAP_MAP_o] >>
+         ‘tlnames (MAP (Var' ∘ (λ(n0,s0). (n0,srename (q,r) h' s0))) t) ⊆ {h'} ∪ tlnames (MAP Var' t)’
+          by (simp[SUBSET_DEF,tlnames_alt,MEM_MAP,
+                  PULL_EXISTS] >>
+             rw[] >> Cases_on ‘y’ >>
+             gs[tnames_thm] (* 2 *)
+             >- (disj2_tac >>
+                qexists ‘(q',r')’ >>
+                gs[tnames_thm]) >>
+             ‘snames (srename (q,r) h' r') ⊆
+             {h'} ∪ snames r'’
+             by metis_tac[tnames_trename_SUBSET] >>
+             gs[SUBSET_DEF] >>
+             first_x_assum $ drule_then assume_tac >>
+             gs[] >>
+             disj2_tac >> qexists ‘(q',r')’ >>
+             gs[tnames_thm]) >>
+         ‘h' ∉ set t'’ by gs[] >>
+         gs[SUBSET_DEF,EXTENSION] >>
+         rw[] >>
+         Cases_on ‘x ∉ tlnames (MAP (Var' ∘ (λ(n0,s0). (n0,srename (q,r) h' s0))) t)’ >> gs[] >>
+         first_x_assum $ drule_then assume_tac >>
+         gs[tlnames_CONS] >>
+         metis_tac[])
+     >- (irule okvnames_MAP_srename >>
+        simp[PULL_EXISTS] >> qexists ‘Σf’ >>
+        gs[okvnames_CONS] >>
+        gs[EXTENSION,tlnames_CONS] >>
+        metis_tac[]) >>
      Cases_on ‘y’ >> gs[] >>
-     irule $ cj 2 wft_trename >> cheat)
+     irule $ cj 2 wft_trename >> simp[] >>
+     first_x_assum $ qspecl_then [‘(q',r')’]
+     assume_tac >> gs[])
   >- (gs[] >> gs[wfdpvl_TRUE] >>
      first_x_assum irule >>
      simp[slfv_alt,PULL_EXISTS] >>
