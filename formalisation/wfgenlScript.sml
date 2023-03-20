@@ -1533,6 +1533,12 @@ gs[SUBSET_DEF] >>
 first_x_assum $ drule_then assume_tac >> gs[]
 QED
 
+
+
+
+
+
+(*        
 cstt_EXT
 wft_tinst
 
@@ -1567,7 +1573,8 @@ simp[tfv_def,tpsubtm_def,tsubtm_def] (* 2 *)
    >- (simp[PULL_EXISTS] >> disj2_tac >>
       qexists ‘t0’ >> simp[tsubtm_REFL])
    >- 
-        
+*)
+   
 Theorem wft_tinst1:
 (∀fsym.
         isfsym Σf fsym ⇒
@@ -1613,7 +1620,23 @@ drule_then assume_tac cstt_EXT1 >>
       suffices_by simp[] >>
     irule MEM_list_size_leq >> simp[]
 QED    
-       
+
+
+
+Theorem wfs_sinst1:
+(∀fsym.
+        isfsym Σf fsym ⇒
+        sfv (fsymout Σf fsym) ⊆
+        BIGUNION {tfv (Var n s) | MEM (n,s) (fsymin Σf fsym)}) ⇒
+     (∀s. wfs Σf s ⇒
+          ∀σ. cstt σ ∧ wfcod Σf σ ⇒ wfs Σf (sinst σ s))
+Proof
+rw[] >> Cases_on ‘s’ >>
+gs[wft_def,EVERY_MEM,MEM_MAP,PULL_EXISTS] >>
+rw[] >>
+irule wft_tinst1 >> simp[]
+QED 
+              
 Definition speclsl_def:
   speclsl i [] sl = sl ∧
   speclsl i (h :: t) sl =
@@ -2890,6 +2913,61 @@ QED
    
 
 
+Theorem nl_EX:
+∀ns:string -> bool n. FINITE ns ⇒
+       ∃nl. ALL_DISTINCT nl ∧ LENGTH nl = n ∧ set nl ∩ ns = {}
+Proof       
+Induct_on ‘FINITE’ >> simp[] >> rw[] (* 2 *)
+>- cheat >>
+Cases_on ‘n’ >> gs[] >>
+first_x_assum $ qspecl_then [‘n'’] assume_tac >>
+gs[] >>
+reverse (Cases_on ‘MEM e nl’) 
+>- (‘∃n1. n1 ∉ set nl ∪ ns ∪ {e}’
+  suffices_by (rw[] >>
+  qexists ‘n1 :: nl’ >> simp[] >>
+  gs[EXTENSION] >> rw[] >>
+  Cases_on ‘x ≠ n1 ∧ ¬MEM x nl’ >> gs[] >>
+  metis_tac[]) >>
+  qexists
+  ‘variant (fromSet (set nl ∪ ns ∪ {e})) ""’ >>
+  qspecl_then [‘(fromSet (set nl ∪ ns ∪ {e}))’,‘""’]
+  assume_tac variant_NOT_fIN >>
+  dep_rewrite.DEP_REWRITE_TAC[GSYM IN_fromSet] >>
+  simp[]) >>
+‘∃n1 n2. n1 ∉ set nl ∪ ns ∪ {e} ∧ n2 ∉ set nl ∪ ns ∪ {e} ∧ n1 ≠ n2’ suffices_by
+ (rw[] >>
+ qexists
+ ‘n1 :: MAP (λx. if x = e then n2 else x) nl’ >>
+ simp[MEM_MAP] >> rw[] (* 3 *)
+ >- simp[]
+ >- (irule ALL_DISTINCT_MAP_INJ >>
+    rw[] >> simp[]) >>
+ ‘set (MAP (λx. if x = e then n2 else x) nl) =
+  {n2} ∪ set nl DELETE e’
+   by
+   (simp[EXTENSION,MEM_MAP] >> rw[EQ_IMP_THM] (* 4 *)
+   >- (Cases_on ‘x' = e’ >> gs[])
+   >- (Cases_on ‘x' = e’ >> gs[])
+   >- (qexists ‘e’ >> simp[]) >>
+   qexists ‘x’ >> simp[]) >>
+ simp[] >> gs[EXTENSION] >> metis_tac[]) >>
+qabbrev_tac ‘s1 = (set nl ∪ ns ∪ {e})’ >>
+‘FINITE s1’ by simp[Abbr‘s1’] >>
+qabbrev_tac ‘n1 = variant (fromSet s1) ""’  >>
+‘n1 ∉ s1’
+  by
+  (simp[Abbr‘n1’] >> irule variant_NOTIN >> simp[])>>
+qabbrev_tac ‘s2 = {n1} ∪ s1’ >>
+‘FINITE s2’ by simp[Abbr‘s2’] >>
+qabbrev_tac ‘n2 = variant (fromSet s2) ""’  >>
+‘n2 ∉ s2’
+  by
+  (simp[Abbr‘n2’] >> irule variant_NOTIN >> simp[])>>
+‘n1 ∈ s2’ by simp[Abbr‘s2’] >>
+‘n2 ∉ s1’ by (simp[Abbr‘s2’] >> gs[]) >>
+qexistsl [‘n2’,‘n1’] >> simp[] >>metis_tac[]
+QED
 
    
 Theorem tinst_wffstl:
@@ -2931,9 +3009,8 @@ MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl (vl2sl vl)) ’
     metis_tac[wft_no_bound]) >>
     gs[MEM_MAP] >>
     Cases_on ‘y’ >> gs[] >>
-    irule $ cj 2 wft_tinst >> simp[] >>
-    ‘sfv r ⊆ FDOM σ’ by cheat >> gs[] >>
-    irule wfvl_sl2vl_vl2sl >>
+    irule wfs_sinst1 >> simp[] >>
+    irule wfvl_sl2vl_vl2sl >> simp[] >>
     qexistsl [‘q’,‘nl’,‘vl’] >> gs[LENGTH_vl2sl])
 >- (irule vl2sl_sl2vl >> simp[])
 >- (irule ALL_DISTINCT_sl2vl >> simp[]) >>
