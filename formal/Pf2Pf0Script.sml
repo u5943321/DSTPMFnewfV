@@ -3909,11 +3909,61 @@ is_imp (concl th1) ∧
      concl th2 = FST (dest_imp (concl th1))
 End     
 
+
+Theorem uniqify_mp_match:
+mp_match th1 th2 ⇒
+mp_match (uniqify uσ th1) (uniqify uσ th2)
+Proof
+Cases_on ‘th1’ >> Cases_on ‘th2’ >>
+Cases_on ‘r’ >> Cases_on ‘r'’ >>
+rename [‘mp_match (Γ1,A1,phi) (Γ2,A2,psi)’] >>
+simp[mp_match,concl_def] >> Cases_on ‘phi’ >>
+simp[is_imp_def,dest_imp_def,uniqify_def,concl_def,ffVrn_def]
+QED
+
+
+Theorem vinsth_mp_match:
+mp_match th1 th2 ⇒
+mp_match (vinsth vσ th1) (vinsth vσ th2)
+Proof
+Cases_on ‘th1’ >> Cases_on ‘th2’ >>
+Cases_on ‘r’ >> Cases_on ‘r'’ >>
+rename [‘mp_match (Γ1,A1,phi) (Γ2,A2,psi)’] >>
+simp[mp_match,concl_def] >> Cases_on ‘phi’ >>
+simp[is_imp_def,dest_imp_def,vinsth_def,concl_def,finst_def]
+QED
+
+
+Theorem fVinsth_mp_match:
+mp_match th1 th2 ⇒
+mp_match (fVinsth fσ th1) (fVinsth fσ th2)
+Proof
+Cases_on ‘th1’ >> Cases_on ‘th2’ >>
+Cases_on ‘r’ >> Cases_on ‘r'’ >>
+rename [‘mp_match (Γ1,A1,phi) (Γ2,A2,psi)’] >>
+simp[mp_match,concl_def] >> Cases_on ‘phi’ >>
+simp[is_imp_def,dest_imp_def,fVinsth_def,
+     concl_def,fVinst_def]
+QED
+        
+        
+
+
+        
 Theorem insth_uniqify_mp_match:
 mp_match th1 th2 ⇒
-mp_match (insth fσ vσ (uniqify uσ th1)) (insth fσ vσ (uniqify uσ th1))
+mp_match (insth fσ vσ (uniqify uσ th1)) (insth fσ vσ (uniqify uσ th2))
 Proof
-cheat
+rw[] >> simp[insth_def] >> irule fVinsth_mp_match >>
+irule vinsth_mp_match >> irule uniqify_mp_match >> simp[] 
+QED
+
+
+Theorem Pf0Drv_mp_match_MP0:
+mp_match th1 th2 ∧ Pf0Drv Σ aths th1 ∧ Pf0Drv Σ aths th2 ⇒
+Pf0Drv Σ aths (MP0 th1 th2)
+Proof
+simp[mp_match] >> metis_tac[Pf0Drv_MP0']
 QED
         
 Theorem insth_uniqify_mp:
@@ -3921,9 +3971,9 @@ mp_match th1 th2 ⇒
 Pf0Drv Σ axs (insth fσ vσ (uniqify uσ th1)) ∧
 Pf0Drv Σ axs (insth fσ vσ (uniqify uσ th2)) ⇒
 Pf0Drv Σ axs (MP0 (insth fσ vσ (uniqify uσ th1))
-(insth fσ vσ (uniqify uσ th1)))
+(insth fσ vσ (uniqify uσ th2)))
 Proof
-cheat
+metis_tac[Pf0Drv_mp_match_MP0,insth_uniqify_mp_match]
 QED
 
 
@@ -3976,7 +4026,7 @@ vinst_cont vσ Γ ∪
          ({finst vσ (ffVrn uσ f)} ∪
           IMAGE (finst vσ) (IMAGE (ffVrn uσ) A)))
 Proof
-cheat
+simp[insth_uniqify_components,cont_def] 
 QED          
 
 
@@ -3986,7 +4036,7 @@ assum (insth fσ vσ (uniqify uσ (Γ,A,f))) =
 IMAGE (fVinst fσ)
       (IMAGE (finst vσ) (IMAGE (ffVrn uσ) A))
 Proof
-cheat
+simp[insth_uniqify_components,assum_def] 
 QED
 
 
@@ -3994,7 +4044,7 @@ Theorem concl_insth_uniqify:
 concl (insth fσ vσ (uniqify uσ (Γ,A,f))) =
 fVinst fσ (finst vσ (ffVrn uσ f))
 Proof
-cheat
+simp[insth_uniqify_components,concl_def] 
 QED
          
 

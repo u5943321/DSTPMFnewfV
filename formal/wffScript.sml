@@ -851,34 +851,88 @@ rw[wfvl_def,wfdpvl_def] >> metis_tac[]
 QED
 
 
+Theorem tsubst_I0:
+(∀t. tsubst (q,r) (Var q r) t = t) ∧
+(∀s. ssubst (q,r) (Var q r) s = s)
+Proof
+ho_match_mp_tac better_tm_induction >> simp[tsubst_def,MAP_fix]
+QED
+
+
+
+Theorem tsubst_I:
+tsubst (q,r) (Var q r) = I ∧
+ssubst (q,r) (Var q r) = I
+Proof
+simp[FUN_EQ_THM,tsubst_I0]  
+QED
+        
+
+
+
+Theorem vl2sl_wfvl_MEM_var_no_bound:
+wfvl Σ vl False ∧ MEM st (vl2sl vl) ∧ (n,s) ∈ sfv st ⇒
+sbounds s = ∅
+Proof
+rw[] >>
+‘slfv (vl2sl vl) ⊆ tlfv (MAP Var' vl)’ by simp[slfv_vl2sl_SUBSET] >>
+‘(n,s) ∈ slfv (vl2sl vl)’
+ by (gs[IN_slfv] >> metis_tac[]) >>
+gs[SUBSET_DEF] >> first_x_assum $ drule_then assume_tac >>
+gvs[wfvl_def,tlfv_def,MEM_MAP] >>
+first_x_assum $ drule_then assume_tac >> Cases_on ‘y’ >> gvs[] (* 2 *)
+>- metis_tac[wft_no_bound] >>
+metis_tac[vsort_tfv_closed,wft_no_vbound]
+QED
+ 
+                        
+
 
 (*tedious*)        
 Theorem wfabsap_vl2sl_MAP_Var':
-wfvl Σ vl TRUE ∧ ALL_DISTINCT vl ∧ okvnames vl ∧ wfdpvl vl TRUE ⇒
+wfvl Σ vl False ∧ ALL_DISTINCT vl ∧ okvnames vl ∧ wfdpvl vl False ⇒
 wfabsap Σ (vl2sl vl) (MAP Var' vl)
 Proof
 Induct_on ‘LENGTH vl’ >> simp[wfabsap_def,vl2sl_EMPTY] >>
 Cases_on ‘vl’ >> simp[vl2sl_CONS,wfabsap_def] >> strip_tac >>
 strip_tac >> Cases_on ‘h’ >> simp[sort_of_def] >>
-gs[wfvl_alt,wfdpvl_TRUE,okvnames_CONS] >> gs[wfvl_alt] >>
+gs[wfvl_alt,wfdpvl_False,okvnames_CONS] >> gs[wfvl_alt] >>
 ‘wfabsap Σ (specsl 0 (Var q r) (abssl (q,r) 0 (vl2sl t))) (MAP Var' t)’
  by (dep_rewrite.DEP_REWRITE_TAC[specsl_abssl] >> simp[LENGTH_vl2sl] >>
-    ‘(ssubst (q,r) (Var q r)) = I’ by cheat >> simp[] >>
-    (*ok_abs_vl2sl *)cheat) >>
-simp[wft_def] >> cheat
+    ‘(ssubst (q,r) (Var q r)) = I’ by
+    metis_tac[tsubst_I] >> simp[] >>
+    simp[wft_def] >> rw[] (* 4 *)
+    >- (‘ok_abs (vl2sl t)’ by (irule ok_abs_vl2sl >> gs[wfvl_def] >>
+       metis_tac[wft_no_bound]) >>
+    gs[ok_abs_def,LENGTH_vl2sl] >>
+    first_x_assum $ drule_then assume_tac>> gs[SUBSET_DEF] >>
+    CCONTR_TAC >>
+    first_x_assum $ qspecl_then [‘m’] assume_tac >> gs[])
+    >- metis_tac[vl2sl_wfvl_MEM_var_no_bound] >>
+    first_x_assum irule >> qexists ‘n’ >> simp[IN_slfv] >>
+    metis_tac[]) >>
+simp[wft_def] >> rw[] >>
+‘slfv (abssl (q,r) 0 (vl2sl t)) ⊆ slfv (vl2sl t)’
+ by metis_tac[slfv_abssl_SUBSET] >>
+‘(n0,s0) ∈ slfv (abssl (q,r) 0 (vl2sl t))’
+ by (simp[IN_slfv] >> metis_tac[]) >>
+gs[SUBSET_DEF] >> first_x_assum $ drule_then assume_tac >>
+gs[IN_slfv] >> 
+irule vl2sl_wfvl_MEM_var_no_bound >>
+qexistsl [‘n0’,‘s0''’,‘t’,‘Σ’] >> simp[] 
 QED    
     
 Theorem wfdpvl_ALL_DISTINCT_okvnames_wff:
-wfvl (FST Σ) vl TRUE ∧ ALL_DISTINCT vl ∧ okvnames vl ⇒
+wfvl (FST Σ) vl False ∧ ALL_DISTINCT vl ∧ okvnames vl ⇒
 wff Σ (FALLL (vl2sl vl) (plainfV (P,vl2sl vl)))
 Proof
 rw[] >> 
-‘wfdpvl vl TRUE’ by metis_tac[wfvl_def] >>
+‘wfdpvl vl False’ by metis_tac[wfvl_def] >>
 drule_then assume_tac $ GSYM mk_FALLL_fVar_FALLL >>
 simp[] >>
 irule mk_FALLL_fVar_wff >> reverse (rw[wfvl_def]) (* 3 *)
 >- gs[wfvl_def]
->- (irule wfdpvl_TRUE_fVar >> simp[]) >>
+>- (irule wfdpvl_False_fVar >> simp[]) >>
 Cases_on ‘Σ’ >> Cases_on ‘r’ >> irule wff_fVar >>
 simp[wffstl_def] >>
 simp[PULL_EXISTS] >> qexists ‘vl’ >> simp[] >>
