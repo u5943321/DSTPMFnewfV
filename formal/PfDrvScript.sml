@@ -246,7 +246,7 @@ metis_tac[]
 QED   
 
 Theorem wff_fVar':
- ∀P sl tl. wfabsap (FST Σ) sl tl ⇒ wff Σ (fVar P sl tl)
+ ∀P sl tl. wffstl (FST Σ) sl tl ⇒ wff Σ (fVar P sl tl)
 Proof
  Cases_on ‘Σ’ >> Cases_on ‘r’>> simp[] >>
  metis_tac[wff_fVar]
@@ -358,7 +358,9 @@ Induct_on ‘Pf’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*43*)
     gs[SUBSET_DEF] >> metis_tac[])
 >- (gs[fVcong_def,wff_IFF] >>
     rw[] (* 2 *)
-    >- (irule wff_fVar' >>
+    >- (irule wff_fVar' >> simp[] >>
+        ‘wfabsap Σf sl (Lofeqthl (map2list (LENGTH sl − 1) eqths))’
+         suffices_by cheat >>
         irule wfabsap_wfs >> rw[] (* 3 *)
         >- (first_x_assum $ drule_then
                          strip_assume_tac >>
@@ -389,6 +391,8 @@ Induct_on ‘Pf’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*43*)
        simp[Lofeqths_def,LENGTH_map2list] >>
        Cases_on ‘sl’ >> gs[]) >>
    (irule wff_fVar' >>
+   ‘wfabsap (FST (Σf,Σp,Σe)) sl
+          (Rofeqthl (map2list (LENGTH sl − 1) eqths))’ suffices_by cheat >>
         irule wfabsap_wfs >> rw[] (* 3 *)
         >- (first_x_assum $ drule_then
                          strip_assume_tac >>

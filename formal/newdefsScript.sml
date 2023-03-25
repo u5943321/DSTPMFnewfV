@@ -1057,7 +1057,7 @@ rw[] (* 5 *)
 >- gs[absapLs_def,EQ_def]
 >- metis_tac[]
 >- metis_tac[]
->- metis_tac[wfabsap_LENGTH] >>
+>- metis_tac[wffstl_def,wfabsap_LENGTH] >>
 gs[mk_FALL_def,absapLs_def,absapLs_fabs,abst_def]  
 QED
 
@@ -1813,9 +1813,55 @@ Proof
 Cases_on ‘fv’ >> metis_tac[FAPPLY_vinst_fVmap_fVmap_fVrn]
 QED
 
+Theorem wffVmap_rn2fVmap:
+(∀P sl. (P,sl) ∈ FDOM uσ ⇒
+∃vl. wfvl (FST Σ) vl TRUE ∧ ALL_DISTINCT vl ∧ okvnames vl ∧
+     vl2sl vl = sl) ⇒
+wffVmap Σ (rn2fVmap uσ)
+Proof
+rw[] >> rw[wffVmap_def] >>
+gs[FDOM_rn2fVmap,FAPPLY_rn2fVmap,fVrn_def] >> 
+first_x_assum $ drule_then assume_tac >>
+gs[] >> pop_assum (assume_tac o GSYM) >> gs[] >>
+irule wfdpvl_ALL_DISTINCT_okvnames_wff >> simp[]
+QED
 
+Definition wffV_def:
+wffV Σf (P,sl) ⇔ 
+∃vl. wfvl Σf vl TRUE ∧ vl2sl vl = sl ∧ ALL_DISTINCT vl ∧ okvnames vl
+End
+        
+
+Theorem fVars_EQ:
+fVars (EQ t1 t2) = {}
+Proof
+rw[EQ_def,fVars_def]
+QED
+
+Theorem wfvl_ffv:
+∀f. wff Σ f ⇒
+    ∀P sl. (P,sl) ∈ fVars f ⇒ wffV (FST Σ) (P,sl)    
+Proof    
+Induct_on ‘wff’ >> gs[fVars_def,fVars_mk_FALL,fVars_EQ] >>
+rw[] (* 3 *)
+>- metis_tac[] >- metis_tac[] >>
+gs[wffstl_def,wffV_def] >> metis_tac[]
+QED
+
+
+
+Theorem wffVmap_rn2fVmap1:
+(∀P sl. (P,sl) ∈ FDOM uσ ⇒ wffV (FST Σ) (P,sl)) ⇒
+wffVmap Σ (rn2fVmap uσ)
+Proof
+rw[] >>
+gs[wffV_def] >> irule wffVmap_rn2fVmap >>metis_tac[] 
+QED
 
         
+
+
+
 Theorem Pf2Pf0_fVinsth_lemma:
 ∀uσ. wffsig Σf ∧ wff (Σf,Σp,Σe) f ∧
      uniqifn uσf (FDOM fσ) ∧
@@ -1839,7 +1885,8 @@ rw[] >>
     rw[] >> irule wff_subfm_fVar_LENGTH >> metis_tac[]) >>
 simp[] >>
 ‘wffVmap (Σf,Σp,Σe) (rn2fVmap uσ)’
- by cheat >>
+ by (*irule wffVmap_rn2fVmap1 >> simp[] >>
+    uniqifn_def *) cheat >>
 ‘fVinst (rn2fVmap uσ) (fVinst fσ f) =
  fVinst (o_fVmap (rn2fVmap uσ) fσ) f’
  by (irule fVar_prpl_o_fVmap >> rpt (first_x_assum $ irule_at Any)) >>
