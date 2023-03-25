@@ -3551,14 +3551,18 @@ QED
 (insth fσ vσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2)))
 *)
 
+
+(*        
 Definition TRUE_def:
 TRUE = Pred "T" []
 End
+*)
 
-Definition exTfmap_def:
-exTfmap σ fvs =
+        
+Definition exFfmap_def:
+exFfmap σ fvs =
 FUN_FMAP
-(λfv. if fv ∈ FDOM σ then σ ' fv else TRUE)
+(λfv. if fv ∈ FDOM σ then σ ' fv else False)
 (FDOM σ ∪ fvs)
 End
 
@@ -3621,7 +3625,7 @@ cheat
 QED
 
 
-
+(*
 Theorem mp_case_lemma:
 ∀Γ1 Γ2 A1 A2 f1 f2.
 wfvmap (FST Σ) hσ ∧
@@ -3649,7 +3653,7 @@ MP0 (insth fσ1 hσ1 (uniqify uσ1 (Γ1,A1,IMP f1 f2)))
 Proof
 cheat
 QED
-
+*)
 (*
 Theorem MP0_insth_unqify:
 MP0 (insth fσ hσ ())
@@ -4275,18 +4279,24 @@ QED
         
 
 
-
+(*
 Theorem insth_unqify_MP0':
 is_imp (concl th1) ∧ mp_match th1 th2 ∧
 let extras = fVars (FST (dest_imp (concl th1))) DIFF
 (Uof fVars ({SND (dest_imp (concl th1))} ∪ assum th1 ∪ assum th2)) in 
 (∀fv. fv ∈ extras ⇒
- ffv (fσ1 ' (vinst_fVar hσ1 (fVrn uσ1 fv))) = {}) ∧
+ ffv (fσ ' (vinst_fVar hσ (fVrn uσ fv))) = {}) ∧
+FDOM  
+FDOM uσ1 = thfVars th1 ∧
+FDOM uσ2 = thfVars th2 ∧
 agrees_on uσ1 uσ (thfVars th1 DIFF extras) ∧
 agrees_on uσ2 uσ (thfVars th2 DIFF extras) ∧
-hσ1 ⊑ hσ ∧ hσ2 ⊑ hσ ∧ 
-agrees_on fσ1 fσ (thfVars (vinsth hσ1 (uniqify uσ1 th1))) ∧
-agrees_on fσ2 fσ (thfVars (vinsth hσ2 (uniqify uσ2 th2))) ⇒
+FDOM hσ1 = cont th1 ∧ FDOM hσ2 = cont th2 ∧ 
+hσ1 ⊑ hσ ∧ hσ2 ⊑ hσ ∧
+fσ1 ⊑ fσ ∧ fσ2 ⊑ fσ ∧
+FDOM fσ1 = thfVars (vinsth hσ1 (uniqify uσ1 th1)) ∧
+FDOM fσ2 = thfVars (vinsth hσ2 (uniqify uσ2 th2)) ∧
+ ⊆  ⇒
 (insth fσ hσ (uniqify uσ (MP0 th1 th2))) =
 MP0 (insth fσ1 hσ1 (uniqify uσ1 th1))
 (insth fσ2 hσ2 (uniqify uσ2 th2))    
@@ -4309,28 +4319,88 @@ irule insth_unqify_MP0 >> simp[] >> rw[] >>
 ‘(fσb ' (vinst_fVar hσ1 (fVrn uσ1 fv))) =
  (fσ1 ' (vinst_fVar hσ1 (fVrn uσ1 fv)))’ by cheat >> simp[]
 QED
- 
-            
+*)
 
-
-
-
-Inductive FTW:
-[~sing:]
-(∀n:num. FTW {n}) ∧
-[~union:]
-(∀s1 s2. FTW s1 ∧ FTW s2 ⇒ FTW (s1 ∪ s2)) ∧
-[~compl:]
-(∀s. FTW s ⇒ FTW (univ (:num) DIFF s)) ∧
-[~inter:]
-(∀s1 s2. FTW s1 ∧ FTW s2 ⇒ FTW (s1 ∩ s2))
-End
         
-Theorem foo:
-∀s. FTW s ⇒ FINITE s ∨ FINITE (univ (:num) DIFF s)
+Theorem SUBMAP_agrees_on:
+σ1 ⊑ σ2 ⇒ agrees_on σ1 σ2 (FDOM σ1)
 Proof
-Induct_on ‘FTW’ >> cheat
+rw[agrees_on_def,SUBMAP_DEF,SUBSET_DEF]
 QED
+
+
+
+        
+Theorem insth_unqify_MP0':
+(is_imp (concl th1) ∧ mp_match th1 th2 ∧
+Uof ffv ({concl th1} ∪ assum th1) ⊆ cont th1 ∧
+Uof ffv ({concl th2} ∪ assum th2) ⊆ cont th2 ∧
+let extras = fVars (FST (dest_imp (concl th1))) DIFF
+(Uof fVars ({SND (dest_imp (concl th1))} ∪ assum th1 ∪ assum th2)) in 
+(∀fv. fv ∈ extras ⇒
+ ffv (fσ ' (vinst_fVar hσ (fVrn uσ fv))) = {}) ∧
+FDOM uσ1 = thfVars th1 ∧
+FDOM uσ2 = thfVars th2 ∧
+uσ1 ⊑ uσ ∧ uσ2 ⊑ uσ ∧
+FDOM hσ1 = cont th1 ∧ FDOM hσ2 = cont th2 ∧ 
+hσ1 ⊑ hσ ∧ hσ2 ⊑ hσ ∧
+fσ1 ⊑ fσ ∧ fσ2 ⊑ fσ ∧
+FDOM fσ1 = thfVars (vinsth hσ1 (uniqify uσ1 th1)) ∧
+FDOM fσ2 = thfVars (vinsth hσ2 (uniqify uσ2 th2))) ⇒
+(insth fσ hσ (uniqify uσ (MP0 th1 th2))) =
+MP0 (insth fσ1 hσ1 (uniqify uσ1 th1))
+(insth fσ2 hσ2 (uniqify uσ2 th2))    
+Proof
+rw[] >>
+‘(insth fσ1 hσ1 (uniqify uσ1 th1)) =
+ (insth fσ hσ (uniqify uσ th1)) ∧
+ (insth fσ2 hσ2 (uniqify uσ2 th2)) =
+ (insth fσ hσ (uniqify uσ th2))’
+ suffices_by
+  (rw[] >> irule insth_unqify_MP0 >> simp[] >> rw[]) >>
+rw[] (* 2 *)
+>- (‘uniqify uσ1 th1 = uniqify uσ th1’
+     by (irule uniqify_cong >>
+        qpat_x_assum ‘FDOM uσ1 = thfVars th1’
+        (assume_tac o GSYM) >> simp[] >>
+        irule SUBMAP_agrees_on >>
+        simp[]) >>
+   simp[] >>
+   simp[insth_def] >>
+   ‘(vinsth hσ1 (uniqify uσ th1)) =
+   (vinsth hσ (uniqify uσ th1))’
+    by (irule vinsth_cong >> reverse (rw[]) (* 2 *)
+        >- (simp[cont_uniqify] >>
+           qpat_x_assum ‘FDOM hσ1 = cont th1’
+        (assume_tac o GSYM) >> simp[] >>
+        irule SUBMAP_agrees_on >>
+        simp[]) >> cheat) >> simp[] >>
+   irule fVinsth_cong >> gs[] >>
+   qpat_x_assum ‘FDOM fσ1 = _’ (assume_tac o GSYM) >>
+   simp[] >> irule SUBMAP_agrees_on >> simp[]) >> 
+‘uniqify uσ2 th2 = uniqify uσ th2’
+     by (irule uniqify_cong >>
+        qpat_x_assum ‘FDOM uσ2 = thfVars th2’
+        (assume_tac o GSYM) >> simp[] >>
+        irule SUBMAP_agrees_on >>
+        simp[]) >>
+   simp[] >>
+   simp[insth_def] >>
+   ‘(vinsth hσ2 (uniqify uσ th2)) =
+   (vinsth hσ (uniqify uσ th2))’
+    by (irule vinsth_cong >> reverse (rw[]) (* 2 *)
+        >- (simp[cont_uniqify] >>
+           qpat_x_assum ‘FDOM hσ2 = cont th2’
+        (assume_tac o GSYM) >> simp[] >>
+        irule SUBMAP_agrees_on >>
+        simp[]) >> cheat) >> simp[] >>
+   irule fVinsth_cong >> gs[] >>
+   qpat_x_assum ‘FDOM fσ2 = _’ (assume_tac o GSYM) >>
+   simp[] >> irule SUBMAP_agrees_on >> simp[]
+QED   
+
+      
+            
 
 Theorem main_mp_case:
  wfsigaxs Σ axs ∧
@@ -4362,6 +4432,78 @@ rpt strip_tac >>
 ‘(FDOM hσ,A1 ∪ A2,f2) = MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f1)’
  by simp[MP0_def] >>
 simp[] >>
+qabbrev_tac ‘extras =
+fVars f1 DIFF
+(Uof fVars ({f2} ∪ A1 ∪ A2))’ >>
+‘∃uσb.
+uniqifn uσb ((thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2)) ∪ extras) ∧
+FDOM uσb = ((thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2)) ∪ extras) ∧
+uσ ⊑ uσb’ by cheat (*uniqifn_inst_EX*) >>
+‘∃fσb.
+ wfcfVmap Σ fσb ∧
+ FDOM fσb = IMAGE ((vinst_fVar hσ) o fVrn uσb)
+                  ((Uof fVars ({f2} ∪ A1 ∪ A2)) ∪ extras) ∧
+ fσ ⊑ fσb ∧
+ ∀fv. fv ∈ extras ⇒ ffv (fσb ' (vinst_fVar hσ (fVrn uσb fv))) = {}’ by cheat >>
+‘(insth fσ hσ (uniqify uσ (MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f1)))) =
+ (insth fσb hσ (uniqify uσb (MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f1))))’ 
+  by (‘(uniqify uσ (MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f1))) =
+      (uniqify uσb (MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f1)))’
+      by (irule uniqify_cong >>
+      ‘(thfVars (MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f1))) =
+       FDOM uσ’
+       by (REWRITE_TAC[MP0_def] >> simp[]) >> simp[] >>
+      irule SUBMAP_agrees_on >> simp[]) >> 
+     simp[] >> simp[insth_def] >>
+     irule fVinsth_cong >>
+     ‘(thfVars
+             (vinsth hσ (uniqify uσb (MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f1))))) =
+      FDOM fσ’
+       by
+        (pop_assum (assume_tac o GSYM) >> simp[] >>
+        REWRITE_TAC[MP0_def] >> simp[]) >>
+     simp[] >> irule SUBMAP_agrees_on >> simp[]) >>
+simp[] >>
+dep_rewrite.DEP_REWRITE_TAC[insth_unqify_MP0] >>
+simp[concl_def,mp_match,is_imp_def,dest_imp_def] >> rw[]
+(* 2 *)
+>- (first_x_assum irule >> gs[assum_def] >>
+   simp[Abbr‘extras’]) >>
+irule Pf0Drv_MP0' >>
+simp[concl_insth_uniqify,dest_imp_def,fVinst_def,finst_def,ffVrn_def,is_imp_def] >> rw[] (* 2 *)
+>- (first_x_assum irule >>
+   simp[] >> rw[] (* 3 *)
+   >- (simp[thfVars_vinsth,thfVars_uniqify,IMAGE_IMAGE] >>
+      simp[Excl "IMAGE_UNION",GSYM IMAGE_UNION] >>
+      irule IMAGE_SUBSET >>
+      simp[thfVars_def,Uof_UNION,Uof_Sing,fVars_def,
+           Abbr‘extras’] >>
+      simp[SUBSET_DEF] >> metis_tac[])
+   >- (qpat_x_assum ‘Γ1 ∪ Γ2 = FDOM hσ’
+       (assume_tac o GSYM) >> simp[]) >>
+   irule uniqifn_SUBSET >>
+   first_x_assum $ irule_at Any >>
+   qpat_x_assum ‘_ = FDOM uσ’ (assume_tac o GSYM) >>
+   simp[thfVars_def,Abbr‘extras’,Uof_UNION,Uof_Sing,
+        fVars_def] >> simp[SUBSET_DEF] >> metis_tac[]) >>
+first_x_assum irule >> simp[] >> rw[] (* 3 *)
+>- (simp[thfVars_vinsth,thfVars_uniqify,IMAGE_IMAGE] >>
+    simp[Excl "IMAGE_UNION",GSYM IMAGE_UNION] >>
+    irule IMAGE_SUBSET >>
+    simp[thfVars_def,Uof_UNION,Uof_Sing,fVars_def,
+         Abbr‘extras’] >>
+    simp[SUBSET_DEF] >> metis_tac[])
+>- (qpat_x_assum ‘Γ1 ∪ Γ2 = FDOM hσ’
+    (assume_tac o GSYM) >> simp[]) >>
+irule uniqifn_SUBSET >>
+first_x_assum $ irule_at Any >>
+qpat_x_assum ‘_ = FDOM uσ’ (assume_tac o GSYM) >>
+simp[thfVars_def,Abbr‘extras’,Uof_UNION,Uof_Sing,
+     fVars_def] >> simp[SUBSET_DEF] >> metis_tac[]
+QED     
+       
+     
+     
 
 dep_rewrite.DEP_REWRITE_TAC[insth_unqify_MP0] >>
 irule_at Any 

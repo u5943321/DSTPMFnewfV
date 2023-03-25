@@ -1815,7 +1815,7 @@ QED
 
 Theorem wffVmap_rn2fVmap:
 (∀P sl. (P,sl) ∈ FDOM uσ ⇒
-∃vl. wfvl (FST Σ) vl TRUE ∧ ALL_DISTINCT vl ∧ okvnames vl ∧
+∃vl. wfvl (FST Σ) vl False ∧ ALL_DISTINCT vl ∧ okvnames vl ∧
      vl2sl vl = sl) ⇒
 wffVmap Σ (rn2fVmap uσ)
 Proof
@@ -1828,7 +1828,7 @@ QED
 
 Definition wffV_def:
 wffV Σf (P,sl) ⇔ 
-∃vl. wfvl Σf vl TRUE ∧ vl2sl vl = sl ∧ ALL_DISTINCT vl ∧ okvnames vl
+∃vl. wfvl Σf vl False ∧ vl2sl vl = sl ∧ ALL_DISTINCT vl ∧ okvnames vl
 End
         
 
