@@ -922,8 +922,39 @@ Theorem Pf0Drv_cont_wf':
 Proof
   rw[] >> irule Pf0Drv_cont_wf >>
   gs[Pf0Drv_def] >> metis_tac[]
-QED  
-        
+QED
+
+Definition dest_forall_def:
+dest_forall (FALL s f) = (s,f)
+End
+
+Theorem Pf0Drv_spec:
+is_fall (concl th) ∧ Pf0Drv Σ aths th ∧ 
+wft (FST Σ) t ∧ sort_of t = FST (dest_forall (concl th)) ⇒
+Pf0Drv Σ aths (spec t th)
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >> simp[concl_def] >>
+Cases_on ‘r'’ >> simp[is_fall_def,dest_forall_def] >>
+rw[] >> gs[Pf0Drv_def] >>
+drule_then assume_tac Pf0_ALLE >>
+first_x_assum $ drule_then assume_tac >>
+first_x_assum $ drule_then assume_tac >> gs[] >>
+first_x_assum $ irule_at Any  >> simp[]
+QED
+
+
+Theorem Pf0Drv_fromBot:
+Pf0Drv Σ aths (Γ,A,False) ∧ wff Σ f ∧ is_cfm f ⇒
+Pf0Drv Σ aths (Γ ∪ ffv f,A,f)
+Proof
+gs[Pf0Drv_def] >> rw[] >>
+drule_then assume_tac Pf0_fromBot >>
+first_x_assum $ drule_all_then assume_tac >>
+first_x_assum $ irule_at Any >> simp[]
+QED
+
+
+     
                 
 val _ = export_theory();
 
