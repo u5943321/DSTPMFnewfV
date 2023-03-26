@@ -980,7 +980,24 @@ Proof
 rw[Pf0Drv_def] >> drule_all_then assume_tac Pf0_trans >>
 first_x_assum $ irule_at Any >> simp[]
 QED                
-     
+
+Theorem Pf0Drv_cong:
+sl ≠ [] ∧
+       (∀n. n < LENGTH sl ⇒
+            is_EQ (concl (eqths n)) ∧
+             Pf0 Σ aths (Pf0s n) ∧
+            MEM (eqths n) (Pf0s n) ∧
+            sort_of (Leq (concl (eqths n))) = EL n sl) ∧
+       (∀s. MEM s sl ⇒ wfs (FST Σ) s) ∧ wff Σ (FALLL sl b) ∧ is_cfm b ⇒
+       Pf0Drv Σ aths
+         (fcong (map2list (LENGTH sl − 1) eqths) sl b)
+Proof
+rw[Pf0Drv_def] >>
+drule_all_then assume_tac Pf0_cong >>
+first_x_assum $ irule_at Any >> simp[]
+QED
+
+                   
                 
 val _ = export_theory();
 
