@@ -953,7 +953,33 @@ first_x_assum $ drule_all_then assume_tac >>
 first_x_assum $ irule_at Any >> simp[]
 QED
 
+Theorem Pf0Drv_refl:
+wft (FST Σ) t ∧ tsname t ∈ SND (SND Σ) ⇒
+Pf0Drv Σ aths (refl t)
+Proof
+rw[Pf0Drv_def] >> drule_all_then assume_tac Pf0_refl >>
+first_x_assum $ qspecl_then [‘aths’] assume_tac >>
+first_x_assum $ irule_at Any >> simp[]
+QED
 
+Theorem Pf0Drv_sym:
+Pf0Drv Σ aths (Γ,A,EQ t1 t2) ⇒
+Pf0Drv Σ aths (Γ,A,EQ t2 t1)
+Proof
+rw[Pf0Drv_def] >> drule_all_then assume_tac Pf0_sym >>
+first_x_assum $ irule_at Any >> simp[]
+QED
+
+
+
+Theorem Pf0Drv_trans:
+Pf0Drv Σ aths (Γ1,A1,EQ t1 t2) ∧
+Pf0Drv Σ aths (Γ2,A2,EQ t2 t3) ⇒
+Pf0Drv Σ aths (Γ1 ∪ Γ2,A1 ∪ A2,EQ t1 t3)
+Proof
+rw[Pf0Drv_def] >> drule_all_then assume_tac Pf0_trans >>
+first_x_assum $ irule_at Any >> simp[]
+QED                
      
                 
 val _ = export_theory();
