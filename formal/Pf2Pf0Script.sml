@@ -1295,6 +1295,10 @@ Cases_on ‘fv1’ >> Cases_on ‘fv2’ >>
 simp[] >> metis_tac[]
 QED
 
+
+        
+
+
 Theorem main_fVinst_case:
      wfsigaxs Σ axs ∧
      Pf Σ axs pf ∧
@@ -1344,7 +1348,7 @@ Proof
   ‘∃uσf:string # sort list |-> string.
      uniqifn uσf (thfVars th) ∧
      FDOM uσf = thfVars th’
-    by (irule uniqifn_ex >> cheat)  >>
+    by (irule uniqifn_ex >> simp[])  >>
   assume_tac (Pf2Pf0_fVinsth_lemma |> SPEC_ALL |> Q.GEN ‘f’) >>
   last_x_assum $ drule_then assume_tac >>
   first_x_assum $ qspecl_then [‘vσ’,‘(o_fVmap σ
@@ -1353,6 +1357,15 @@ Proof
                                ‘uσf’] assume_tac >> gs[] >>
   ‘cont th ⊆ cont (fVinsth fσ th)’
     by simp[cont_fVinsth] >>
+  ‘PfDrv (Σf,Σp,Σe) axs (fVinsth fσ th)’
+   by (irule PfDrv_fVinsth >> simp[]) >>
+  ‘(∀fv. fv ∈ FDOM uσ ⇒ wffV Σf fv)’
+    by (qpat_x_assum ‘_ = FDOM uσ’ (assume_tac o GSYM) >>
+       simp[] >>
+       match_mp_tac PfDrv_thfVars_wffV >>
+       simp[]) >>
+  ‘wffVmap (Σf,Σp,Σe) (rn2fVmap uσ)’
+   by (irule wffVmap_rn2fVmap1 >> simp[]) >>
   ‘Pf0Drv (Σf,Σp,Σe)  aths
    (insth
     (o_fVmap σ
@@ -1385,9 +1398,7 @@ Proof
                 FDOM_rn2fVmap,INTER_UNION] >>
            irule wffVmap_DRESTRICT >>
            irule wffVmap_o_fVmap >> simp[] >>
-           gs[wffsig_def] >>
-           cheat (*  wffVmap (Σf,Σp,Σe) (rn2fVmap uσ)
-           *)) >> simp[] >>
+           gs[wffsig_def]) >> simp[] >>
       simp[BIGUNION_SUBSET,PULL_EXISTS] >>
       rw[] (* 2 *)
       >- (qspecl_then [‘uσf’,‘(DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ))’] 

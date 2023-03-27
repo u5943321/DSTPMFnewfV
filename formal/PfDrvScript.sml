@@ -1271,7 +1271,30 @@ QED
    
 
         
-       
+Theorem PfDrv_thfVars_wffV:
+wfsigaxs (Σf,Σp,Σe) axs ∧ PfDrv (Σf,Σp,Σe) axs th ⇒ ∀fv. fv ∈ thfVars th ⇒ wffV Σf fv
+Proof
+rw[] >> irule wff_wffV' >>
+Cases_on ‘th’ >> Cases_on ‘r’ >> gs[IN_thfVars] (* 2 *)
+>- (drule_then assume_tac $ GEN_ALL PfDrv_concl_wff >>
+   first_x_assum $ drule_then assume_tac >> metis_tac[]) >>
+drule_then assume_tac $ PfDrv_assum_wff >>
+metis_tac[]
+QED
+
+
+(*        
+
+Theorem PfDrv_assum_FINITE:
+
+
+        
+Theorem PfDrv_thfVars_FINITE:
+PfDrv (Σf,Σp,Σe) axs th ⇒ FINITE (thfVars th)
+Proof
+cheat
+*)
+
                                         
 val _ = export_theory();
 
