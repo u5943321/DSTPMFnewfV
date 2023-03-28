@@ -3584,6 +3584,60 @@ simp[insth_uniqify_components,concl_def]
 QED
 
         
+Theorem ofFMAP_SUBSET_FDOM:
+ofFMAP f σ s ⊆ ofFMAP f σ (FDOM σ)
+Proof
+simp[SUBSET_DEF,ofFMAP_def] >> metis_tac[]
+QED
+
+
+
+
+Theorem main_gen_case_ffv_fVinst_lemma1:
+wffVmap Σ fσ ∧
+wfs (FST Σ) r ∧
+sinst vσ s = r ∧ 
+(x,s) ∉ ffv f ∧
+(q,r) ∉ ofFMAP ffv fσ (FDOM fσ) ∧
+(q,r) ∉ ofFMAP tfv vσ (FDOM vσ) ∧
+ffv f ⊆ FDOM vσ ∧ cstt vσ ∧ no_bound vσ ∧
+complete vσ ∧
+(∀n1 s1. (n1,s1) ∈ FDOM vσ ⇒ (x,s) ∉ sfv s1) ∧
+sfv s ⊆ FDOM vσ ∧ 
+(x,s) ∉ FDOM vσ ⇒
+(q,r) ∉
+ffv (fVinst fσ (finst (vσ |+ ((x,s),Var q r)) f))
+Proof
+simp[] >> rw[] >>
+qabbrev_tac ‘r = sinst vσ s’ >> simp[] >>
+‘(q,r) ∉ ffv (finst (vσ |+ ((x,s),Var q r)) f) ∪ ffv (fVinst fσ (finst (vσ |+ ((x,s),Var q r)) f))’
+suffices_by gs[] >>
+dep_rewrite.DEP_REWRITE_TAC[ffv_fVinst,ffv_finst_alt] >>
+rw[] (* 5 *)
+>- metis_tac[wffVmap_no_vbound]
+>- (irule FUPDATE_cstt  >> simp[Abbr‘r’,sort_of_def] >>
+   metis_tac[])
+>- (irule no_bound_FUPDATE >> simp[tbounds_def] >>
+   metis_tac[wft_no_bound])
+>- (strip_tac >>
+   gvs[ofFMAP_def] >>
+   ‘(x,s) ≠ a’ by metis_tac[] >> gs[FAPPLY_FUPDATE_THM] >>
+   metis_tac[]) >>
+strip_tac >>
+gvs[ofFMAP_def] >>
+metis_tac[]
+QED
+
+Theorem sfv_SUBSET_DELETE:
+sfv s ⊆ Γ ⇒ sfv s ⊆ Γ DELETE (x,s)
+Proof
+gs[SUBSET_DEF] >>metis_tac[tm_tree_WF]
+QED        
+
+
+
+
+           
 Theorem main_gen_case:
    wfsigaxs Σ axs ∧ PfDrv Σ axs (Γ,A,f) ∧
    wfs (FST Σ) s ∧ sfv s ⊆ Γ ∧
@@ -3611,9 +3665,15 @@ Proof
   qpat_x_assum ‘FDOM hσ1 ⊆ FDOM vσ’ (K all_tac) >>
   qpat_x_assum ‘uniqifn uσ (FDOM uσ1)’ (K all_tac)>>
   pop_assum (K all_tac) >>
-  rename [‘(insth fσ vσ (uniqify uσ (gen (x,s) (Γ,A,f))))’] >>
-  ‘∃nn. (nn,s) ∉ ofFMAP tfv vσ (FDOM vσ) ∪
-               ofFMAP ffv fσ (FDOM fσ)’ by cheat >>
+  rename [‘(insth fσ vσ (uniqify uσ (gen (x,s) (Γ,A,f))))’] >> 
+  ‘∃nn. ∀s. (nn,s) ∉ ofFMAP tfv vσ (FDOM vσ) ∪
+               ofFMAP ffv fσ (FDOM fσ) ∪ Γ’
+   by (irule fresh_name_ex >>
+      simp[ofFMAP_FINITE] >>
+      gs[PfDrv_def] >>
+      rev_drule_then assume_tac PfDrv_cont_FINITE >>
+      first_x_assum $ drule_then assume_tac >>
+      gs[cont_def]) >>
   first_x_assum $ qspecl_then
   [‘vσ |+ ((x,s),Var nn (sinst vσ s))’,‘fσ’,‘uσ’] assume_tac >>
   gs[] >>
@@ -3623,11 +3683,28 @@ Proof
    by (irule insth_uniqify_gen >>
       simp[PULL_EXISTS] >>
       qexistsl [‘axs’,‘Σ’] >> simp[] >>
-      gs[cont_gen,cont_def] >> cheat) >>
+      gs[cont_gen,cont_def]) >>
   simp[] >> irule Pf0Drv_gen1 >>
   reverse (rw[]) (* 4 *)
   >- (first_x_assum irule >> simp[cont_def] >> rw[] (* 4 *)
-     >- cheat
+     >- (gs[thfVars_vinsth,thfVars_uniqify,thfVars_gen]>>
+         qpat_x_assum ‘_ = FDOM fσ’
+         (assume_tac o GSYM) >> simp[] >>
+         ‘IMAGE (vinst_fVar (vσ |+ ((x,s),Var nn (sinst vσ s))))
+          (IMAGE (fVrn uσ) (FDOM uσ)) =
+        IMAGE (vinst_fVar vσ) (IMAGE (fVrn uσ) (FDOM uσ))’
+         suffices_by simp[] >>
+         irule IMAGE_eq_lemma >>
+         rw[] >>
+         Cases_on ‘x'’ >> gs[] >>
+         simp[fVrn_def,vinst_fVar_def,MAP_EQ_f] >>
+         rw[] >>
+         irule $ GSYM update_inst_lemma >>
+         gs[cont_gen,cont_def] >>
+         qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
+         simp[] >>
+         gs[NOTIN_genavds,thfVars_def,IN_Uof,EXTENSION] >>
+         metis_tac[])
      >- (gs[cont_gen,cont_def,SUBSET_DEF,EXTENSION] >>
         metis_tac[])
      >- gs[thfVars_gen] >>
@@ -3657,30 +3734,122 @@ Proof
   simp[insth_uniqify_components] >>
   simp[NOTIN_genavds,concl_def,cont_def,assum_def,
        PULL_EXISTS] >> rw[] (* 5 *)
-  >-( gs[vinst_cont_def] >>
-     ‘ofFMAP tfv vσ1 Γ = ofFMAP tfv vσ Γ ∪ tfv (Var nn (sinst vσ s))’ by cheat >>
-     gs[] (* 3 *) >- cheat (*nn  not in range*)
-     >- simp[tm_tree_WF] >>
-     metis_tac[tm_tree_WF,vsort_tfv_closed])
-  >- cheat (*nn not in range fσ*)
-  >- cheat (* x not in assum*)
+  >-(gs[vinst_cont_def] >>
+     gvs[ofFMAP_def,Abbr‘vσ1’]
+     >- simp[tm_tree_WF]
+     >- metis_tac[tm_tree_WF,vsort_tfv_closed] >>
+     gs[cont_gen,cont_def] >>
+     ‘(x,s) ∉ FDOM vσ’ by (gs[EXTENSION] >> metis_tac[])>>
+     ‘(x,s) ≠ a’ by metis_tac[] >>
+     gs[FAPPLY_FUPDATE_THM] >>
+     first_x_assum $ qspecl_then [‘sinst vσ s’] assume_tac >>
+     gs[PULL_EXISTS] >>
+     last_x_assum $ qspecl_then [‘tfv (vσ ' a)’] assume_tac
+     >> strip_tac >>
+     ‘(nn,sinst vσ s) ∈ tfv (vσ ' a)’
+      by metis_tac[vsort_tfv_closed] >>
+     gs[])
+  >- (first_x_assum $ qspecl_then [‘sinst vσ s’]
+     assume_tac >>
+     ‘ ofFMAP ffv fσ
+          (Uof fVars
+             ({finst vσ1 (ffVrn uσ f)} ∪
+              IMAGE (finst vσ1) (IMAGE (ffVrn uσ) A))) ⊆
+      ofFMAP ffv fσ (FDOM fσ)’
+      by simp[ofFMAP_SUBSET_FDOM] >>
+     strip_tac >>
+     ‘(n,s') ∈ ofFMAP ffv fσ (FDOM fσ)’
+      by metis_tac[SUBSET_DEF] >>
+     ‘is_cont (ofFMAP ffv fσ (FDOM fσ))’
+      by simp[ofFMAP_ffv_is_cont] >>
+     ‘(nn,sinst vσ s) ∈ ofFMAP ffv fσ (FDOM fσ)’
+      by metis_tac[SUBSET_DEF,is_cont_def] >>
+      metis_tac[]) (*nn not in range fσ*)
+  >- (simp[ffv_fVinst,ffv_finst] >>
+     simp[Abbr‘vσ1’] >>
+     irule main_gen_case_ffv_fVinst_lemma1 >>
+     simp[PULL_EXISTS] >> qexists ‘Σ’ >> simp[] >>
+     simp[ffv_ffVrn] >> gs[wfcfVmap_def,wfvmap_def] >>
+     drule_then assume_tac wfcod_no_bound >> simp[] >>
+     gs[cont_def,cont_gen] >>
+     qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
+     gs[] >> simp[complete_FDOM_is_cont] >>
+     irule_at Any is_cont_DELETE >>
+     irule_at Any wfs_sinst1 >> simp[] >>
+     drule_then assume_tac PfDrv_assum_ffv_SUBSET >>
+     first_x_assum $ rev_drule_then assume_tac >>
+     irule_at Any sfv_SUBSET_DELETE >>
+     rev_drule_then assume_tac PfDrv_cont_is_cont >>
+     gs[cont_def] >>
+     first_x_assum $ drule_then assume_tac >>
+     gs[wfsigaxs_def1] >> Cases_on ‘Σ’ >>
+     Cases_on ‘r’ >> gs[wfsig_def] >>
+     ‘(∀n s'. (n,s') ∈ Γ ⇒ (x,s) ∉ sfv s') ∧
+        (∀n1 s1. (n1,s1) ∈ Γ ∧ (n1 = x ⇒ s1 ≠ s) ⇒ (x,s) ∉ sfv s1) ∧
+        (x,s) ∉ ffv x''’ suffices_by
+      (rw[] >> TRY (metis_tac[]) >>
+      gs[SUBSET_DEF] >> metis_tac[]) >>
+     gs[NOTIN_genavds] >> metis_tac[]) (* x not in assum*)
   >- (‘(P,sl) ∈ fVars (finst vσ1 (ffVrn uσ f)) ∪ fVars (fVinst fσ (finst vσ1 (ffVrn uσ f)))’ by simp[] >>
      pop_assum mp_tac >> REWRITE_TAC[fVars_fVinst] >>
      rw[] (* 2 *)
      >- (gvs[fVars_finst,fVars_ffVrn,
             vinst_fVar_def,fVrn_def] >>
         Cases_on ‘x''’ >> gs[fVrn_def] >> 
-        ‘(q,r) ∈ FDOM uσ’ by cheat >> gs[] >>
+        ‘(q,r) ∈ FDOM uσ’
+         by (gs[thfVars_gen,thfVars_def] >>
+            qpat_x_assum ‘_ = FDOM uσ’ (assume_tac o GSYM) >>
+            simp[IN_Uof] >> metis_tac[]) >> gs[] >>
         gvs[vinst_fVar_def,MEM_MAP]>>
-        ‘(x,s) ∉ sfv y’ by cheat >>
+        ‘(x,s) ∉ sfv y’
+         by (gs[NOTIN_genavds] >> metis_tac[]) >>
         qspecl_then [‘y’,‘vσ1’] assume_tac $ cj 2 tfv_tinst>>
-        ‘cstt vσ1 ∧ sfv y ⊆ FDOM vσ1 ∧ (∀v. v ∈ FDOM vσ1 ⇒ ¬is_bound (vσ1 ' v))’  by cheat >> gs[] >>
+        ‘cstt vσ1 ∧ sfv y ⊆ FDOM vσ1 ∧
+         (∀v. v ∈ FDOM vσ1 ⇒ ¬is_bound (vσ1 ' v))’
+         by (simp[Abbr‘vσ1’] >>
+            irule_at Any FUPDATE_cstt  >>
+            simp[sort_of_def,FAPPLY_FUPDATE_THM,
+                 AllCaseEqs()] >>
+            drule_then assume_tac PfDrv_cont_is_cont>>
+            simp[complete_FDOM_is_cont] >>
+            qpat_x_assum ‘_ = FDOM vσ’
+            (assume_tac o GSYM) >> simp[] >>
+            simp[cont_gen,cont_def] >>
+            irule_at Any sfv_SUBSET_DELETE >>
+            simp[] >> gs[wfvmap_def] >>
+            rw[] (* 4 *)
+            >- (gs[NOTIN_genavds] >> metis_tac[])
+            >- (‘sfv y ⊆ Γ’ suffices_by
+                (gs[SUBSET_DEF] >> metis_tac[]) >>
+               rev_drule_then assume_tac
+               PfDrv_concl_ffv_SUBSET >>
+               first_x_assum $ rev_drule_then assume_tac >>
+               irule SUBSET_TRANS >>
+               first_assum $ irule_at Any >>
+               irule SUBSET_TRANS >>
+               irule_at Any fVslfv_SUBSET_ffv >>
+               irule MEM_fVsl_SUBSET_fVslfv >>
+               metis_tac[])
+            >- simp[is_bound_def] >>
+            gs[cont_gen,cont_def] >>
+            ‘v ∈ FDOM vσ’ by gs[] >>
+            metis_tac[wfcod_no_bound,no_bound_not_bound])   
+          >> gs[] >>
         rw[] >> Cases_on ‘(n0,st0) ∈ sfv y’ >> gs[] >>
         ‘(x,s) ≠ (n0,st0)’ by metis_tac[] >>
         simp[Abbr‘vσ1’] >> simp[FAPPLY_FUPDATE_THM] >>
-        (*nn not in range of vσ*) cheat) >>
-     ‘(nn,sinst vσ s) ∉ ofFMAP ffv fσ (FDOM fσ)’
-      by cheat >>
+        ‘(n0,st0) ∈ FDOM vσ’
+         by (gs[cont_gen,cont_def] >>
+            qpat_x_assum ‘_ = FDOM vσ’
+            (assume_tac o GSYM) >> simp[] >>
+            rev_drule_then assume_tac
+                           PfDrv_concl_ffv_SUBSET >>
+            first_x_assum $ rev_drule_then assume_tac >>
+            gs[SUBSET_DEF]) >>
+        gs[ofFMAP_def] >> metis_tac[]
+        (*nn not in range of vσ*) ) >>
+     first_x_assum $ qspecl_then [‘sinst vσ s’]
+     strip_assume_tac >> 
      strip_tac >>
      qpat_x_assum ‘(nn,sinst vσ s) ∉ ofFMAP ffv fσ (FDOM fσ)’
      mp_tac >> simp[] >>
@@ -3690,10 +3859,81 @@ Proof
       by simp[fVslfv_SUBSET_ffv] >>
      gs[SUBSET_DEF] >>
      first_x_assum irule >> simp[IN_fVslfv,PULL_EXISTS] >>
-     metis_tac[]) >>
-  cheat
+     metis_tac[]) >> (*repeat as in concl*)
+  ‘(P,sl) ∈ fVars (finst vσ1 (ffVrn uσ x'')) ∪
+   fVars (fVinst fσ (finst vσ1 (ffVrn uσ x'')))’
+    by simp[] >>
+  pop_assum mp_tac >>
+  REWRITE_TAC[fVars_fVinst] >> rw[] (* 2 *)
+ >- (gvs[fVars_finst,fVars_ffVrn,
+            vinst_fVar_def,fVrn_def] >>
+        Cases_on ‘x'''’ >> gs[fVrn_def] >> 
+        ‘(q,r) ∈ FDOM uσ’
+         by (gs[thfVars_gen,thfVars_def] >>
+            qpat_x_assum ‘_ = FDOM uσ’ (assume_tac o GSYM) >>
+            simp[IN_Uof] >> metis_tac[]) >> gs[] >>
+        gvs[vinst_fVar_def,MEM_MAP]>>
+        ‘(x,s) ∉ sfv y’
+         by (gs[NOTIN_genavds] >> metis_tac[]) >>
+        qspecl_then [‘y’,‘vσ1’] assume_tac $ cj 2 tfv_tinst>>
+        ‘cstt vσ1 ∧ sfv y ⊆ FDOM vσ1 ∧
+         (∀v. v ∈ FDOM vσ1 ⇒ ¬is_bound (vσ1 ' v))’
+         by (simp[Abbr‘vσ1’] >>
+            irule_at Any FUPDATE_cstt  >>
+            simp[sort_of_def,FAPPLY_FUPDATE_THM,
+                 AllCaseEqs()] >>
+            drule_then assume_tac PfDrv_cont_is_cont>>
+            simp[complete_FDOM_is_cont] >>
+            qpat_x_assum ‘_ = FDOM vσ’
+            (assume_tac o GSYM) >> simp[] >>
+            simp[cont_gen,cont_def] >>
+            irule_at Any sfv_SUBSET_DELETE >>
+            simp[] >> gs[wfvmap_def] >>
+            rw[] (* 4 *)
+            >- (gs[NOTIN_genavds] >> metis_tac[])
+            >- (‘sfv y ⊆ Γ’ suffices_by
+                (gs[SUBSET_DEF] >> metis_tac[]) >>
+               rev_drule_then assume_tac
+               PfDrv_assum_ffv_SUBSET >>
+               first_x_assum $ rev_drule_all_then assume_tac >>
+               irule SUBSET_TRANS >>
+               first_assum $ irule_at Any >>
+               irule SUBSET_TRANS >>
+               irule_at Any fVslfv_SUBSET_ffv >>
+               irule MEM_fVsl_SUBSET_fVslfv >>
+               metis_tac[])
+            >- simp[is_bound_def] >>
+            gs[cont_gen,cont_def] >>
+            ‘v ∈ FDOM vσ’ by gs[] >>
+            metis_tac[wfcod_no_bound,no_bound_not_bound])   
+          >> gs[] >>
+        rw[] >> Cases_on ‘(n0,st0) ∈ sfv y’ >> gs[] >>
+        ‘(x,s) ≠ (n0,st0)’ by metis_tac[] >>
+        simp[Abbr‘vσ1’] >> simp[FAPPLY_FUPDATE_THM] >>
+        ‘(n0,st0) ∈ FDOM vσ’
+         by (gs[cont_gen,cont_def] >>
+            qpat_x_assum ‘_ = FDOM vσ’
+            (assume_tac o GSYM) >> simp[] >>
+            rev_drule_then assume_tac
+                           PfDrv_assum_ffv_SUBSET >>
+            first_x_assum $ drule_all_then assume_tac >>
+            gs[SUBSET_DEF]) >>
+        gs[ofFMAP_def] >> metis_tac[]) >>
+first_x_assum $ qspecl_then [‘sinst vσ s’]
+     strip_assume_tac >> 
+     strip_tac >>
+     qpat_x_assum ‘(nn,sinst vσ s) ∉ ofFMAP ffv fσ (FDOM fσ)’
+     mp_tac >> simp[] >>
+     gvs[ofFMAP_def,PULL_EXISTS] >>
+     qexists ‘a’ >> simp[] >>
+     ‘fVslfv (fσ ' a) ⊆ ffv (fσ ' a)’
+      by simp[fVslfv_SUBSET_ffv] >>
+     gs[SUBSET_DEF] >>
+     first_x_assum irule >> simp[IN_fVslfv,PULL_EXISTS] >>
+     metis_tac[]        
 QED        
-     
+
+
         
         
         
