@@ -1584,6 +1584,7 @@ simp[MAP_tprpl_mk_bmap_REVERSE]
 QED
 
 
+
 Theorem wfvmap_presname:
  wfvmap Σ vσ ⇒ presname vσ
 Proof
@@ -1862,6 +1863,12 @@ QED
 
 
 
+
+Theorem wff_wffV:
+∀f. wff Σ f ⇒ ∀fv. fv ∈ fVars f ⇒ wffV (FST Σ) fv
+Proof
+Induct_on ‘wff’ >> simp[fVars_def,wff_rules,wffV_def,wffstl_def,fVars_mk_FALL,fVars_EQ] >> metis_tac[]
+QED
 
 
 
@@ -2545,6 +2552,43 @@ Induct_on ‘n’ >> Cases_on ‘vl’ >> Cases_on ‘sl’ >> gs[wfabsap_def,FA
 >- cheat >>
 *)
              
-                  
+Theorem IN_thfVars:
+∀fv. fv ∈ thfVars (Γ,A,f) ⇔
+     ∃a. (a = f ∨ a ∈ A) ∧ fv ∈ fVars a
+Proof
+ simp[thfVars_def,IN_Uof]
+QED
+
+
+
+Theorem ofFMAP_SUBSET:
+ofFMAP f σ A ⊆ B ⇔ ∀a. a ∈ A ∧ a ∈ FDOM σ ⇒ f (σ ' a) ⊆ B
+Proof        
+rw[ofFMAP_def,SUBSET_DEF] >> metis_tac[]
+QED
+
+
+        
+
+Theorem ofFMAP_Uof_SUBSET_lemma:
+(∀a. a ∈ A ⇒ ofFMAP f σ (g a) ⊆ B) ⇒
+ofFMAP f σ (Uof g A) ⊆ B
+Proof
+rw[ofFMAP_def,SUBSET_DEF,IN_Uof,PULL_EXISTS] >>
+first_x_assum $ drule_then assume_tac >>
+metis_tac[]
+QED
+
+        
+
+
+Theorem IMAGE_eq_lemma:
+(∀a. a ∈ A ⇒ f1 a = f2 a) ⇒ IMAGE f1 A = IMAGE f2 A
+Proof
+rw[Once EXTENSION] >> metis_tac[]
+QED
+
+
+                                          
 val _ = export_theory();
 

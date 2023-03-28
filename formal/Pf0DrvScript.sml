@@ -928,6 +928,12 @@ Definition dest_forall_def:
 dest_forall (FALL s f) = (s,f)
 End
 
+Definition is_fall_def:
+(is_fall (FALL s b) ⇔ T) ∧
+(is_fall _ ⇔ F)
+End            
+                
+
 Theorem Pf0Drv_spec:
 is_fall (concl th) ∧ Pf0Drv Σ aths th ∧ 
 wft (FST Σ) t ∧ sort_of t = FST (dest_forall (concl th)) ⇒

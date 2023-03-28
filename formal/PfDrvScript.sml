@@ -1270,6 +1270,22 @@ QED
               
    
 
+
+Theorem PfDrv_concl_wff:
+wfsigaxs Σ axs ⇒
+∀th. PfDrv Σ axs (Γ,A,f) ⇒ wff Σ f
+Proof
+metis_tac[PfDrv_wff,concl_def]
+QED
+
+
+Theorem PfDrv_assum_wff:
+wfsigaxs Σ axs ⇒
+∀th. PfDrv Σ axs (Γ,A,f) ⇒
+∀a. a ∈ A ⇒ wff Σ a
+Proof
+metis_tac[PfDrv_wff,assum_def]
+QED
         
 Theorem PfDrv_thfVars_wffV:
 wfsigaxs (Σf,Σp,Σe) axs ∧ PfDrv (Σf,Σp,Σe) axs th ⇒ ∀fv. fv ∈ thfVars th ⇒ wffV Σf fv
@@ -1281,6 +1297,19 @@ Cases_on ‘th’ >> Cases_on ‘r’ >> gs[IN_thfVars] (* 2 *)
 drule_then assume_tac $ PfDrv_assum_wff >>
 metis_tac[]
 QED
+
+
+Theorem PfDrv_fVinsth:
+∀th.
+PfDrv Σ axs th ∧
+wffVmap Σ fσ ∧ thfVars th ⊆ FDOM fσ ⇒
+PfDrv Σ axs (fVinsth fσ th)
+Proof
+rw[PfDrv_def] >>
+drule_all_then assume_tac Pf_fVinsth >>
+first_x_assum $ irule_at Any >> simp[]
+QED
+        
 
 
 (*        
