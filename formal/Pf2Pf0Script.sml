@@ -5278,6 +5278,97 @@ simp[fVcong_def,thfVars_def,Uof_UNION,Uof_Sing,fVars_IFF,
       fVars_def]
 QED        
     
+Theorem Rofeqthl_eqthl1:
+(∀n. n < LENGTH sl ⇒
+      is_EQ (concl (eqths n))) ∧
+sl ≠ [] ⇒
+Rofeqthl (map2list (LENGTH sl − 1) (λn. insth fσ vσ (uniqify uσ (eqths n)))) =
+MAP (tinst vσ) (Rofeqthl (map2list (LENGTH sl − 1) eqths))
+Proof
+rw[Rofeqths_def] >>
+irule LIST_EQ >>
+simp[EL_MAP,LENGTH_map2list] >>
+Cases_on ‘sl’ >> gs[EL_map2list] >>
+rw[] >> gs[arithmeticTheory.ADD1] >>
+first_x_assum $ drule_then assume_tac >>
+simp[concl_insth_uniqify] >>
+gs[is_EQ_def,ffVrn_EQ,instf_def,finst_EQ,fVinst_EQ,
+   dest_eq_EQ]
+QED   
+
+
+Theorem Lofeqthl_eqthl1:
+(∀n. n < LENGTH sl ⇒
+      is_EQ (concl (eqths n))) ∧
+sl ≠ [] ⇒
+Lofeqthl (map2list (LENGTH sl − 1) (λn. insth fσ vσ (uniqify uσ (eqths n)))) =
+MAP (tinst vσ) (Lofeqthl (map2list (LENGTH sl − 1) eqths))
+Proof
+rw[Lofeqths_def] >>
+irule LIST_EQ >>
+simp[EL_MAP,LENGTH_map2list] >>
+Cases_on ‘sl’ >> gs[EL_map2list] >>
+rw[] >> gs[arithmeticTheory.ADD1] >>
+first_x_assum $ drule_then assume_tac >>
+simp[concl_insth_uniqify] >>
+gs[is_EQ_def,ffVrn_EQ,instf_def,finst_EQ,fVinst_EQ,
+   dest_eq_EQ]
+QED      
+        
+Theorem IMAGE_fVinst_finst_ffVrn_assum_eqthl:
+sl ≠ [] ⇒
+IMAGE (fVinst fσ)
+          (IMAGE (finst vσ) (IMAGE (ffVrn uσ) (Uof assum (set (map2list (LENGTH sl − 1) eqths))))) =
+Uof assum
+(set (map2list (LENGTH sl − 1) (λn. insth fσ vσ (uniqify uσ (eqths n)))))
+Proof
+rw[] >>
+simp[Once EXTENSION,IN_Uof,PULL_EXISTS,MEM_map2list] >>
+rw[EQ_IMP_THM] (* 2 *)
+>- (qexists ‘n0’ >> simp[] >>
+   Cases_on ‘eqths n0’ >>  Cases_on ‘r’ >>
+   simp[assum_insth_uniqify] >>
+   gs[assum_def] >> metis_tac[]) >>
+Cases_on ‘eqths n’ >>  Cases_on ‘r’ >>
+gs[assum_insth_uniqify,assum_def] >>
+irule_at Any EQ_REFL >>
+qexists ‘n’ >> simp[assum_def]
+QED
+
+  
+
+
+
+Theorem eqths_cont_SUBSET_fVcong:
+sl ≠ [] ∧ n < LENGTH sl ⇒
+cont (eqths n) ⊆ cont (fVcong (map2list (LENGTH sl − 1) eqths) P sl)
+Proof 
+Cases_on ‘eqths n’ >> Cases_on ‘r’ >>
+simp[cont_def,fVcong_def,cont_def] >>
+simp[SUBSET_DEF,PULL_EXISTS,IN_Uof,MEM_map2list] >>
+rw[] >> qexists ‘n’ >> simp[cont_def]
+QED   
+
+Theorem eqths_thfVars_SUBSET_fVcong:
+sl ≠ [] ∧
+is_EQ (concl (eqths n)) ∧
+n < LENGTH sl ⇒
+thfVars (eqths n) ⊆ thfVars (fVcong (map2list (LENGTH sl − 1) eqths) P sl)
+Proof
+Cases_on ‘eqths n’ >> Cases_on ‘r’ >>
+simp[SUBSET_DEF,fVcong_def,thfVars_def,Uof_Sing,Uof_UNION,
+     IN_Uof,fVars_IFF,fVars_def,MEM_map2list,
+     PULL_EXISTS] >> rw[] (* 2 *)
+>- (disj2_tac >> 
+   gs[is_EQ_def,fVars_EQ,concl_def]) >>
+disj2_tac >> qexistsl [‘a’,‘n’] >> simp[assum_def]
+QED
+
+        
+
+
+
+         
 Theorem main:
  wfsigaxs Σ axs ∧ wfsigaths Σ aths ⇒
  ∀pf. Pf Σ axs pf ⇒
@@ -5811,21 +5902,41 @@ qabbrev_tac ‘eqthl = (map2list (LENGTH sl − 1) eqths)’ >>
       first_x_assum irule >>
       simp[concl_fv_IN_thfVars_fVcong]) >> simp[] >>
     simp[fVinst_def] >>
-    ‘(uσ ' (P,sl),MAP (sinst vσ) sl) ∈ FDOM fσ’ by cheat >>
+    ‘(uσ ' (P,sl),MAP (sinst vσ) sl) ∈ FDOM fσ’
+      by (gs[thfVars_vinsth,thfVars_uniqify,SUBSET_DEF] >>
+      first_x_assum irule >> simp[PULL_EXISTS] >>
+      qexists ‘(P,sl)’ >> 
+      simp[concl_fv_IN_thfVars_fVcong,vinst_fVar_def,
+       fVrn_def]) >>
     simp[] >>
     ‘(MAP (tinst vσ) (Rofeqthl eqthl)) = (Rofeqthl eqthl1) ∧
     (MAP (tinst vσ) (Lofeqthl eqthl)) = (Lofeqthl eqthl1)’
-     suffices_by metis_tac[] >>
-    cheat)
+     suffices_by metis_tac[] >> rw[] (* 2 *)
+     >- (simp[Abbr‘eqthl1’,Abbr‘eqthl’,Abbr ‘eqths1’] >>
+     irule $ GSYM Rofeqthl_eqthl1 >>
+     simp[]) >>
+     simp[Abbr‘eqthl1’,Abbr‘eqthl’,Abbr ‘eqths1’] >>
+     irule $ GSYM Lofeqthl_eqthl1 >>
+     simp[])
     >- (simp[assum_def,insth_uniqify_components] >>
-       (*IMAGE comm with union?*) cheat) >>
+        simp[Abbr‘eqthl1’,Abbr‘eqthl’,Abbr‘eqths1’] >>
+        irule
+        IMAGE_fVinst_finst_ffVrn_assum_eqthl >>
+        simp[]) >>
     simp[cont_def,insth_uniqify_components] >>
     simp[Uof_UNION,Uof_Sing,fVars_finst,
          fVars_ffVrn,fVars_IFF,fVars_def] >>
-    ‘(P,sl) ∈ FDOM uσ’ by cheat >>
+    ‘(P,sl) ∈ FDOM uσ’
+    by (gs[uniqifn_def,SUBSET_DEF] >>
+      first_x_assum irule >>
+      simp[concl_fv_IN_thfVars_fVcong]) >>
     simp[fVrn_def,vinst_fVar_def,ofFMAP_UNION,ofFMAP_Sing]>>
     ‘(uσ ' (P,sl),MAP (sinst vσ) sl) ∈ FDOM fσ’
-     by cheat >> simp[ofFMAP_Sing] >>
+     by (gs[thfVars_vinsth,thfVars_uniqify,SUBSET_DEF] >>
+      first_x_assum irule >> simp[PULL_EXISTS] >>
+      qexists ‘(P,sl)’ >> 
+      simp[concl_fv_IN_thfVars_fVcong,vinst_fVar_def,
+       fVrn_def]) (*repeated above*) >> simp[ofFMAP_Sing] >>
     ‘vinst_cont vσ (Uof cont (set eqthl)) ∪
      ofFMAP ffv fσ
            (Uof fVars
@@ -5841,7 +5952,14 @@ qabbrev_tac ‘eqthl = (map2list (LENGTH sl − 1) eqths)’ >>
        Cases_on ‘eqths n0’ >> Cases_on ‘r’ >>
        gs[cont_def] >>
        rename [‘(Γ,A,f)’] >>
-       ‘Γ ⊆ FDOM vσ’ by cheat >>
+       ‘Γ ⊆ FDOM vσ’ by
+         (gs[fVcong_def,cont_def] >>
+          irule SUBSET_TRANS >>
+          first_x_assum $ irule_at Any >>
+          simp[SUBSET_DEF,IN_Uof,PULL_EXISTS,
+               MEM_map2list] >>
+          rw[cont_def] >> qexists ‘n0’ >>
+          rw[cont_def]) >>
        simp[insth_uniqify_components,cont_def] >>
        disj1_tac >> simp[vinst_cont_def,ofFMAP_def] >>
        gs[SUBSET_DEF] >> metis_tac[])
@@ -5869,7 +5987,12 @@ qabbrev_tac ‘eqthl = (map2list (LENGTH sl − 1) eqths)’ >>
     gs[cont_def,insth_uniqify_components] (* 2 *)
     >- (gvs[vinst_cont_def,ofFMAP_def] >>
        disj1_tac >> qexistsl [‘a’,‘n’] >> simp[cont_def]) >>
-    ‘∃t1 t2. r' = EQ t1 t2’ by cheat >>
+    ‘∃t1 t2. r' = EQ t1 t2’
+      by (‘LENGTH sl ≠ 0’ by simp[] >>
+         ‘n < LENGTH sl’ by simp[] >>
+         first_x_assum $ drule_then assume_tac >>
+         gs[concl_def,is_EQ_def] >>
+         metis_tac[]) >>
     gs[Uof_UNION,Uof_Sing,ffVrn_EQ,finst_EQ,fVars_EQ] >>
     disj2_tac >>
     gvs[ofFMAP_def,IN_Uof] >>
@@ -5890,7 +6013,24 @@ rw[] (* 4 *)
        first_x_assum $ qspecl_then [‘vσ’,‘fσ’,‘uσ’]
        assume_tac >>
        gs[] >>
-       ‘Pf0Drv Σ aths (eqths1 n)’ by cheat >> simp[] >>
+       ‘Pf0Drv Σ aths (eqths1 n)’
+        by (first_x_assum irule >>
+           gs[thfVars_vinsth,thfVars_uniqify] >>
+           irule_at Any uniqifn_SUBSET >>
+           first_x_assum $ irule_at Any >>
+           simp[Abbr‘eqthl’] >>
+           irule_at Any eqths_thfVars_SUBSET_fVcong >>
+           simp[] >>
+           irule_at Any SUBSET_TRANS >>
+           first_x_assum $ irule_at Any >>
+           gs[IMAGE_IMAGE] >>
+           irule_at Any IMAGE_SUBSET >>
+           irule_at Any eqths_thfVars_SUBSET_fVcong >>
+           simp[] >>
+           irule_at Any SUBSET_TRANS >>
+           first_x_assum $ irule_at Any >>
+           irule_at Any eqths_cont_SUBSET_fVcong >>
+           simp[]) >> simp[] >>
        simp[Abbr‘eqths1’] >>
        gs[is_EQ_def] >>
        Cases_on ‘eqths n’ >> Cases_on ‘r’ >>

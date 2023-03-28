@@ -16,7 +16,7 @@ Inductive Pf:
 (∀ax. ax ∈ axs ⇒ Pf Σ axs [(ffv ax,{},ax)]) ∧
 [~fVcong:]
 (∀P sl Pfs eqths.
- sl ≠ [] ∧
+ sl ≠ [] ∧ wffVsl (FST Σ) sl ∧
  (∀n. n < LENGTH sl ⇒
       is_EQ (concl (eqths n)) ∧
       Pf Σ axs (Pfs n) ∧ MEM (eqths n) (Pfs n) ∧
@@ -360,7 +360,8 @@ Induct_on ‘Pf’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*43*)
     rw[] (* 2 *)
     >- (irule wff_fVar' >> simp[] >>
         ‘wfabsap Σf sl (Lofeqthl (map2list (LENGTH sl − 1) eqths))’
-         suffices_by cheat >>
+         suffices_by (simp[wffstl_def] >> gs[wffVsl_def] >>
+         metis_tac[])>>
         irule wfabsap_wfs >> rw[] (* 3 *)
         >- (first_x_assum $ drule_then
                          strip_assume_tac >>
@@ -392,7 +393,9 @@ Induct_on ‘Pf’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*43*)
        Cases_on ‘sl’ >> gs[]) >>
    (irule wff_fVar' >>
    ‘wfabsap (FST (Σf,Σp,Σe)) sl
-          (Rofeqthl (map2list (LENGTH sl − 1) eqths))’ suffices_by cheat >>
+          (Rofeqthl (map2list (LENGTH sl − 1) eqths))’ suffices_by
+          (simp[wffstl_def] >> gs[wffVsl_def] >>
+         metis_tac[])>>
         irule wfabsap_wfs >> rw[] (* 3 *)
         >- (first_x_assum $ drule_then
                          strip_assume_tac >>
