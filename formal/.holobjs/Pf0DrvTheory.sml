@@ -6,7 +6,7 @@ struct
     else ()
   
   open Type Term Thm
-  local open newdefsTheory in end;
+  local open PfDrvTheory in end;
   
   structure TDB = struct
     val thydata = 

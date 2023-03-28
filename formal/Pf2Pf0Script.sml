@@ -88,7 +88,8 @@ QED
         
 
 
-Theorem PfDrv_thfVars_wffV:
+
+Theorem PfDrv_thfVars_wffV0:
 wfsigaxs Σ axs ∧ PfDrv Σ axs th ⇒
 ∀fv. fv ∈ thfVars th ⇒ wffV (FST Σ) fv
 Proof
@@ -105,7 +106,53 @@ Cases_on ‘Σ’ >> Cases_on ‘r’ >> gs[] >>
 metis_tac[]
 QED
 
-             
+
+
+Theorem ffVrn_eq:
+∀f σ1 σ2.
+ (DRESTRICT σ1 (fVars f)  = DRESTRICT σ2 (fVars f)) ⇒ ffVrn σ1 f = ffVrn σ2 f
+Proof
+Induct_on ‘f’ >> gs[ffVrn_def,fVars_def,INTER_UNION] >> rw[] (* 5 *)
+>- (first_x_assum irule >>
+   drule_then assume_tac DRESTRICT_SUBSET >>
+   first_x_assum $
+   qspecl_then [‘fVars f’] assume_tac >>
+   gs[SUBSET_DEF])
+>- (first_x_assum irule >>
+   drule_then assume_tac DRESTRICT_SUBSET >>
+   first_x_assum $
+   qspecl_then [‘fVars f'’] assume_tac >>
+   gs[SUBSET_DEF])
+>- (qspecl_then [‘σ1’,‘{(s,l)}’,‘(s,l)’] assume_tac
+   (SRULE [PULL_FORALL] DRESTRICT_DEF) >>
+   qspecl_then [‘σ2’,‘{(s,l)}’,‘(s,l)’] assume_tac
+   (SRULE [PULL_FORALL] DRESTRICT_DEF)  >> gs[]) >>
+qspecl_then [‘σ1’,‘{(s,l)}’] assume_tac
+  DRESTRICT_DEF >>
+qspecl_then [‘σ2’,‘{(s,l)}’] assume_tac
+  DRESTRICT_DEF >>
+gs[] >> gs[Once EXTENSION] >> metis_tac[]
+QED
+        
+Theorem uniqify_DRESTRICT:
+thfVars th ⊆ s ⇒
+uniqify (DRESTRICT uσ s) th = uniqify uσ th
+Proof
+Cases_on ‘th’ >> Cases_on ‘r’ >>
+simp[uniqify_def] >> rw[] (* 2 *)
+>- (irule IMAGE_eq_lemma >> rw[] >>
+   irule ffVrn_eq >>
+   rw[DRESTRICT_DRESTRICT] >>
+   gs[SUBSET_DEF,thfVars_def,Uof_UNION,Uof_Sing] >>
+   AP_TERM_TAC >> gs[Once EXTENSION,IN_Uof] >>
+   metis_tac[EXTENSION]) >>
+ irule ffVrn_eq >>
+   rw[DRESTRICT_DRESTRICT] >>
+   gs[SUBSET_DEF,thfVars_def,Uof_UNION,Uof_Sing] >>
+   AP_TERM_TAC >> gs[Once EXTENSION,IN_Uof] >>
+   metis_tac[EXTENSION]   
+QED
+        
 Theorem PfDrv_uniqify:
  wfsigaxs Σ axs ∧ PfDrv Σ axs th ⇒
  ∀uσ. PfDrv Σ axs (uniqify uσ th)
@@ -118,7 +165,7 @@ Proof
  irule PfDrv_fVinsth1 >> simp[FDOM_rn2fVmap] >>
  irule wffVmap_rn2fVmap1 >>
  simp[FDOM_DRESTRICT] >>
- metis_tac[PfDrv_thfVars_wffV]
+ metis_tac[PfDrv_thfVars_wffV0]
 QED        
 
 (*Uniqified Concrete Instance*)           
@@ -754,32 +801,6 @@ QED
 
 
 
-Theorem ffVrn_eq:
-∀f σ1 σ2.
- (DRESTRICT σ1 (fVars f)  = DRESTRICT σ2 (fVars f)) ⇒ ffVrn σ1 f = ffVrn σ2 f
-Proof
-Induct_on ‘f’ >> gs[ffVrn_def,fVars_def,INTER_UNION] >> rw[] (* 5 *)
->- (first_x_assum irule >>
-   drule_then assume_tac DRESTRICT_SUBSET >>
-   first_x_assum $
-   qspecl_then [‘fVars f’] assume_tac >>
-   gs[SUBSET_DEF])
->- (first_x_assum irule >>
-   drule_then assume_tac DRESTRICT_SUBSET >>
-   first_x_assum $
-   qspecl_then [‘fVars f'’] assume_tac >>
-   gs[SUBSET_DEF])
->- (qspecl_then [‘σ1’,‘{(s,l)}’,‘(s,l)’] assume_tac
-   (SRULE [PULL_FORALL] DRESTRICT_DEF) >>
-   qspecl_then [‘σ2’,‘{(s,l)}’,‘(s,l)’] assume_tac
-   (SRULE [PULL_FORALL] DRESTRICT_DEF)  >> gs[]) >>
-qspecl_then [‘σ1’,‘{(s,l)}’] assume_tac
-  DRESTRICT_DEF >>
-qspecl_then [‘σ2’,‘{(s,l)}’] assume_tac
-  DRESTRICT_DEF >>
-gs[] >> gs[Once EXTENSION] >> metis_tac[]
-QED
-
         
 Theorem ffVrn_eq1:
 ∀f σ1 σ2.
@@ -791,24 +812,7 @@ simp[fmap_EXT,DRESTRICT_DEF] >> rw[] >>
 gs[EXTENSION] >> metis_tac[]
 QED
  
-Theorem uniqify_DRESTRICT:
-thfVars th ⊆ s ⇒
-uniqify (DRESTRICT uσ s) th = uniqify uσ th
-Proof
-Cases_on ‘th’ >> Cases_on ‘r’ >>
-simp[uniqify_def] >> rw[] (* 2 *)
->- (irule IMAGE_eq_lemma >> rw[] >>
-   irule ffVrn_eq >>
-   rw[DRESTRICT_DRESTRICT] >>
-   gs[SUBSET_DEF,thfVars_def,Uof_UNION,Uof_Sing] >>
-   AP_TERM_TAC >> gs[Once EXTENSION,IN_Uof] >>
-   metis_tac[EXTENSION]) >>
- irule ffVrn_eq >>
-   rw[DRESTRICT_DRESTRICT] >>
-   gs[SUBSET_DEF,thfVars_def,Uof_UNION,Uof_Sing] >>
-   AP_TERM_TAC >> gs[Once EXTENSION,IN_Uof] >>
-   metis_tac[EXTENSION]   
-QED
+
 
 Theorem wfvmap_DRESTRICT:
 wfvmap Σ vσ ⇒
