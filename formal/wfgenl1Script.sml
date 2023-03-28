@@ -2714,6 +2714,14 @@ simp[slnames_alt,PULL_EXISTS,tnames_FINITE] >>
  simp[EXTENSION]
 QED
     
+
+Definition wffVsl_def:
+wffVsl Σf sl ⇔
+∃vl. wfvl Σf vl False ∧ vl2sl vl = sl ∧ ALL_DISTINCT vl ∧ okvnames vl
+End
+        
+
+
 Theorem wffVsl_sinst:
 wffVsl Σf sl ∧
 (∀fsym.
@@ -2760,6 +2768,7 @@ MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl (vl2sl vl)) ’
 >- (irule ALL_DISTINCT_sl2vl >> simp[]) >>
 irule okvnames_sl2vl >> simp[]
 QED
+
 
 
 Theorem tinst_wffstl:

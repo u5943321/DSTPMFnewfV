@@ -1309,20 +1309,72 @@ rw[PfDrv_def] >>
 drule_all_then assume_tac Pf_fVinsth >>
 first_x_assum $ irule_at Any >> simp[]
 QED
-        
 
-
-(*        
+Theorem Uof_FINITE_lemma:
+FINITE A ∧ (∀a. a ∈ A ⇒ FINITE (f a)) ⇒
+FINITE (Uof f A)
+Proof
+rw[Uof_def] (* 2 *)
+>- (‘{f e | e ∈ A} = IMAGE f A’
+    by simp[Once EXTENSION] >>
+    gs[]) >>
+metis_tac[]
+QED            
 
 Theorem PfDrv_assum_FINITE:
+∀pf. Pf Σ axs pf ⇒
+ ∀Γ A f. MEM (Γ,A,f) pf ⇒ FINITE A
+Proof
+Induct_on ‘Pf’ >> rw[] >> gs[]>> TRY (metis_tac[]) (* 11 *)
+>- (gs[MEM_FLAT,MEM_map2list] >>
+   ‘LENGTH sl ≠ 0’ by gs[] >>
+   ‘n0 < LENGTH sl’ by simp[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[] >> metis_tac[])
+>- (gs[fVcong_def] >>
+   irule Uof_FINITE_lemma >> simp[] >>
+   gs[MEM_FLAT,MEM_map2list] >> rw[] >>
+   ‘LENGTH sl ≠ 0’ by gs[] >>
+   ‘n0 < LENGTH sl’ by simp[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[] >> Cases_on ‘ (eqths n0)’ >> Cases_on ‘r’ >> gs[] >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[assum_def])
+>- (Cases_on ‘th’ >> Cases_on ‘r’ >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[fVinsth_def])
+>- (Cases_on ‘th’ >> Cases_on ‘r’ >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[vinsth_def])
+>- (gs[gen_def] >> metis_tac[])
+>- (gs[spec_def] >> metis_tac[])
+>- (first_x_assum $ drule_then assume_tac >> gs[])
+>- gs[assume_def]
+>- (Cases_on ‘th’ >> Cases_on ‘r’ >>
+   first_x_assum $ drule_then assume_tac >> gs[disch_def])
+>- gs[refl_def] >>
+Cases_on ‘th’ >> Cases_on ‘r’ >> gs[add_cont1_def] >>
+first_x_assum $ drule_then assume_tac >> gs[]
+QED
+   
 
+Theorem fVars_FINITE:
+∀f. FINITE (fVars f)
+Proof
+Induct_on ‘f’ >> gs[fVars_def]
+QED
 
         
 Theorem PfDrv_thfVars_FINITE:
 PfDrv (Σf,Σp,Σe) axs th ⇒ FINITE (thfVars th)
 Proof
-cheat
-*)
+Cases_on ‘th’ >> Cases_on ‘r’ >> simp[PfDrv_def] >> rw[thfVars_def] >>
+simp[Uof_UNION,Uof_Sing] >>
+drule_all_then assume_tac PfDrv_assum_FINITE >>
+simp[fVars_FINITE] >>
+irule Uof_FINITE_lemma >> simp[fVars_FINITE]
+QED
+
 
                                         
 val _ = export_theory();
