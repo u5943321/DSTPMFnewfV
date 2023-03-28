@@ -4443,6 +4443,7 @@ irule $ cj 6 wff_rules >> gs[] >>
 simp[fVslfv_mk_FALLL] >> metis_tac[]
 QED
 
+        
 
             
 Theorem wfcfVmap_inst_EX:
@@ -4458,16 +4459,31 @@ Proof
 Induct_on ‘FINITE’ >> rw[] (* 2 *)
 >- (qexists ‘fσ’ >> simp[]) >>
 ‘FDOM fσ ∩ δ = {}’ by (gs[EXTENSION] >> metis_tac[]) >>
+‘e ∉ FDOM fσ’ by (gs[EXTENSION] >> metis_tac[]) >>
 ‘(∀fv. fv ∈ δ ⇒ wffV (FST Σ) fv)’ by metis_tac[] >>
 first_x_assum $ drule_all_then assume_tac >> 
 gs[] >> qexists ‘fσ1 |+ (e,False)’ >>
 rw[] (* 5 *)
->- gs[wfcfVmap_def,wffVmap_def,cfVmap_def] >>
+>- (gs[wfcfVmap_def,wffVmap_def,cfVmap_def] >>
    rw[] (* 6 *)
-   >- simp[FAPPLY_FUPDATE_THM] >>
-      
-rw[] 
-rw[] >> cheat
+   >- (simp[FAPPLY_FUPDATE_THM] >>
+      last_x_assum $ qspecl_then [‘(P,sl)’] assume_tac >>
+      gs[wffV_def] >>
+      qpat_x_assum ‘_ = sl’ (assume_tac o GSYM) >> 
+      simp[GSYM mk_FALLL_False] >>
+      Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+      irule wff_wfvl_mk_FALLL >> gs[])
+   >- (gs[FAPPLY_FUPDATE_THM] >>
+      ‘(P,sl) ≠ e’ by metis_tac[] >> simp[])
+   >- (gs[FAPPLY_FUPDATE_THM] >>
+      ‘(P,sl) ≠ e’ by metis_tac[] >> simp[]) 
+   >- simp[FAPPLY_FUPDATE_THM,is_cfm_def] >>
+   gs[FAPPLY_FUPDATE_THM] >>
+   ‘(P,sl) ≠ e’ by metis_tac[] >> simp[])
+>- (gs[EXTENSION] >> metis_tac[])
+>- (‘e ∉ FDOM fσ1’ by (gs[EXTENSION] >> metis_tac[]) >>
+    gs[SUBMAP_DEF,FAPPLY_FUPDATE_THM] >> rw[]) >>
+simp[FAPPLY_FUPDATE_THM] >> rw[]    
 QED   
 
             
@@ -4495,6 +4511,32 @@ pop_assum mp_tac >> simp[] >> disj2_tac >>
 first_x_assum $ irule_at Any >> simp[] >> gs[]) 
 QED
  
+
+
+Theorem wffV_wffVsl:
+wffV Σf (P,sl) ⇔ wffVsl Σf sl
+Proof
+rw[wffVsl_def,wffV_def]
+QED
+
+Theorem wffV_sinst_wffV:
+wffV Σf fv ∧
+     (∀fsym.
+        isfsym Σf fsym ⇒
+        sfv (fsymout Σf fsym) ⊆
+        BIGUNION {tfv (Var n s) | MEM (n,s) (fsymin Σf fsym)}) ∧ wfvmap Σf σ ⇒ wffV Σf (vinst_fVar σ fv)
+Proof
+Cases_on ‘fv’ >> simp[wffV_wffVsl,vinst_fVar_def] >>
+rw[] >> irule wffVsl_sinst >>
+gs[wfvmap_def]
+QED
+
+Theorem wffV_fVrn:
+wffV Σ fv ⇒ wffV Σ (fVrn uσ fv)
+Proof
+Cases_on ‘fv’ >> simp[wffV_wffVsl,fVrn_def] >>
+rw[wffV_wffVsl]
+QED
 
 
 Theorem main_mp_case:
@@ -4555,6 +4597,19 @@ uσ ⊑ uσb’
  fσ ⊑ fσb ∧
  ∀fv. fv ∈ extras ⇒ ffv (fσb ' (vinst_fVar hσ (fVrn uσb fv))) = {}’ by
   (qspecl_then [‘fσ’,‘IMAGE (vinst_fVar hσ ∘ fVrn uσb) extras’] assume_tac wfcfVmap_inst_EX >>
+ ‘(∀fv. fv ∈ IMAGE (vinst_fVar hσ ∘ fVrn uσb) extras ⇒ wffV (FST Σ) fv)’
+   by (simp[PULL_EXISTS] >>
+   rw[] >> irule wffV_sinst_wffV >>
+   Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+   gs[wfsigaxs_def1,wfsig_def] >>
+   irule wffV_fVrn >>
+   irule wff_wffV' >> rename [‘(Σf,Σp,Σe)’] >>
+   qexistsl [‘f1’,‘Σe’,‘Σp’] >> rw[] (* 2 *)
+   >- gs[Abbr‘extras’] >>
+   irule PfDrv_concl_wff >>
+   qexistsl [‘A2’,‘axs’,‘Γ2’] >>
+   simp[wfsigaxs_def1,wfsig_def] >>
+   metis_tac[PfDrv_def]) >> 
  ‘IMAGE (vinst_fVar hσ ∘ fVrn uσb)
             (Uof fVars ({f2} ∪ A1 ∪ A2)) 
   ∩ IMAGE (vinst_fVar hσ ∘ fVrn uσb) extras = {}’
@@ -4602,7 +4657,13 @@ simp[concl_def,mp_match,is_imp_def,dest_imp_def] >> rw[]
 >- (first_x_assum irule >> gs[assum_def] >>
    simp[Abbr‘extras’]) >>
 irule Pf0Drv_MP0' >>
-simp[concl_insth_uniqify,dest_imp_def,fVinst_def,finst_def,ffVrn_def,is_imp_def] >> rw[] (* 2 *)
+simp[concl_insth_uniqify,dest_imp_def,fVinst_def,finst_def,ffVrn_def,is_imp_def,dest_imp_def,concl_def] >> rw[] (* 2 *)
+>- (simp[concl_def,mp_match,is_imp_def,dest_imp_def] >>
+rw[] >>
+   simp[ffVrn_def,instf_def,fVinst_def,finst_def,is_imp_def])
+>- (simp[concl_def,mp_match,is_imp_def,dest_imp_def] >>
+rw[] >>
+   simp[ffVrn_def,instf_def,fVinst_def,finst_def,is_imp_def]>> simp[dest_imp_def])   
 >- (first_x_assum irule >>
    simp[] >> rw[] (* 3 *)
    >- (simp[thfVars_vinsth,thfVars_uniqify,IMAGE_IMAGE] >>

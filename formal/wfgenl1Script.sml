@@ -2714,6 +2714,54 @@ simp[slnames_alt,PULL_EXISTS,tnames_FINITE] >>
  simp[EXTENSION]
 QED
     
+Theorem wffVsl_sinst:
+wffVsl Σf sl ∧
+(∀fsym.
+            isfsym Σf fsym ⇒
+            sfv (fsymout Σf fsym) ⊆
+            BIGUNION {tfv (Var n s) | MEM (n,s) (fsymin Σf fsym)}) ∧
+cstt σ ∧ wfcod Σf σ ⇒
+wffVsl Σf (MAP (sinst σ) sl)
+Proof
+rw[wffVsl_def] >>
+‘∃nl.ALL_DISTINCT nl ∧
+     LENGTH nl = LENGTH (vl2sl vl) ∧
+     (set nl) ∩ (slnames (MAP (sinst σ) (vl2sl vl))) = {} ∧
+     (set nl) ∩ IMAGE FST (FDOM σ) = {} ∧
+     set nl ∩ tlnames (MAP Var' vl) = ∅’
+ by (‘FINITE (slnames (MAP (sinst σ) (vl2sl vl)) ∪ IMAGE FST (FDOM σ) ∪ tlnames (MAP Var' vl))’ by simp[tlnames_FINITE,slnames_FINITE] >>
+     drule_then assume_tac nl_EX >>
+     first_x_assum $ qspecl_then [‘LENGTH (vl2sl vl)’] assume_tac >> gs[] >>
+     qexists ‘nl’ >> simp[] >>
+     gs[EXTENSION] >> metis_tac[]) >>
+qexists ‘sl2vl nl (MAP (sinst σ) (vl2sl vl))’ >>
+rw[] (* 4 *)
+>- (simp[wfvl_def] >> rw[] (* 2 *)
+   >- (irule wfdpvl_sl2vl >> simp[]) >>
+   ‘sl2vl nl (MAP (sinst σ) (vl2sl vl)) =
+MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl (vl2sl vl)) ’
+    by
+    (irule sl2vl_sinst >> simp[LENGTH_vl2sl] >>
+    rw[] (* 3 *)
+    >- (irule vl2sl_no_vbound >>
+    first_x_assum $ irule_at Any >>
+    first_x_assum $ irule_at Any >>
+    gs[wfvl_def] >>
+    rw[] >> metis_tac[wft_no_vbound])
+    >- metis_tac[wfcod_no_bound,no_bound_def] >>
+    irule ok_abs_vl2sl >> gs[wfvl_def] >>
+    metis_tac[wft_no_bound]) >>
+    gs[MEM_MAP] >>
+    Cases_on ‘y’ >> gs[] >>
+    irule wfs_sinst1 >> simp[] >>
+    irule wfvl_sl2vl_vl2sl >> simp[] >>
+    qexistsl [‘q’,‘nl’,‘vl’] >> gs[LENGTH_vl2sl])
+>- (irule vl2sl_sl2vl >> simp[])
+>- (irule ALL_DISTINCT_sl2vl >> simp[]) >>
+irule okvnames_sl2vl >> simp[]
+QED
+
+
 Theorem tinst_wffstl:
 wffstl Σf sl tl ∧
 (∀fsym.
