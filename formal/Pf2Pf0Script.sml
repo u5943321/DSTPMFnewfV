@@ -2543,7 +2543,39 @@ rw[] (* 2 *)
         gs[wfsigaxs_def,wfsig_def,wffsig_def] >>
         irule wffVmap_rn2fVmap1 >>
         simp[FDOM_fVrnwinst] >>
-        cheat (*wf of rn*)) >>
+        simp[wffV_wffVsl] >> rw[] >>
+        ‘wffV Σf x’
+          by (irule wff_wffV' >>
+             drule_at_then Any assume_tac PfDrv_wff >>
+             gs[concl_def,assum_def] >>
+             gs[wfsigaxs_def,wfsig_def] >> 
+             gs[thfVars_def,IN_Uof] >>
+             metis_tac[]) >>
+        Cases_on ‘x’ >>
+        gs[fVrn_def,vinst_fVar_def,wffV_wffVsl] >>
+        irule wffVsl_sinst >>
+        gs[] >>
+        ‘wfvmap Σf (o_vmap hσ vσ)’ (*this long proof is repeated!!!*)
+           by (rw[wfvmap_def] (* 2 *)
+           >- (irule o_vmap_cstt >> gs[wfvmap_def] >>
+               simp[complete_FDOM_is_cont] >> rw[] >>
+               TRY (metis_tac[wfcod_no_bound]) (* 2 *)
+               >- (qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
+                  qpat_x_assum ‘_ = FDOM hσ’ (assume_tac o GSYM) >>
+                  gs[] >> gs[GSYM vinsth_def] >>
+                  irule IN_cont_FAPPLY_SUBSET_cont_vinst >>
+                  gs[]) >>
+               metis_tac[PfDrv_cont_is_cont]) >>
+           irule wfcod_o_vmap >>
+           gs[wfvmap_def] >> rw[] >>
+           TRY (metis_tac[wfcod_no_bound]) (* 2 *)
+           >- (qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
+                  qpat_x_assum ‘_ = FDOM hσ’ (assume_tac o GSYM) >>
+                  gs[] >> gs[GSYM vinsth_def] >>
+                  irule IN_cont_FAPPLY_SUBSET_cont_vinst >>
+                  gs[]) >>
+           gs[wffsig_def]) >>
+        gs[wfvmap_def]) >>
     simp[] >>
     ‘ffv a ⊆ FDOM vσ’
      by (qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
@@ -2585,7 +2617,11 @@ rw[] (* 2 *)
          drule_then assume_tac wfvmap_presname >> simp[] >>
          gs[wfvmap_def] >> simp[ffv_ffVrn,FDOM_o_vmap] >>
          ‘wff (Σf,Σp,Σe) (ffVrn uσ2 a)’
-           by cheat (*done if have wf rn but can be proved directly*) >>
+           by (irule wff_ffVrn >>
+              gs[wffsig_def] >>
+              drule_at_then Any assume_tac
+              PfDrv_concl_wff >>
+              gs[wfsigaxs_def,wffsig_def,wfsig_def])(*done if have wf rn but can be proved directly*) >>
          simp[]) >>
     simp[] >> AP_TERM_TAC >> irule Pf2Pf0_vinst_lemma >>
     gs[] >> gs[SUBSET_thfVars] >> rw[] (* 2 *)
@@ -2604,7 +2640,42 @@ rw[] (* 2 *)
   by (irule $ GSYM fVar_prpl_o_fVmap >>
       first_x_assum $ irule_at Any >> 
       gs[wfsigaxs_def,wfsig_def,wffsig_def] >>
-      cheat (*wf of rn*)) >>
+      irule wffVmap_rn2fVmap1 >>
+      simp[FDOM_fVrnwinst,PULL_EXISTS] >>
+      rw[] >>
+      ‘wffV Σf x’
+      by
+      (irule wff_wffV' >>
+             drule_at_then Any assume_tac PfDrv_wff >>
+             gs[concl_def,assum_def] >>
+             gs[wfsigaxs_def,wfsig_def] >> 
+             gs[thfVars_def,IN_Uof] >>
+             metis_tac[]) >>
+      Cases_on ‘x’ >>
+        gs[fVrn_def,vinst_fVar_def,wffV_wffVsl] >>
+        irule wffVsl_sinst >>
+        gs[] >>
+      ‘wfvmap Σf (o_vmap hσ vσ)’ (*this long proof is repeated!!!*)
+           by (rw[wfvmap_def] (* 2 *)
+           >- (irule o_vmap_cstt >> gs[wfvmap_def] >>
+               simp[complete_FDOM_is_cont] >> rw[] >>
+               TRY (metis_tac[wfcod_no_bound]) (* 2 *)
+               >- (qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
+                  qpat_x_assum ‘_ = FDOM hσ’ (assume_tac o GSYM) >>
+                  gs[] >> gs[GSYM vinsth_def] >>
+                  irule IN_cont_FAPPLY_SUBSET_cont_vinst >>
+                  gs[]) >>
+               metis_tac[PfDrv_cont_is_cont]) >>
+           irule wfcod_o_vmap >>
+           gs[wfvmap_def] >> rw[] >>
+           TRY (metis_tac[wfcod_no_bound]) (* 2 *)
+           >- (qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
+                  qpat_x_assum ‘_ = FDOM hσ’ (assume_tac o GSYM) >>
+                  gs[] >> gs[GSYM vinsth_def] >>
+                  irule IN_cont_FAPPLY_SUBSET_cont_vinst >>
+                  gs[]) >>
+           gs[wffsig_def]) >>
+        gs[wfvmap_def] (* 3rd time copying wf o_vmap*)) >>
 simp[] >>
 ‘ffv a ⊆ FDOM vσ’
   by (qpat_x_assum ‘_ = FDOM vσ’ (assume_tac o GSYM) >>
@@ -2646,7 +2717,11 @@ simp[] >>
       drule_then assume_tac wfvmap_presname >> simp[] >>
       gs[wfvmap_def] >> simp[ffv_ffVrn,FDOM_o_vmap] >>
       ‘wff (Σf,Σp,Σe) (ffVrn uσ2 a)’
-        by cheat (*done if have wf rn but can be proved directly*) >>
+        by (irule wff_ffVrn >>
+         gs[wffsig_def] >>
+              rev_drule_at_then Any assume_tac
+              PfDrv_assum_wff >>
+              gs[wfsigaxs_def,wffsig_def,wfsig_def])>>
       simp[]) >>
 simp[] >> AP_TERM_TAC >> irule Pf2Pf0_vinst_lemma >>
 gs[] >> gs[SUBSET_thfVars] >> rw[] (* 2 *)
