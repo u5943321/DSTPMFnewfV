@@ -6382,7 +6382,31 @@ rw[] (* 4 *)
        ‘wfsig Σ’ by gs[wfsigaxs_def1] >>
        Cases_on ‘Σ’ >> Cases_on ‘r’ >> gs[wff_EQ] >>
        metis_tac[wft_not_bound]) >>
-       cheat)
+       qspecl_then [‘λn pf. (n < LENGTH sl ∧
+          is_EQ (concl (eqths1 n)) ∧ Pf0 Σ aths pf ∧
+          MEM (eqths1 n) pf ∧
+          sort_of (Leq (concl (eqths1 n))) = EL n (MAP (sinst vσ) sl)) ∨ (LENGTH sl ≤ n ∧ pf = [])’]
+       assume_tac SKOLEM_THM >>
+       ‘(∀x. ∃y.
+           (λn pf.
+                n < LENGTH sl ∧ is_EQ (concl (eqths1 n)) ∧ Pf0 Σ aths pf ∧
+                MEM (eqths1 n) pf ∧
+                sort_of (Leq (concl (eqths1 n))) = EL n (MAP (sinst vσ) sl) ∨
+                LENGTH sl ≤ n ∧ pf = []) x y)’
+         suffices_by
+         (first_x_assum $ (assume_tac o iffLR) >>
+         strip_tac >>
+         first_x_assum $ drule_then assume_tac >>
+         gs[] >>
+         qexists ‘f’ >>
+         strip_tac >> strip_tac >>
+         first_x_assum $ qspecl_then [‘n’] assume_tac >>
+         gs[]) >>
+        rw[] >> pop_assum (K all_tac) >>
+        Cases_on ‘x < LENGTH sl’ (* 2 *)
+        >- (first_x_assum $ drule_then assume_tac >>
+           gs[Pf0Drv_def] >> metis_tac[]) >>
+        qexists ‘[]’ >> simp[])
 >- (gs[MEM_MAP] >> irule wfs_sinst1 >>
    gs[wfsigaxs_def1] >> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
    gs[wfvmap_def,wfsig_def])

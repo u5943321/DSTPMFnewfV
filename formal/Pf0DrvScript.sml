@@ -461,9 +461,14 @@ Induct_on ‘Pf0’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*42*)
     first_x_assum $ drule_then assume_tac >>
     rw[] >> disj1_tac >> qexists ‘n0’ >> simp[cont_def] >>
     gs[SUBSET_DEF] >> metis_tac[])
+    
 >~ [‘(Γ,A,f) = fcong (map2list (LENGTH sl − 1) eqths) sl b’]
    >- (gs[fcong_def,wff_IFF] >>
-    rw[] (* 2 *) >>cheat (* need to realise as fVinst *))
+    rw[] (* 2 *) >>
+    drule_then assume_tac wfs_wffVsl >>
+    
+
+cheat (* need to realise as fVinst *))
 >~ [‘(Γ,A,f) = fcong (map2list (LENGTH sl − 1) eqths) sl b’]
    >- (gs[fcong_def,IN_Uof,MEM_map2list] >>
     ‘LENGTH sl ≠ 0’ by simp[] >>

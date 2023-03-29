@@ -2822,6 +2822,20 @@ MAP (λ(n,s). (n,sinst σ s)) (sl2vl nl (vl2sl vl)) ’
 irule okvnames_sl2vl >> simp[]
 QED
 
+
+Theorem wfs_wffVsl:
+(∀s. MEM s sl ⇒ wfs Σf s) ⇒ wffVsl Σf sl
+Proof
+rw[] >>
+‘∃nl. ALL_DISTINCT nl ∧
+     LENGTH nl = LENGTH sl ∧
+     (set nl) ∩ (slnames sl) = {}’
+  by (‘FINITE (slnames sl)’ by simp[slnames_FINITE] >>
+     qspecl_then [‘slnames sl’,‘LENGTH sl’] assume_tac nl_EX   >>
+     metis_tac[]) >>
+simp[wffVsl_def] >> qexists ‘sl2vl nl sl’ >>
+cheat
+QED
         
         
 
