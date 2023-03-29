@@ -19,11 +19,11 @@ Inductive Pf:
  sl ≠ [] ∧ wffVsl (FST Σ) sl ∧
  (∀n. n < LENGTH sl ⇒
       is_EQ (concl (eqths n)) ∧
-      Pf Σ axs (Pfs n) ∧ MEM (eqths n) (Pfs n) ∧
-      sort_of (Leq (concl (eqths n))) = EL n sl) ∧
- (∀s. MEM s sl ⇒ wfs (FST Σ) s) ⇒
+      Pf Σ axs (Pfs n) ∧ MEM (eqths n) (Pfs n)) ∧
+ wfabsap (FST Σ) sl (Lofeqthl (map2list (LENGTH sl - 1) eqths)) ∧
+ wfabsap (FST Σ) sl (Rofeqthl (map2list (LENGTH sl - 1) eqths))⇒
  Pf Σ axs (FLAT (map2list (LENGTH sl - 1) Pfs)  ++
- [fVcong (map2list (LENGTH sl - 1) eqths) P sl])   
+ [fVcong (map2list (LENGTH sl - 1) eqths) P sl])
  ) ∧
 [~fVinsth:]
   (∀pf th fσ.
@@ -83,7 +83,8 @@ Inductive Pf:
     Pf Σ axs pf ∧ MEM th pf ∧ wfs (FST Σ) s ⇒
     Pf Σ axs (pf ++ [add_cont1 (n,s) th]))
 End
-        
+
+
   
 Theorem Pf_cont_is_cont:
 ∀pf. Pf Σ axs pf ⇒
@@ -265,6 +266,53 @@ Proof
 QED
 
                 
+
+
+Theorem EL_Lofeqthl:
+n < LENGTH sl ⇒
+EL n (Lofeqthl (map2list (LENGTH sl − 1) eqths)) =
+FST (dest_eq (concl (eqths n)))
+Proof
+rw[] >>
+‘n < LENGTH (map2list (LENGTH sl − 1) eqths)’
+ by simp[LENGTH_map2list] >>
+simp[Lofeqths_def,EL_MAP] >>
+‘n ≤ LENGTH sl - 1’ by gs[] >> simp[EL_map2list]
+QED
+
+
+
+Theorem EL_Rofeqthl:
+n < LENGTH sl ⇒
+EL n (Rofeqthl (map2list (LENGTH sl − 1) eqths)) =
+SND (dest_eq (concl (eqths n)))
+Proof
+rw[] >>
+‘n < LENGTH (map2list (LENGTH sl − 1) eqths)’
+ by simp[LENGTH_map2list] >>
+simp[Rofeqths_def,EL_MAP] >>
+‘n ≤ LENGTH sl - 1’ by gs[] >> simp[EL_map2list]
+QED
+
+                                
+(*
+Theorem wfabsap_eq_sort_wfabsap:
+∀tl1 tl2 sl. wfabsap Σ sl tl1 ∧
+(∀t. MEM t tl2 ⇒ wft Σ t) ∧
+LENGTH tl1 = LENGTH tl2 ∧
+(∀n. n < LENGTH sl ⇒ sort_of (EL n tl1) = sort_of (EL n tl2)) ⇒
+wfabsap Σ sl tl2
+Proof
+Induct_on ‘tl1’ >- cheat >> 
+rw[] >> Cases_on ‘sl’ >> Cases_on ‘tl2’ >> gs[wfabsap_def] >>
+rw[] (* 3 *) >- metis_tac[]
+>- (first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >>
+first_assum irule >> simp[LENGTH_specsl] >> 
+
+first_x_assum irule >> simp[]
+wfabsap_def
+*)
+
 Theorem Pf_ffv_SUBSET_wff:
  wfsig (Σf,Σp,Σe) ∧ 
 (∀ax. ax ∈ axs ⇒ wff (Σf,Σp,Σe) ax) ⇒
@@ -318,7 +366,16 @@ Induct_on ‘Pf’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*43*)
          suffices_by metis_tac[SUBSET_DEF] >>
         gs[wff_EQ,Uof_SUBSET,Uof_UNION,Uof_Sing] >>
         rw[] (* 2 *)
-        >- metis_tac[wft_not_bound] >>
+        >- (first_x_assum irule >> rw[] (* 2 *)
+            >-  metis_tac[wft_not_bound] >>
+            rev_drule_then assume_tac wfabsap_sfv_sort_of >>
+            first_x_assum $ drule_then assume_tac >> 
+            ‘(EL n (Lofeqthl (map2list (LENGTH sl − 1) eqths))) =
+             t1’ suffices_by 
+                 (gs[SUBSET_DEF] >> metis_tac[]) >>
+            drule_then assume_tac EL_Lofeqthl >>
+            simp[] >> simp[concl_def,dest_eq_EQ]
+(*slfv of sl is subset of tl metis_tac[wft_not_bound] *)) >>
         ‘ffv (EQ t1 t2) ⊆ Γ’ by metis_tac[] >>
         qpat_x_assum ‘∀a. a = EQ t1 t2 ∨ a ∈ A ⇒ ffv a ⊆ Γ’ (K all_tac) >> gs[ffv_EQ]) >>
      simp[SUBSET_DEF,PULL_EXISTS] >>
@@ -356,86 +413,14 @@ Induct_on ‘Pf’ >> rw[] (* 27 *) >> TRY (metis_tac[]) (*43*)
     first_x_assum $ drule_then assume_tac >>
     rw[] >> qexists ‘n0’ >> simp[cont_def] >>
     gs[SUBSET_DEF] >> metis_tac[])
->- (gs[fVcong_def,wff_IFF] >>
+>-  (gs[fVcong_def,wff_IFF] >>
     rw[] (* 2 *)
     >- (irule wff_fVar' >> simp[] >>
-        ‘wfabsap Σf sl (Lofeqthl (map2list (LENGTH sl − 1) eqths))’
-         suffices_by (simp[wffstl_def] >> gs[wffVsl_def] >>
-         metis_tac[])>>
-        irule wfabsap_wfs >> rw[] (* 3 *)
-        >- (first_x_assum $ drule_then
-                         strip_assume_tac >>
-           ‘(Leq (concl (eqths n))) =
-            (EL n (Lofeqthl (map2list (LENGTH sl − 1) eqths)))’ suffices_by metis_tac[] >>
-           simp[Lofeqths_def] >>
-           ‘ EL n (MAP (FST ∘ dest_eq ∘ concl) (map2list (LENGTH sl − 1) eqths)) =
-           (FST ∘ dest_eq ∘ concl)
-           (EL n (map2list (LENGTH sl − 1) eqths))’
-           by (irule EL_MAP >>
-               simp[LENGTH_map2list]) >>
-           gs[Leq_def] >>
-           ‘n ≤  (LENGTH sl − 1)’ by simp[] >>
-           rpt AP_TERM_TAC >>
-           rw[Once EQ_SYM_EQ] >>
-           irule EL_map2list >> simp[])
-       >- (gs[Lofeqths_def,MEM_MAP,MEM_map2list] >>
-          ‘LENGTH sl ≠ 0’ by simp[] >>
-          ‘n0 < LENGTH sl’ by simp[] >>
-          first_x_assum $ drule_then
-                      strip_assume_tac >>
-          Cases_on ‘eqths n0’ >>
-          gs[concl_def,is_EQ_def] >>
-          gs[dest_eq_EQ] >> Cases_on ‘r’ >>
-          first_x_assum $ drule_then
-          strip_assume_tac >>
-          gs[concl_def,wff_EQ]) >>
-       simp[Lofeqths_def,LENGTH_map2list] >>
-       Cases_on ‘sl’ >> gs[]) >>
-   (irule wff_fVar' >>
-   ‘wfabsap (FST (Σf,Σp,Σe)) sl
-          (Rofeqthl (map2list (LENGTH sl − 1) eqths))’ suffices_by
-          (simp[wffstl_def] >> gs[wffVsl_def] >>
+       simp[wffstl_def] >> gs[wffVsl_def] >>
          metis_tac[]) >>
-        irule wfabsap_wfs >> rw[] (* 3 *)
-        >- (first_x_assum $ drule_then
-                         strip_assume_tac >>
-            ‘sort_of (Leq (concl (eqths n))) =
-             sort_of (Req (concl (eqths n)))’
-             by (irule is_EQ_wff_Leq_Req >>
-                simp[] >>
-                last_x_assum $ irule_at Any>>
-                Cases_on ‘(eqths n)’ >>
-                Cases_on ‘r’ >>
-                first_x_assum $
-                  drule_then assume_tac >>
-                simp[concl_def]) >>
-            gs[] >>
-           ‘(Req (concl (eqths n))) =
-            (EL n (Rofeqthl (map2list (LENGTH sl − 1) eqths)))’ suffices_by metis_tac[] >>
-           simp[Rofeqths_def] >>
-           ‘ EL n (MAP (SND ∘ dest_eq ∘ concl) (map2list (LENGTH sl − 1) eqths)) =
-           (SND ∘ dest_eq ∘ concl)
-           (EL n (map2list (LENGTH sl − 1) eqths))’
-           by (irule EL_MAP >>
-               simp[LENGTH_map2list]) >>
-           gs[Req_def] >>
-           ‘n ≤  (LENGTH sl − 1)’ by simp[] >>
-           rpt AP_TERM_TAC >>
-           rw[Once EQ_SYM_EQ] >>
-           irule EL_map2list >> simp[])
-       >- (gs[Rofeqths_def,MEM_MAP,MEM_map2list] >>
-          ‘LENGTH sl ≠ 0’ by simp[] >>
-          ‘n0 < LENGTH sl’ by simp[] >>
-          first_x_assum $ drule_then
-                      strip_assume_tac >>
-          Cases_on ‘eqths n0’ >>
-          gs[concl_def,is_EQ_def] >>
-          gs[dest_eq_EQ] >> Cases_on ‘r’ >>
-          first_x_assum $ drule_then
-          strip_assume_tac >>
-          gs[concl_def,wff_EQ]) >>
-       simp[Rofeqths_def,LENGTH_map2list] >>
-       Cases_on ‘sl’ >> gs[]))
+    irule wff_fVar' >> simp[] >>
+       simp[wffstl_def] >> gs[wffVsl_def] >>
+         metis_tac[])
 >- (gs[fVcong_def,IN_Uof,MEM_map2list] >>
     ‘LENGTH sl ≠ 0’ by simp[] >>
     ‘n0 < LENGTH sl’ by simp[] >>

@@ -114,17 +114,13 @@ Definition fVeff_def:
 fVeff σ fv = if fv ∈ FDOM σ then σ ' fv else plainfV fv
 End
 
-(*        
-
 Theorem fprpl_mk_bmap_REVERSE_plainfV:
 LENGTH l = LENGTH l0 ⇒
 fprpl (mk_bmap (REVERSE l0)) (plainfV (s,l)) = fVar s l l0
 Proof
 simp[plainfV_def,fprpl_def,MAP_MAP_o,fVar_prpl_eq_lemma]
 QED        
-*)
 
-        
 Theorem fVeff_fVinst_cong:
 ∀f σ1 σ2.
 (∀P sl tl. fVar P sl tl ∈ subfm f ⇒ LENGTH sl = LENGTH tl) ⇒
@@ -176,6 +172,7 @@ simp[FUNION_DEF,FAPPLY_idfVmap]
 QED
         
 
+
 Theorem ofFMAP_differ_2_SUBSET_lemma:
 (∀a.  a ∈ A ∧ a ∈ FDOM σ1 ⇒
  ∃b. b ∈ B ∧ b ∈ FDOM σ2 ∧ σ1 ' a = σ2 ' b) 
@@ -184,6 +181,7 @@ Proof
 simp[SUBSET_DEF,ofFMAP_def]  >>
 metis_tac[]
 QED
+
 
 
 
@@ -2246,6 +2244,7 @@ QED
 
 
 
+
 Theorem vinst_case_SUBSET_lemma:
   wfsigaxs Σ axs ∧
   PfDrv Σ axs (Γ,A,f) ∧
@@ -2526,6 +2525,12 @@ QED
 
         
 
+Theorem wffV_wffVsl:
+wffV Σf (P,sl) ⇔ wffVsl Σf sl
+Proof
+rw[wffVsl_def,wffV_def]
+QED
+
 
 
 Theorem ffVrn_fabs:
@@ -2540,7 +2545,7 @@ Theorem ffVrn_mk_FALL:
 ffVrn uσ (mk_FALL n s f) =  mk_FALL n s (ffVrn uσ f)
 Proof
 rw[mk_FALL_def,abst_def,ffVrn_def,ffVrn_fabs]
-QED
+QED        
 
 Theorem fVslfv_ffVrn:
 fVslfv (ffVrn uσ f) = fVslfv f
@@ -2566,12 +2571,7 @@ QED
 
 
 
-Theorem wffV_wffVsl:
-wffV Σf (P,sl) ⇔ wffVsl Σf sl
-Proof
-rw[wffVsl_def,wffV_def]
-QED
-
+        
 Theorem Pf2Pf0_vinst_lemma1:
 ∀Γ A f. PfDrv Σ axs (Γ,A,f) ∧ wfsigaxs Σ axs ∧
         wfvmap (FST Σ) vσ ∧
@@ -3066,6 +3066,7 @@ gs[finst_def,frename_alt,MAP_MAP_o,MAP_EQ_f,
    PULL_EXISTS] >> rw[] >> TRY (metis_tac[])
 >> metis_tac[tinst_FUPDATE_as_trename]
 QED
+
 
 
 
@@ -5252,8 +5253,6 @@ QED
     
 
 
-
-
 Theorem inst_eff_finst:
 (∀v. v ∈ ffv f ⇒ inst_eff σ1 v = inst_eff σ v) ⇒
 finst σ f = finst σ1 f
@@ -5702,7 +5701,7 @@ QED
 
 
 
-         
+
 Theorem main:
  wfsigaxs Σ axs ∧ wfsigaths Σ aths ⇒
  ∀pf. Pf Σ axs pf ⇒
@@ -6335,7 +6334,7 @@ simp[] >> simp[Abbr‘eqthl1’] >>
 qspecl_then [‘Σ’,‘(MAP (sinst vσ) sl)’,‘eqths1’]
 assume_tac $ GEN_ALL Pf0Drv_cong >> gs[] >>
 first_x_assum irule >>
-rw[] (* 4 *)
+rw[] (* 6 *)
 >- (* indeed need choice*)
    (‘∀n.
           n < LENGTH sl ⇒
@@ -6385,7 +6384,7 @@ rw[] (* 4 *)
        cheat)
 >- (gs[MEM_MAP] >> irule wfs_sinst1 >>
    gs[wfsigaxs_def1] >> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
-   gs[wfvmap_def,wfsig_def])
+   gs[wfvmap_def,wfsig_def]) (*should not require this*)
 >- (gs[wfcfVmap_def,cfVmap_def] >>
    first_x_assum irule >>
    gs[thfVars_vinsth,thfVars_uniqify] >>
@@ -6396,8 +6395,8 @@ rw[] (* 4 *)
     by (gs[uniqifn_def,SUBSET_DEF] >>
         first_x_assum irule >>
         simp[concl_fv_IN_thfVars_fVcong]) >>
-   simp[fVrn_def,vinst_fVar_def]) >>
-‘(P,sl) ∈ FDOM uσ’   
+   simp[fVrn_def,vinst_fVar_def]) 
+>- (‘(P,sl) ∈ FDOM uσ’   
     by (gs[uniqifn_def,SUBSET_DEF] >>
         first_x_assum irule >>
         simp[concl_fv_IN_thfVars_fVcong]) >>
@@ -6407,7 +6406,9 @@ rw[] (* 4 *)
     qexists ‘(P,sl)’ >>
     simp[concl_fv_IN_thfVars_fVcong,
          fVrn_def,vinst_fVar_def]) >>
-gs[wfcfVmap_def,wffVmap_def]
+gs[wfcfVmap_def,wffVmap_def])
+>- cheat >>
+cheat
 QED
          
  

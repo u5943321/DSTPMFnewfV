@@ -3962,8 +3962,44 @@ Proof
  rw[] (* 2 *)
  >- gs[SUBSET_DEF]>>
  qexists ‘n’ >> simp[specsl_EL]
-QED 
-     
+QED
+
+
+        
+
+Theorem wfabsap_sfv_tfv:
+∀tl sl. wfabsap Σ sl tl ⇒ ∀n. n < LENGTH sl ⇒ sfv (EL n sl) ⊆ tfv (EL n tl)
+Proof
+Induct_on ‘tl’ >> Cases_on ‘sl’ >> simp[wfabsap_def] >>
+rw[] >>
+first_x_assum $ drule_then assume_tac >>
+gs[LENGTH_specsl] >>
+Cases_on ‘n’ >> gs[] (* 2 *)
+>- (Cases_on ‘h'’ (* 3 *)
+   >> gs[sort_of_def] >> metis_tac[wft_def]) >>
+first_x_assum $ drule_then assume_tac >>
+drule_then assume_tac specsl_EL >> gs[] >>
+irule SUBSET_TRANS >>
+first_x_assum $ irule_at Any >>
+simp[tfv_trpl_SUBSET1]
+QED
+
+
+
+Theorem wfabsap_sfv_sort_of:
+∀tl sl. wfabsap Σ sl tl ⇒ ∀n. n < LENGTH sl ⇒ sfv (EL n sl) ⊆ sfv (sort_of (EL n tl))
+Proof
+Induct_on ‘tl’ >> Cases_on ‘sl’ >> simp[wfabsap_def] >>
+rw[] >>
+first_x_assum $ drule_then assume_tac >>
+gs[LENGTH_specsl] >>
+Cases_on ‘n’ >> gs[]  >>
+first_x_assum $ drule_then assume_tac >>
+drule_then assume_tac specsl_EL >> gs[] >>
+irule SUBSET_TRANS >>
+first_x_assum $ irule_at Any >>
+simp[tfv_trpl_SUBSET1]
+QED             
 (*        
 Theorem tbounds_tinst:
 (∀)
