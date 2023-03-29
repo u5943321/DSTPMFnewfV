@@ -2821,10 +2821,27 @@ first_x_assum
  ‘wfcfVmap Σ (o_fVmap fσ (rn2fVmap (fVrwinst vσ uσ1 hσ uσ2)))’
    by
    (rw[wfcfVmap_def] (* 2 *)
-   >- (Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+   >-
+(Cases_on ‘Σ’ >> Cases_on ‘r’ >>
       irule wffVmap_o_fVmap >>
       gs[wfsigaxs_def,wfsig_def,wffsig_def] >>
-      gs[wfcfVmap_def] >> cheat
+      gs[wfcfVmap_def] >>
+      irule wffVmap_rn2fVmap1 >>
+      simp[FDOM_fVrnwinst,PULL_EXISTS] >>
+      rw[] >>
+      ‘wffV q x’
+      by
+      (irule wff_wffV' >>
+      Cases_on ‘th’ >> Cases_on ‘r’ >>
+      rename [‘(Γ,A,f)’] >> 
+      drule_at_then Any assume_tac Pf_wff >>
+      first_x_assum $ qspecl_then [‘(q,q',r')’,‘axs’]
+      assume_tac >> gs[wfsigaxs_def,wfsig_def] >> 
+      gs[thfVars_def,IN_Uof] >> metis_tac[]) >>
+      Cases_on ‘x’ >>
+        gs[fVrn_def,vinst_fVar_def,wffV_wffVsl] >>
+        irule wffVsl_sinst >>
+        gs[] >> gs[wfvmap_def]
       (*need wffVmap of rn2fVmap*)) >>
    irule cfVmap_o_fVmap >> gs[wfcfVmap_def] >>
    simp[FDOM_rn2fVmap,FDOM_fVrnwinst] >>
