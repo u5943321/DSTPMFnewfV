@@ -546,7 +546,16 @@ Proof
   drule_then assume_tac rich_listTheory.EL_COUNT_LIST >>
   simp[]
 QED
-        
+
+
+
+Theorem fprpl_mk_bmap_REVERSE_plainfV:
+LENGTH l = LENGTH l0 ⇒
+fprpl (mk_bmap (REVERSE l0)) (plainfV (s,l)) = fVar s l l0
+Proof
+simp[plainfV_def,fprpl_def,MAP_MAP_o,fVar_prpl_eq_lemma]
+QED
+                
 
 Theorem fVar_prpl_fabs1:
 ∀f i σ.

@@ -78,12 +78,230 @@ metis_tac[]
 QED
 
 
+Definition idfVmap_def:
+idfVmap fvs =
+FUN_FMAP (λfv. plainfV fv) fvs
+End
+
+Theorem FDOM_idfVmap:
+FINITE fvs ⇒ FDOM (idfVmap fvs) = fvs
+Proof        
+rw[idfVmap_def]
+QED
+
+
+Theorem FAPPLY_idfVmap:
+FINITE fvs ∧ fv ∈ fvs ⇒ (idfVmap fvs) ' fv = plainfV fv
+Proof
+rw[FUN_FMAP_DEF,idfVmap_def]     
+QED                
+
+
+Definition fVeff_def:
+fVeff σ fv = if fv ∈ FDOM σ then σ ' fv else plainfV fv
+End
+
+Theorem fVeff_fVinst_cong:
+∀f σ1 σ2.
+(∀P sl tl. fVar P sl tl ∈ subfm f ⇒ LENGTH sl = LENGTH tl) ⇒
+(∀fv. fv ∈ fVars f ⇒ fVeff σ1 fv = fVeff σ2 fv) ⇒
+fVinst σ1 f = fVinst σ2 f
+Proof
+Induct_on ‘f’ >> gs[fVinst_def,fVars_def,subfm_def] >>
+rw[] (* 6 *) >> TRY (metis_tac[]) (* 3 *)
+>- gs[fVeff_def]
+>- gs[fVeff_def,fprpl_mk_bmap_REVERSE_plainfV] >>
+pop_assum (assume_tac o GSYM) >>
+gs[fVeff_def,fprpl_mk_bmap_REVERSE_plainfV]
+QED
+
+(*
+Theorem FUNION_fVeff_cong:
+∀f.
+(∀P sl tl. fVar P sl tl ∈ subfm f ⇒ LENGTH sl = LENGTH tl) ⇒
+fVinst σ f = fVinst (FUNION σ (idfVmap (fVars f DIFF FDOM σ))) f
+Proof
+rw[] >>
+irule fVeff_fVinst_cong >> rw[] (* 2 *)
+>- metis_tac[] >>
+simp[fVeff_def] >> Cases_on ‘fv ∈ FDOM σ’ >> simp[]
+(* 2 *)
+>- simp[FUNION_DEF] >>
+‘FINITE (fVars f DIFF FDOM σ)’ by simp[fVars_FINITE] >>
+simp[FDOM_idfVmap] >>
+simp[FUNION_DEF,FAPPLY_idfVmap]
+QED
+*)
+
+
+Theorem FUNION_fVeff_cong:
+∀f.
+FINITE s ⇒
+(∀P sl tl. fVar P sl tl ∈ subfm f ⇒ LENGTH sl = LENGTH tl) ⇒
+fVinst σ f = fVinst (FUNION σ (idfVmap s)) f
+Proof
+rw[] >>
+irule fVeff_fVinst_cong >> rw[] (* 2 *)
+>- metis_tac[] >>
+simp[fVeff_def] >> Cases_on ‘fv ∈ FDOM σ’ >> simp[]
+(* 2 *)
+>- simp[FUNION_DEF] >>
+‘FINITE (fVars f DIFF FDOM σ)’ by simp[fVars_FINITE] >>
+simp[FDOM_idfVmap] >>
+simp[FUNION_DEF,FAPPLY_idfVmap] 
+QED
+        
+Theorem fVinsth_FUNION_fVeff:
+wff Σ f ∧ FINITE A ∧ (∀a. a ∈ A ⇒ wff Σ a) ⇒
+Uof ffv ({f} ∪ A) ⊆ Γ ⇒ 
+fVinsth fσ (Γ,A,f) =
+fVinsth (FUNION fσ (idfVmap (Uof fVars ({f} ∪ A)))) (Γ,A,f)
+Proof
+reverse (rw[fVinsth_def]) (* 3 *)
+>- (irule FUNION_fVeff_cong >>
+   simp[Uof_def,PULL_EXISTS,fVars_FINITE] >>
+   ‘{fVars e | e = f ∨ e ∈ A} =
+    IMAGE fVars ({f} ∪ A)’ by simp[EXTENSION] >>
+   simp[] >> rw[] >> irule wff_subfm_fVar_LENGTH >>
+   metis_tac[])
+>- (irule IMAGE_eq_lemma >> rw[] >>
+   irule FUNION_fVeff_cong >>
+   simp[Uof_def,PULL_EXISTS,fVars_FINITE] >>
+   ‘{fVars e | e = f ∨ e ∈ A} =
+    IMAGE fVars ({f} ∪ A)’ by simp[EXTENSION] >>
+   simp[] >> rw[] >> irule wff_subfm_fVar_LENGTH >>
+   metis_tac[]) >>
+irule $ iffLR SUBSET_ANTISYM_EQ >> strip_tac (* 2 *)
+>- (rw[] >>
+   ‘ofFMAP ffv fσ (Uof fVars ({f} ∪ A)) ⊆
+        ofFMAP ffv (fσ ⊌ idfVmap (Uof fVars ({f} ∪ A))) (Uof fVars ({f} ∪ A))’
+    suffices_by (gs[SUBSET_DEF] >> metis_tac[]) >>
+   irule ofFMAP_differ_2_SUBSET_lemma >>
+   simp[FUNION_DEF] >> rw[] >>
+   qexists ‘a’ >> simp[]) >>
+rw[] >> simp[SUBSET_DEF,ofFMAP_def,IN_Uof,PULL_EXISTS,
+Uof_Sing,Uof_UNION] >>
+‘FINITE (fVars f ∪ Uof fVars A)’
+ by (simp[fVars_FINITE,Uof_def,PULL_EXISTS] >>
+    ‘{fVars e | e ∈ A} = IMAGE fVars A’
+      by simp[EXTENSION] >> simp[]) >>
+simp[FDOM_idfVmap] >> simp[IN_Uof,PULL_EXISTS] >>
+rw[] (* 6 *)
+>- (gs[FUNION_DEF] >> metis_tac[])
+>- (gs[FUNION_DEF] >> metis_tac[])
+>- (Cases_on ‘a ∈ FDOM fσ’ >> gs[FUNION_DEF] (* 2 *)
+   >- metis_tac[]>>
+   gs[FAPPLY_idfVmap] >> Cases_on ‘a’ >>
+   gs[ffv_plainfV] >> disj1_tac >>
+   gs[SUBSET_DEF] >> first_x_assum irule >>
+   simp[Uof_def,PULL_EXISTS] >>
+   qexists ‘a'’ >> simp[] >>
+   drule_then assume_tac slfv_SUBSET_ffv >>
+   gs[SUBSET_DEF])
+>- (Cases_on ‘a ∈ FDOM fσ’ >> gs[FUNION_DEF] (* 2 *)
+   >- metis_tac[]>>
+   gs[FAPPLY_idfVmap] >> Cases_on ‘a’ >>
+   gs[ffv_plainfV] >> disj1_tac >>
+   gs[SUBSET_DEF] >> first_x_assum irule >>
+   simp[Uof_def,PULL_EXISTS] >>
+   qexists ‘a'’ >> simp[] >>
+   drule_then assume_tac slfv_SUBSET_ffv >>
+   gs[SUBSET_DEF])
+>- (Cases_on ‘a ∈ FDOM fσ’ >> gs[FUNION_DEF] (* 2 *)
+   >- metis_tac[]>>
+   gs[FAPPLY_idfVmap] >> Cases_on ‘a’ >>
+   gs[ffv_plainfV] >> disj1_tac >>
+   gs[SUBSET_DEF] >> first_x_assum irule >>
+   simp[Uof_def,PULL_EXISTS] >>
+   qexists ‘a'’ >> simp[] >>
+   drule_then assume_tac slfv_SUBSET_ffv >>
+   gs[SUBSET_DEF]) >>
+Cases_on ‘a ∈ FDOM fσ’ >> gs[FUNION_DEF] (* 2 *)
+>- metis_tac[]>>
+gs[FAPPLY_idfVmap] >> Cases_on ‘a’ >>
+gs[ffv_plainfV] >> disj1_tac >>
+gs[SUBSET_DEF] >> first_x_assum irule >>
+simp[Uof_def,PULL_EXISTS] >>
+qexists ‘a'’ >> simp[] >>
+drule_then assume_tac slfv_SUBSET_ffv >>
+gs[SUBSET_DEF] >>
+first_x_assum irule >>
+‘FINITE (fVars f ∪ Uof fVars A)’ by simp[] >>
+drule_then assume_tac FAPPLY_idfVmap >>
+first_x_assum $ qspecl_then [‘(q,r)’] assume_tac >>
+gs[Uof_def,PULL_EXISTS] >>
+‘idfVmap (fVars f ∪ BIGUNION {fVars e | e ∈ A}) ' (q,r) =
+        plainfV (q,r)’
+ by (first_x_assum irule >> metis_tac[]) >>
+gs[] >>
+gs[ffv_plainfV]
+QED 
+
+ 
+
+
+
+        
+Theorem wffVmap_FUNION:
+wffVmap Σ σ1 ∧ wffVmap Σ σ2 ⇒ wffVmap Σ (FUNION σ1 σ2)
+Proof
+rw[wffVmap_def,FUNION_DEF] >> simp[] >>
+Cases_on ‘(P,sl) ∈ FDOM σ1’ >> simp[]
+QED
+
+
+Theorem wffV_wff_plainfV:
+wffV (FST Σ) (P,sl) ⇒ wff Σ (FALLL sl (plainfV (P,sl)))
+Proof
+rw[wffV_def] >>
+irule wfdpvl_ALL_DISTINCT_okvnames_wff>> simp[]
+QED
+
+Theorem wffVmap_idfVmap:
+∀s. (FINITE s ∧ ∀fv. fv ∈ s⇒ wffV (FST Σ) fv) ⇒
+wffVmap Σ (idfVmap s)
+Proof
+rw[wffVmap_def] >> gs[FDOM_idfVmap,FAPPLY_idfVmap] >>
+irule wffV_wff_plainfV >> metis_tac[]
+QED     
+
+    
 (* only need to do it for uniqify*)
 Theorem PfDrv_fVinsth1:
-PfDrv Σ axs th ∧ wffVmap Σ fσ ⇒
+wfsigaxs Σ axs ∧ PfDrv Σ axs th ∧ wffVmap Σ fσ ⇒
 PfDrv Σ axs (fVinsth fσ th)
 Proof
-cheat
+rw[] >>
+Cases_on ‘th’ >> Cases_on ‘r’ >> rename [‘(Γ,A,f)’] >>
+‘(fVinsth fσ (Γ,A,f)) =
+fVinsth (FUNION fσ (idfVmap (Uof fVars ({f} ∪ A)))) (Γ,A,f)’
+by (irule fVinsth_FUNION_fVeff >>
+   drule_then assume_tac PfDrv_assum_wff >>
+   first_x_assum $ drule_then assume_tac >>
+   drule_then assume_tac PfDrv_ffv_SUBSET_cont >>
+   first_x_assum $ drule_then assume_tac >>
+   gs[] >>
+   drule_then assume_tac PfDrv_concl_wff >>
+   first_x_assum $ drule_then assume_tac >>
+   simp[PULL_EXISTS] >> qexists ‘Σ’ >> simp[] >>
+   irule PfDrv_assum_FINITE >> metis_tac[PfDrv_def]) >>
+pop_assum SUBST_ALL_TAC >>
+irule PfDrv_fVinsth >>
+simp[FUNION_DEF] >>
+‘FINITE A’ by
+ (irule PfDrv_assum_FINITE >> metis_tac[PfDrv_def]) >>
+‘FINITE (Uof fVars ({f} ∪ A))’
+ by (simp[Uof_def,Uof_UNION,PULL_EXISTS,fVars_FINITE] >>
+    ‘{fVars e | e = f} = IMAGE fVars {f} ∧
+     {fVars e | e ∈ A} = IMAGE fVars A’ by simp[EXTENSION] >>
+     simp[]) >>
+simp[FDOM_idfVmap,thfVars_def] >>
+irule wffVmap_FUNION >> simp[] >>
+irule wffVmap_idfVmap >>
+simp[] >> rw[] >>
+irule wff_wffV >> gvs[Uof_def,PULL_EXISTS] (* 2 *)
+>- (qexists ‘e’ >> metis_tac[PfDrv_concl_wff]) >>
+qexists ‘e’ >> metis_tac[PfDrv_assum_wff]
 QED
         
 
