@@ -1,0 +1,9 @@
+
+Exception raised at IndDefLib.Hol_reln:
+at Parse.type parser:
+on line 50, characters 6-9:
+form not a known type operator
+error in quse /Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/Pf0Drv1Script.sml : HOL_ERR {message = "at Parse.type parser:\non line 50, characters 6-9:\nform not a known type operator", origin_function = "Hol_reln", origin_structure = "IndDefLib"}
+error in load /Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/Pf0Drv1Script : HOL_ERR {message = "at Parse.type parser:\non line 50, characters 6-9:\nform not a known type operator", origin_function = "Hol_reln", origin_structure = "IndDefLib"}
+<<HOL message: Created theory "Pf0Drv">>
+Uncaught exception: HOL_ERR {message = "at Parse.type parser:\non line 50, characters 6-9:\nform not a known type operator", origin_function = "Hol_reln", origin_structure = "IndDefLib"}

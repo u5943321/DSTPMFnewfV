@@ -1,0 +1,13 @@
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/fVinst1Theory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/wfgenl1Theory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/wfgenl1Theory
+$(HOLDIR)/sigobj/Globals
+$(HOLDIR)/sigobj/HOLdict
+$(HOLDIR)/sigobj/Overlay
+$(HOLDIR)/sigobj/Parse
+$(HOLDIR)/sigobj/Term
+$(HOLDIR)/sigobj/Theory
+$(HOLDIR)/sigobj/TheoryReader
+$(HOLDIR)/sigobj/Thm
+$(HOLDIR)/sigobj/Type
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/wfgenl1Theory.sml

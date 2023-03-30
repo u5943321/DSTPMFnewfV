@@ -1,0 +1,44 @@
+<<HOL message: Created theory "wff">>
+<<HOL message: Generalising variables "Σe", "Σf", "Σp" in clause #0 (13:1-13:23)>>
+<<HOL message: Generalising variables "t1", "t2", "Σe", "Σf", "Σp" in clause #1 (15:3-16:56)>>
+<<HOL message: Generalising variables "p", "tl", "Σe", "Σf", "Σp" in clause #2 (18:3-22:28)>>
+<<HOL message: Generalising variables "f1", "f2", "Σe", "Σf", "Σp" in clause #3 (24:3-25:30)>>
+<<HOL message: Generalising variables "P", "sl", "tl", "Σe", "Σf", "Σp" in clause #4 (27:3-28:33)>>
+<<HOL message: Generalising variables "Σe", "Σf", "Σp" in clause #5 (30:2-34:34)>>
+Saved theorem _______ "wff_rules"
+Saved theorem _______ "wff_ind"
+Saved theorem _______ "wff_strongind"
+Saved theorem _______ "wff_cases"
+Saved theorem _______ "wff_False"
+Saved theorem _______ "wff_EQ"
+Saved theorem _______ "wff_Pred"
+Saved theorem _______ "wff_IMP"
+Saved theorem _______ "wff_fVar"
+Saved theorem _______ "wff_FALL"
+Saved definition ____ "wffVmap_def"
+Saved theorem _______ "wff_EQ"
+Saved theorem _______ "wff_finst"
+Saved theorem _______ "wff_FALL"
+Saved theorem _______ "wff_wfs"
+Saved theorem _______ "wff_fbounds"
+Saved theorem _______ "wff_no_vbound"
+Saved theorem _______ "wff_spec"
+Saved theorem _______ "wff_fVar_subst_lemma"
+Saved theorem _______ "wff_FALLL_no_vbound"
+Saved theorem _______ "wff_wfcod_cvmap_ffv"
+Saved theorem _______ "wff_frename"
+Saved theorem _______ "wfcod_rnmap_ffv"
+Saved theorem _______ "wff_frename"
+Saved theorem _______ "wff_IMP"
+Saved theorem _______ "fVmap_no_bound_lemma"
+Saved theorem _______ "wffVmap_fVmap_rename"
+Saved theorem _______ "wffVmap_no_vbound"
+Saved theorem _______ "wff_fVinst"
+Saved theorem _______ "mk_FALLL_fVar_wff"
+Saved theorem _______ "tsubst_I0"
+Saved theorem _______ "tsubst_I"
+Saved theorem _______ "vl2sl_wfvl_MEM_var_no_bound"
+Saved theorem _______ "wfabsap_vl2sl_MAP_Var'"
+Saved theorem _______ "wfdpvl_ALL_DISTINCT_okvnames_wff"
+Exporting theory "wff" ... done.
+Theory "wff" took 4.4s to build

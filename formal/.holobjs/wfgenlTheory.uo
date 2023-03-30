@@ -1,0 +1,12 @@
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/wfgenlTheory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/wfgenlTheory
+$(HOLDIR)/sigobj/Globals
+$(HOLDIR)/sigobj/HOLdict
+$(HOLDIR)/sigobj/Overlay
+$(HOLDIR)/sigobj/Parse
+$(HOLDIR)/sigobj/Term
+$(HOLDIR)/sigobj/Theory
+$(HOLDIR)/sigobj/TheoryReader
+$(HOLDIR)/sigobj/Thm
+$(HOLDIR)/sigobj/Type
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/wfgenlTheory.sml

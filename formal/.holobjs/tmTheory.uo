@@ -1,0 +1,15 @@
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/tmTheory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/tmTheory
+$(HOLDIR)/sigobj/Globals
+$(HOLDIR)/sigobj/HOLdict
+$(HOLDIR)/sigobj/Overlay
+$(HOLDIR)/sigobj/Parse
+$(HOLDIR)/sigobj/Term
+$(HOLDIR)/sigobj/Theory
+$(HOLDIR)/sigobj/TheoryReader
+$(HOLDIR)/sigobj/Thm
+$(HOLDIR)/sigobj/Type
+$(HOLDIR)/sigobj/finite_mapTheory
+$(HOLDIR)/sigobj/finite_setTheory
+$(HOLDIR)/sigobj/stringTheory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/tmTheory.sml
