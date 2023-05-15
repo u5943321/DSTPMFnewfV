@@ -1,17 +1,17 @@
-structure fVinst1Theory :> fVinst1Theory =
+structure fVinstTheory :> fVinstTheory =
 struct
   
   val _ = if !Globals.print_thy_loads
-    then TextIO.print "Loading fVinst1Theory ... "
+    then TextIO.print "Loading fVinstTheory ... "
     else ()
   
   open Type Term Thm
-  local open fm1Theory in end;
+  local open fmTheory in end;
   
   structure TDB = struct
     val thydata = 
-      TheoryReader.load_thydata "fVinst1"
-        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/fVinst1Theory.dat")
+      TheoryReader.load_thydata "fVinst"
+        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/fVinstTheory.dat")
     fun find s = HOLdict.find (thydata,s)
   end
   
@@ -92,7 +92,7 @@ struct
   
   
 val _ = if !Globals.print_thy_loads then TextIO.print "done\n" else ()
-val _ = Theory.load_complete "fVinst1"
+val _ = Theory.load_complete "fVinst"
 
-val fVinst1_grammars = valOf (Parse.grammarDB {thyname = "fVinst1"})
+val fVinst_grammars = valOf (Parse.grammarDB {thyname = "fVinst"})
 end

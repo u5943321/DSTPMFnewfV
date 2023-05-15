@@ -232,6 +232,7 @@ sig
     val tfv_tprpl : thm
     val tfv_trpl : thm
     val tfv_trpl_SUBSET : thm
+    val tfv_trpl_SUBSET1 : thm
     val tfv_tshift : thm
     val tfv_tsubst : thm
     val tfv_tsubst_SUBSET : thm
@@ -2048,6 +2049,11 @@ sig
         ∀s i new.
           (∀n0 s0. (n0,s0) ∈ sfv s ⇒ sbounds s0 = ∅) ⇒
           sfv s ⊆ sfv (srpl i new s)
+   
+   [tfv_trpl_SUBSET1]  Theorem
+      
+      ⊢ (∀t i new. tfv t ⊆ tfv (trpl i new t)) ∧
+        ∀s i new. sfv s ⊆ sfv (srpl i new s)
    
    [tfv_tshift]  Theorem
       

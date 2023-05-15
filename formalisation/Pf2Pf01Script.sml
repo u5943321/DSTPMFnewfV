@@ -44,13 +44,7 @@ End
 
 Theorem insth_uniqify_fVinsth:
 insth σ vσ (uniqify uσ (fVinsth fσ (Γ,A,f))) =
-(vinst_cont vσ
- (Γ ∪
-  (ofFMAP ffv fσ (fVars f) ∪ ofFMAP ffv fσ (Uof fVars A))) ∪
- (ofFMAP ffv σ
-  (IMAGE (vinst_fVar vσ) (fVars (ffVrn uσ (fVinst fσ f)))) ∪
-  ofFMAP ffv σ
-  (Uof (IMAGE (vinst_fVar vσ) ∘ fVars) (IMAGE (ffVrn uσ ∘ fVinst fσ) A))),
+(vinst_cont vσ Γ,
  IMAGE ((fVinst σ) o (finst vσ) o  (ffVrn uσ) o  (fVinst fσ)) A,
  fVinst σ (finst vσ (ffVrn uσ (fVinst fσ f))))
 Proof         
@@ -89,13 +83,7 @@ insth (o_fVmap σ
                (vinst_fVmap vσ (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)))
       vσ
       (uniqify uσf (Γ,A,f)) =
-(vinst_cont vσ Γ ∪
-   (ofFMAP ffv
-      (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)))
-      (IMAGE (vinst_fVar vσ ∘ fVrn uσf) (fVars f)) ∪
-    ofFMAP ffv
-      (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)))
-      (Uof (IMAGE (vinst_fVar vσ ∘ fVrn uσf) o fVars) A)),
+(vinst_cont vσ Γ,
 IMAGE
  ((instf (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (DRESTRICT (o_fVmap (rn2fVmap uσ) fσ) (FDOM fσ)) uσf)))
        vσ) o (ffVrn uσf)) A
@@ -109,34 +97,7 @@ rw[insth_def,fVinsth_def,uniqify_def,vinsth_def,
    fVars_ffVrn,Uof_fVars_finst_ffVrn] >>
 rw[instf_fVinst_finst]
 QED
-        
-(*        
-Theorem fVinst_o_Vmap_finst_ffVrn:
-insth (o_fVmap σ
-               (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))
-      vσ
-      (uniqify uσf (Γ,A,f)) =
-(vinst_cont vσ Γ ∪
-   (ofFMAP ffv
-      (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))
-      (IMAGE (vinst_fVar vσ ∘ fVrn uσf) (fVars f)) ∪
-    ofFMAP ffv
-      (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))
-      (Uof (IMAGE (vinst_fVar vσ ∘ fVrn uσf) o fVars) A)),
-IMAGE
- ((instf (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))
-       vσ) o (ffVrn uσf)) A
-,
-fVinst (o_fVmap σ (vinst_fVmap vσ (fVmap_fVrn (o_fVmap (rn2fVmap uσ) fσ) uσf)))
-       (finst vσ (ffVrn uσf f))
-)
-Proof
-rw[insth_def,fVinsth_def,uniqify_def,vinsth_def,
-   IMAGE_IMAGE,Uof_Sing,Uof_UNION,fVars_finst,Uof_IMAGE,ofFMAP_UNION,
-   fVars_ffVrn,Uof_fVars_finst_ffVrn] >>
-rw[instf_fVinst_finst]
-QED
-*)
+
 
 
         
@@ -650,8 +611,7 @@ Theorem fVinsth_DRESTRICT:
 (fVinsth (DRESTRICT fσ (thfVars th)) th) =  (fVinsth fσ th)
 Proof
 Cases_on ‘th’ >> Cases_on ‘r’ >> gs[fVinsth_def] >>
-rw[] (* 3 *)
->- (AP_TERM_TAC >> irule ofFMAP_DRESTRICT >> rw[thfVars_def])
+rw[] (* 2 *)
 >- (irule IMAGE_eq_lemma >> rw[] >>
    irule $ GSYM fVars_DRESTRICT_fVinst_eq1 >>
    gs[thfVars_def,Uof_UNION,Uof_Sing] >> rw[Uof_def] >>
@@ -819,7 +779,8 @@ QED
 Theorem PfDrv_fVinsth:
 ∀th.
 PfDrv Σ axs th ∧
-wffVmap Σ fσ ∧ thfVars th ⊆ FDOM fσ ⇒
+wffVmap Σ fσ ∧ thfVars th ⊆ FDOM fσ ∧
+ofFMAP ffv fσ (thfVars th) ⊆ cont th ⇒
 PfDrv Σ axs (fVinsth fσ th)
 Proof
 rw[PfDrv_def] >>
@@ -3146,9 +3107,6 @@ Proof
   metis_tac[sfv_ffv,SUBSET_DEF]
 QED  
 
-
-
-(*     
         
 Theorem ffv_fVinst_SUBSET:
 ∀f σ. ffv (fVinst σ f) ⊆ ffv f ∪ ofFMAP ffv σ (fVars f)
@@ -3192,7 +3150,7 @@ rw[genavds_def] (* 3 *)
 
 
          cont_fVinsth cont_vinsth
-*)
+
                   
 Theorem NOTIN_Uof_lemma2:
 (∀a. a ∈ A ⇒ x ∉ f a) ⇒ x ∉ Uof f A
@@ -3414,7 +3372,7 @@ simp[gen_def,cont_def]
 QED
    
 
-(*
+
 Theorem main_gen_case:
    wfsigaxs Σ axs ∧ PfDrv Σ axs (Γ,A,f) ∧
    wfs (FST Σ) s ∧ sfv s ⊆ Γ ∧
@@ -3476,7 +3434,7 @@ Proof
   
   
 fabs_frename
-*)
+
 
 
 Theorem ffVrn_NEG:
@@ -3556,197 +3514,6 @@ QED
 ()
 (insth fσ vσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2)))
 *)
-
-Definition TRUE_def:
-TRUE = Pred "T" []
-End
-
-Definition exTfmap_def:
-exTfmap σ fvs =
-FUN_FMAP
-(λfv. if fv ∈ FDOM σ then σ ' fv else TRUE)
-(FDOM σ ∪ fvs)
-End
-
-Definition MP0_def:
-MP0 (Γ1,A1,IMP f1 f2) (Γ2,A2,f3) =
-(Γ1 ∪ Γ2, A1 ∪ A2,f2)
-End 
-
-
-Theorem Pf0Drv_MP0:
-Pf0Drv Σ aths (Γ1,A1,IMP ϕ ψ) ∧ Pf0Drv Σ aths (Γ2,A2,ϕ) ⇒
-Pf0Drv Σ aths (MP0 (Γ1,A1,IMP ϕ ψ) (Γ2,A2,ϕ))
-Proof
-simp[MP0_def] >> rw[] >>
-irule Pf0Drv_mp >> metis_tac[]
-QED
-        
-
-Definition cfVmap_def:
-cfVmap (fvs:string # sort list -> bool) (fm:form) =
-FUN_FMAP (λfv. fm) fvs
-End
-
-(*trivial aug*)
-Definition tvaug_def:
-tvaug fσ fvs = FUNION fσ (cfVmap fvs TRUE)
-End
-
-
-
-        
-        
-Theorem mp_case_lemma:
-∀Γ1 Γ2 A1 A2 f1 f2.
-wfvmap (FST Σ) hσ ∧
-wfcfVmap Σ fσ ∧
-thfVars (vinsth hσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2))) = FDOM fσ ∧
-Γ1 ∪ Γ2 = FDOM hσ ∧
-uniqifn uσ (thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2)) ∧
-thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2) = FDOM uσ ⇒
-
-∃hσ1 fσ1 uσ1 hσ2 fσ2 uσ2.
- wfvmap (FST Σ) hσ1 ∧
- wfcfVmap Σ fσ1 ∧
- thfVars
- (vinsth hσ1 (uniqify uσ1 (Γ1,A1,IMP f1 f2))) ⊆ FDOM fσ1 ∧
- Γ1 ⊆ FDOM hσ1 ∧
- uniqifn uσ1 (thfVars (Γ1,A1,IMP f1 f2)) ∧
- wfvmap (FST Σ) hσ2 ∧
- wfcfVmap Σ fσ2 ∧
- thfVars
- (vinsth hσ1 (uniqify uσ2 (Γ2,A2,f1))) ⊆ FDOM fσ2 ∧
- Γ2 ⊆ FDOM hσ2 ∧
- uniqifn uσ2 (thfVars (Γ2,A2,f1)) ∧
-insth fσ hσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2)) =
-MP0 (insth fσ1 hσ1 (uniqify uσ1 (Γ1,A1,IMP f1 f2)))
-(insth fσ2 hσ2 (uniqify uσ2 (Γ2,A2,f1)))
-Proof
-cheat
-QED
-
-
-
-Theorem mp_case_lemma:
-∀Γ1 Γ2 A1 A2 f1 f2.
-wfvmap (FST Σ) hσ ∧
-wfcfVmap Σ fσ ∧
-thfVars (vinsth hσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2))) = FDOM fσ ∧
-Γ1 ∪ Γ2 = FDOM hσ ∧
-uniqifn uσ (thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2)) ∧
-thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2) = FDOM uσ ⇒
-∃hσ1 fσ1 uσ1 hσ2 fσ2 uσ2.
- wfvmap (FST Σ) hσ1 ∧
- wfcfVmap Σ fσ1 ∧
- thfVars
- (vinsth hσ1 (uniqify uσ1 (Γ1,A1,IMP f1 f2))) ⊆ FDOM fσ1 ∧
- Γ1 ⊆ FDOM hσ1 ∧
- uniqifn uσ1 (thfVars (Γ1,A1,IMP f1 f2)) ∧
- wfvmap (FST Σ) hσ2 ∧
- wfcfVmap Σ fσ2 ∧
- thfVars
- (vinsth hσ1 (uniqify uσ2 (Γ2,A2,f1))) ⊆ FDOM fσ2 ∧
- Γ2 ⊆ FDOM hσ2 ∧
- uniqifn uσ2 (thfVars (Γ2,A2,f1)) ∧
-insth fσ hσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2)) =
-MP0 (insth fσ1 hσ1 (uniqify uσ1 (Γ1,A1,IMP f1 f2)))
-(insth fσ2 hσ2 (uniqify uσ2 (Γ2,A2,f1)))
-Proof
-cheat
-QED
-
-
-Theorem MP0_insth_unqify:
-MP0 (insth fσ hσ ())
-
-        
-Theorem main_mp_case:
- wfsigaxs Σ axs ∧
-      Pf Σ axs pf ∧
-      Pf Σ axs pf' ∧
-      MEM (Γ1,A1,IMP f1 f2) pf ∧
-      MEM (Γ2,A2,f1) pf' ∧
-      Uof (UCIth Σ) (IMAGE ax2th axs) ⊆ aths ∧
-      (∀vσ' fσ' uσ'.
-        wfvmap (FST Σ) vσ' ∧ wfcfVmap Σ fσ' ∧
-        thfVars (vinsth vσ' (uniqify uσ' (Γ2,A2,f1))) ⊆ FDOM fσ' ∧
-        Γ2 ⊆ FDOM vσ' ∧ uniqifn uσ' (thfVars (Γ2,A2,f1)) ⇒
-        Pf0Drv Σ aths (insth fσ' vσ' (uniqify uσ' (Γ2,A2,f1)))) ∧
-      (∀vσ' fσ' uσ'.
-        wfvmap (FST Σ) vσ' ∧ wfcfVmap Σ fσ' ∧
-        thfVars (vinsth vσ' (uniqify uσ' (Γ1,A1,IMP f1 f2))) ⊆ FDOM fσ' ∧
-        Γ1 ⊆ FDOM vσ' ∧ uniqifn uσ' (thfVars (Γ1,A1,IMP f1 f2)) ⇒
-        Pf0Drv Σ aths (insth fσ' vσ' (uniqify uσ' (Γ1,A1,IMP f1 f2)))) ∧
-      PfDrv Σ axs (Γ1 ∪ Γ2,A1 ∪ A2,f2) ∧
-      wfvmap (FST Σ) hσ ∧
-      wfcfVmap Σ fσ ∧
-      thfVars (vinsth hσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2))) = FDOM fσ ∧
-      Γ1 ∪ Γ2 = FDOM hσ ∧
-      uniqifn uσ (thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2)) ∧
-      thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2) = FDOM uσ ⇒
-        Pf0Drv Σ aths (insth fσ hσ (uniqify uσ (FDOM hσ,A1 ∪ A2,f2)))
-Proof
-rpt strip_tac >>
-qabbrev_tac ‘impth = (Γ1,A1,IMP f1 f2)’ >>
-qabbrev_tac ‘anth = (Γ2,A2,f1)’ >>
-qabbrev_tac ‘mped = (Γ1 ∪ Γ2,A1 ∪ A2,f2)’ >>
-‘Pf0Drv Σ aths (insth fσ hσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2)))’
-suffices_by metis_tac[] >>
-simp[] >>
-Cases_on ‘fVars f1 DIFF Uof fVars ({f2} ∪ A1 ∪ A2) ≠ {}’>>
-
-
-     
-drule_all_then assume_tac mp_case_lemma >>
-first_x_assum $ qspecl_then [‘f1’] strip_assume_tac >>
-gs[] >>
-Pf0Drv_MP0
-QED
-
-
-Theorem main_mp_case:
- wfsigaxs Σ axs ∧
-      Pf Σ axs pf ∧
-      Pf Σ axs pf' ∧
-      MEM (Γ1,A1,IMP f1 f2) pf ∧
-      MEM (Γ2,A2,f1) pf' ∧
-      Uof (UCIth Σ) (IMAGE ax2th axs) ⊆ aths ∧
-      (∀vσ' fσ' uσ'.
-        wfvmap (FST Σ) vσ' ∧ wfcfVmap Σ fσ' ∧
-        thfVars (vinsth vσ' (uniqify uσ' (Γ2,A2,f1))) ⊆ FDOM fσ' ∧
-        Γ2 ⊆ FDOM vσ' ∧ uniqifn uσ' (thfVars (Γ2,A2,f1)) ⇒
-        Pf0Drv Σ aths (insth fσ' vσ' (uniqify uσ' (Γ2,A2,f1)))) ∧
-      (∀vσ' fσ' uσ'.
-        wfvmap (FST Σ) vσ' ∧ wfcfVmap Σ fσ' ∧
-        thfVars (vinsth vσ' (uniqify uσ' (Γ1,A1,IMP f1 f2))) ⊆ FDOM fσ' ∧
-        Γ1 ⊆ FDOM vσ' ∧ uniqifn uσ' (thfVars (Γ1,A1,IMP f1 f2)) ⇒
-        Pf0Drv Σ aths (insth fσ' vσ' (uniqify uσ' (Γ1,A1,IMP f1 f2)))) ∧
-      PfDrv Σ axs (Γ1 ∪ Γ2,A1 ∪ A2,f2) ∧
-      wfvmap (FST Σ) hσ ∧
-      wfcfVmap Σ fσ ∧
-      thfVars (vinsth hσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2))) = FDOM fσ ∧
-      Γ1 ∪ Γ2 = FDOM hσ ∧
-      uniqifn uσ (thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2)) ∧
-      thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2) = FDOM uσ ⇒
-        Pf0Drv Σ aths (insth fσ hσ (uniqify uσ (FDOM hσ,A1 ∪ A2,f2)))
-Proof
-rw[] >>
-drule_all_then assume_tac 
-
-gs[insth_def,uniqify_def]
-‘∃vσ1 fσ1 uσ1.
- wfvmap (FST Σ) vσ1 ∧ wfcfVmap Σ fσ1 ∧
-          thfVars (vinsth vσ1 (uniqify uσ1 (Γ2,A2,f1))) ⊆ FDOM fσ1 ∧
-          Γ2 ⊆ FDOM vσ1 ∧ uniqifn uσ1 (thfVars (Γ2,A2,f1)) ∧
- ∃vσ2 fσ2 uσ2.
-          wfvmap (FST Σ) vσ2 ∧ wfcfVmap Σ fσ2 ∧
-          thfVars (vinsth vσ2 (uniqify uσ2 (Γ1,A1,IMP f1 f2))) ⊆ FDOM fσ2 ∧
-          Γ1 ⊆ FDOM vσ2 ∧ uniqifn uσ2 (thfVars (Γ1,A1,IMP f1 f2)) ∧
-  (mp )’
-
-QED        
-
 
 Theorem main:
  wfsigaxs Σ axs ⇒
@@ -3842,45 +3609,7 @@ assume_tac >>
 >~ [‘MEM (Γ1,A1,IMP f1 f2) pf’]
 >- gs[cont_def] >>
    first_x_assum $ drule_then assume_tac >>
-   last_x_assum $ drule_then assume_tac >> gs[cont_def] >>
-   drule_then assume_tac gen_precise_maps_ex1 >>
-   ‘PfDrv Σ axs (Γ1 ∪ Γ2,A1 ∪ A2,f2)’
-     by (irule PfDrv_mp >> metis_tac[PfDrv_def]) >>
-   first_x_assum $ drule_then assume_tac >>
-   gs[cont_def]>>
-   first_x_assum $ drule_all_then strip_assume_tac >>
-   qpat_x_assum ‘Γ1 ⊆ FDOM vσ’ (K all_tac) >>
-   qpat_x_assum ‘Γ2 ⊆ FDOM vσ’ (K all_tac) >>
-   qpat_x_assum ‘thfVars (vinsth vσ (uniqify uσ (Γ1 ∪ Γ2,A1 ∪ A2,f2))) ⊆ FDOM fσ’ (K all_tac) >>
-   qpat_x_assum ‘wfvmap (FST Σ) vσ’ (K all_tac) >>
-   qpat_x_assum ‘wfcfVmap Σ fσ’ (K all_tac) >>
-   qpat_x_assum ‘uniqifn uσ (thfVars (Γ1 ∪ Γ2,A1 ∪ A2,f2))’
-   (K all_tac) >>
-   simp[] >> pop_assum (K all_tac) >>
-   rename
-   [‘(insth fσ hσ (uniqify uσ (FDOM hσ,A1 ∪ A2,f2)))’] >>
-   qabbrev_tac ‘fvonlyf1 = (fVars f1 DIFF FDOM uσ)’ >>
-   qabbrev_tac ‘fσ1 = DRESTRICT
-                      (exTfmap fσ fvonlyf1)
-                      (thfVars (Γ1,A1,IMP f1 f2))’ >>
-   qabbrev_tac ‘fσ2 = DRESTRICT
-                      (exTfmap fσ fvonlyf1)
-                      (thfVars (Γ2,A2,f1))’ >>
-   ‘∃uσ1. uniqifn uσ1 (thfVars (Γ1,A1,IMP f1 f2)) ∧
-    FDOM uσ1 = (thfVars (Γ1,A1,IMP f1 f2)) ∧
-    (∀fv. fv ∈ fvonlyf1 ⇒ uσ1 ' fv ∉ FRANGE uσ) ∧
-    (∀fv. fv ∈ FDOM uσ1 DIFF fvonlyf1 ⇒ uσ1 ' fv = uσ ' fv)’
-     by cheat >>
-   ‘∃uσ1. uniqifn uσ1 (thfVars (Γ1,A1,IMP f1 f2)) ∧
-    FDOM uσ1 = (thfVars (Γ1,A1,IMP f1 f2)) ∧
-    (∀fv. fv ∈ fvonlyf1 ⇒ uσ1 ' fv ∉ FRANGE uσ) ∧
-    (∀fv. fv ∈ FDOM uσ1 DIFF fvonlyf1 ⇒ uσ1 ' fv = uσ ' fv)’
-     by cheat     
-   first_x_assum $
-                 qspecl_then [‘vσ’,‘’,‘’] assume_tac
-   metis_tac[main_mp_case]
-
-   
+   last_x_assum $ drule_then assume_tac >>
    first_x_assum $ qspecl_then
    [‘vσ’,‘fσ’,‘uσ’] assume_tac >>
     first_x_assum $ qspecl_then

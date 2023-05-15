@@ -155,4 +155,4 @@ Saved theorem _______ "sl2vl_no_bound"
 Saved theorem _______ "wfs_wffVsl"
 Saved theorem _______ "wfabsap_of_wfsl"
 Exporting theory "wfgenl1" ... done.
-Theory "wfgenl1" took 10.6s to build
+Theory "wfgenl1" took 9.9s to build

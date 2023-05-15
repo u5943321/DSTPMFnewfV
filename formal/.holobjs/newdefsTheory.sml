@@ -11,7 +11,7 @@ struct
   structure TDB = struct
     val thydata = 
       TheoryReader.load_thydata "newdefs"
-        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/newdefsTheory.dat")
+        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/newdefsTheory.dat")
     fun find s = HOLdict.find (thydata,s)
   end
   

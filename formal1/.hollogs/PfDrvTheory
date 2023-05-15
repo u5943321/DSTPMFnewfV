@@ -73,4 +73,4 @@ Saved theorem _______ "PfDrv_assum_FINITE"
 Saved theorem _______ "fVars_FINITE"
 Saved theorem _______ "PfDrv_thfVars_FINITE"
 Exporting theory "PfDrv" ... done.
-Theory "PfDrv" took 6.6s to build
+Theory "PfDrv" took 6.3s to build

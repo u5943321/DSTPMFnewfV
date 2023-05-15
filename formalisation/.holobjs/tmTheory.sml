@@ -1,8 +1,8 @@
-structure tmsytxTheory :> tmsytxTheory =
+structure tmTheory :> tmTheory =
 struct
   
   val _ = if !Globals.print_thy_loads
-    then TextIO.print "Loading tmsytxTheory ... "
+    then TextIO.print "Loading tmTheory ... "
     else ()
   
   open Type Term Thm
@@ -10,8 +10,8 @@ struct
   
   structure TDB = struct
     val thydata = 
-      TheoryReader.load_thydata "tmsytx"
-        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/tmsytxTheory.dat")
+      TheoryReader.load_thydata "tm"
+        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/tmTheory.dat")
     fun find s = HOLdict.find (thydata,s)
   end
   
@@ -513,7 +513,7 @@ struct
   
   
 val _ = if !Globals.print_thy_loads then TextIO.print "done\n" else ()
-val _ = Theory.load_complete "tmsytx"
+val _ = Theory.load_complete "tm"
 
-val tmsytx_grammars = valOf (Parse.grammarDB {thyname = "tmsytx"})
+val tm_grammars = valOf (Parse.grammarDB {thyname = "tm"})
 end

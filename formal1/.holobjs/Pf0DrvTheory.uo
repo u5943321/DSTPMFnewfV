@@ -1,6 +1,6 @@
-/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/Pf0DrvTheory
-/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/Pf0DrvTheory
-/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/PfDrvTheory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/Pf0DrvTheory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/Pf0DrvTheory
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/PfDrvTheory
 $(HOLDIR)/sigobj/Globals
 $(HOLDIR)/sigobj/HOLdict
 $(HOLDIR)/sigobj/Overlay
@@ -10,4 +10,4 @@ $(HOLDIR)/sigobj/Theory
 $(HOLDIR)/sigobj/TheoryReader
 $(HOLDIR)/sigobj/Thm
 $(HOLDIR)/sigobj/Type
-/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/Pf0DrvTheory.sml
+/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/Pf0DrvTheory.sml

@@ -41,4 +41,4 @@ Saved theorem _______ "vl2sl_wfvl_MEM_var_no_bound"
 Saved theorem _______ "wfabsap_vl2sl_MAP_Var'"
 Saved theorem _______ "wfdpvl_ALL_DISTINCT_okvnames_wff"
 Exporting theory "wff" ... done.
-Theory "wff" took 4.4s to build
+Theory "wff" took 4.3s to build

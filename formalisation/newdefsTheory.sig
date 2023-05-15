@@ -92,6 +92,7 @@ sig
     val NOTIN_genavds : thm
     val Pf2Pf0_fVinsth_lemma : thm
     val Pf2Pf0_vinst_lemma : thm
+    val SUBSET_one_Uof : thm
     val Uof_lemma_classic : thm
     val absapLs_fabs : thm
     val add_assum_EMPTY : thm
@@ -155,7 +156,6 @@ sig
     val wffVmap_o_fVmap : thm
     val wffVmap_vinst_fVmap : thm
     val wff_FALL_alt : thm
-    val wff_IMP : thm
     val wff_absapLs_eq : thm
     val wff_subfm_fVar_LENGTH : thm
     val wfvmap_IN_ofMAP_wfs : thm
@@ -675,6 +675,10 @@ sig
             ffVrn (fVrwinst vσ uσ1 hσ uσ2)
               (finst (o_vmap hσ vσ) (ffVrn uσ2 f))
    
+   [SUBSET_one_Uof]  Theorem
+      
+      ⊢ ∀a. a ∈ A ∧ B ⊆ f a ⇒ B ⊆ Uof f A
+   
    [Uof_lemma_classic]  Theorem
       
       ⊢ Uof ffv ({False} ∪ (A ∪ {NEG f})) = Uof ffv ({f} ∪ A)
@@ -1036,10 +1040,6 @@ sig
               ∀nn.
                 (nn,s) ∉ ffv b ⇒
                 FALL s b = mk_FALL nn s (substb (Var nn s) b)
-   
-   [wff_IMP]  Theorem
-      
-      ⊢ wff Σ (IMP f1 f2) ⇔ wff Σ f1 ∧ wff Σ f2
    
    [wff_absapLs_eq]  Theorem
       

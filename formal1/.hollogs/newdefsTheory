@@ -167,4 +167,4 @@ Saved theorem _______ "ofFMAP_SUBSET"
 Saved theorem _______ "ofFMAP_Uof_SUBSET_lemma"
 Saved theorem _______ "IMAGE_eq_lemma"
 Exporting theory "newdefs" ... done.
-Theory "newdefs" took 8.9s to build
+Theory "newdefs" took 7.7s to build

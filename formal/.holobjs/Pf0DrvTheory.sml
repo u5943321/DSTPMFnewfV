@@ -76,6 +76,8 @@ struct
   fun op FAPPLY_mk_bmap_REVERSE_Rofeqthl _ = ()
   val op FAPPLY_mk_bmap_REVERSE_Rofeqthl = TDB.find
     "FAPPLY_mk_bmap_REVERSE_Rofeqthl"
+  fun op EL_Lofeqthl _ = () val op EL_Lofeqthl = TDB.find "EL_Lofeqthl"
+  fun op EL_Rofeqthl _ = () val op EL_Rofeqthl = TDB.find "EL_Rofeqthl"
   fun op Pf0_ffv_SUBSET_wff _ = ()
   val op Pf0_ffv_SUBSET_wff = TDB.find "Pf0_ffv_SUBSET_wff"
   fun op Pf0_wff _ = () val op Pf0_wff = TDB.find "Pf0_wff"

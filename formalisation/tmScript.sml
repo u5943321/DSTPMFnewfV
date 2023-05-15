@@ -1,7 +1,7 @@
 open HolKernel Parse boolLib bossLib;
 open stringTheory finite_setTheory pred_setTheory listTheory;
 open finite_mapTheory;
-val _ = new_theory "tmsytx";
+val _ = new_theory "tm";
 
 
 Datatype: term = Var string sort | Fn string sort (term list)
@@ -1278,6 +1278,80 @@ QED
 
 
 
+
+
+Theorem tinst_subtm1:
+(∀t σ n st. (n,st) ∈ FDOM σ ∩ tfv t ∧ cstt σ ∧
+ (∀v. v ∈ FDOM σ ⇒ ¬(is_bound (σ ' v))) ⇒
+           σ ' (n,st) ∈ tsubtm (tinst σ t)) ∧
+(∀s σ n st. (n,st) ∈ FDOM σ ∩ sfv s ∧ cstt σ ∧
+(∀v. v ∈ FDOM σ ⇒ ¬(is_bound (σ ' v))) ⇒
+           σ ' (n,st) ∈ ssubtm (sinst σ s))
+Proof                 
+ho_match_mp_tac better_tm_induction >> rw[] >> gvs[]
+(* 5 *)
+>- metis_tac[tsubtm_REFL]
+>- (rename [‘(n1,st1) ∉ FDOM σ’] >> 
+   Cases_on ‘(n1,st1) ∈ FDOM σ’ (* 2 *)
+   >- (gs[] >>  irule ssubtm_tsubtm >> simp[] >>
+       last_x_assum rev_drule >> rw[] >>
+       gs[cstt_def]) >>
+   gs[tsubtm_def])
+>- (gs[tsubtm_def,MEM_MAP,PULL_EXISTS] >>
+   rpt disj2_tac >> qexists ‘t’ >>
+   metis_tac[])
+>- gs[tsubtm_def,MEM_MAP,PULL_EXISTS] >>
+gs[tsubtm_def,MEM_MAP,PULL_EXISTS] >>
+metis_tac[]
+QED
+ 
+Theorem tfv_tinst:
+(∀t σ. cstt σ ∧ tfv t ⊆ FDOM σ ∧
+ (∀v. v ∈ FDOM σ ⇒ ¬(is_bound (σ ' v))) ⇒
+ (∀n st. (n,st) ∈ tfv (tinst σ t) ⇔
+       ∃n0 st0. (n0,st0) ∈ tfv t ∧ (n,st) ∈ tfv (σ ' (n0,st0)))) ∧
+(∀s σ. cstt σ ∧ sfv s ⊆ FDOM σ ∧
+   (∀v. v ∈ FDOM σ ⇒ ¬(is_bound (σ ' v))) ⇒
+ (∀n st. (n,st) ∈ sfv (sinst σ s) ⇔
+       ∃n0 st0. (n0,st0) ∈ sfv s ∧ (n,st) ∈ tfv (σ ' (n0,st0))))
+Proof                 
+ho_match_mp_tac better_tm_induction >> rw[] >> gvs[]
+(* 3 *)
+>- (eq_tac (* 2 *)
+   >- metis_tac[] >>
+   rw[] (* 2 *)
+   >- simp[] >>
+   first_x_assum $ drule_all_then assume_tac >>
+   ‘(n,st) ∈ sfv (sinst σ s)’ by metis_tac[] >> 
+   pop_assum mp_tac >> pop_assum (K all_tac) >>
+   gs[cstt_def] >> first_x_assum (drule o GSYM) >> rw[] >>
+   irule sfv_tfv >> simp[])
+>- (eq_tac(* 2 *)
+   >- (simp[PULL_EXISTS,MEM_MAP] >> rw[] (* 2 *)
+      >- (‘tfv a ⊆ FDOM σ’ by (gs[SUBSET_DEF]  >> metis_tac[]) >>
+         first_x_assum $ drule_all_then assume_tac >> gs[] >>
+         metis_tac[]) >>
+      ‘(n,st) ∈ sfv (sinst σ s)’
+        by (simp_tac std_ss [Once fv_subtm] >>
+           qexistsl [‘σ ' (n0,st0)’] >> simp[] >>
+           irule $ cj 2 tinst_subtm1 >> gs[SUBSET_DEF]) >>
+      gs[] >> metis_tac[]) >>
+   simp[PULL_EXISTS,MEM_MAP] >>
+   rw[] (* 2 *)
+   >- (disj1_tac >> qexists ‘t’ >> simp[] >>
+      first_x_assum (irule o iffRL) >> simp[] >> gs[SUBSET_DEF] >>
+      metis_tac[]) >>
+   disj2_tac >> metis_tac[]) >>
+simp[PULL_EXISTS,MEM_MAP] >> eq_tac (* 2 *)
+>- (rw[] >> ‘tfv a ⊆ FDOM σ’ by (gs[SUBSET_DEF] >> metis_tac[]) >>
+   metis_tac[]) >>
+rw[] >> qexists ‘t’ >> simp[] >>
+first_x_assum $ irule o iffRL  >> simp[] >> gs[SUBSET_DEF] >>
+metis_tac[]
+QED
+                
+
+ 
 Theorem tfv_sinst:
 (∀t σ. cstt σ ∧ tfv t ⊆ FDOM σ ∧ no_bound σ ⇒
  (∀n st. (n,st) ∈ tfv (tinst σ t) ⇔
@@ -2070,6 +2144,15 @@ simp[Once variant_def] >>
 rw[]            
 QED
 
+
+Theorem variant_NOTIN:
+∀vs n. FINITE vs ⇒ (variant (fromSet vs) n) ∉ vs
+Proof
+rpt strip_tac >>
+drule_all_then assume_tac $ iffRL IN_fromSet >>
+gs[] >> metis_tac[variant_NOT_fIN]
+QED
+        
 Theorem variant_var_NOTIN:
 ∀vs n s. FINITE vs ⇒ (variant (fromSet (IMAGE FST vs)) n,s) ∉ vs
 Proof
@@ -2716,6 +2799,8 @@ QED
 
 
 
+
+        
 Theorem DRESTRICT_cstt:        
   cstt σ ∧ s ⊆ FDOM σ ∧
   is_cont s ⇒ cstt (DRESTRICT σ s)
@@ -3589,7 +3674,39 @@ QED
 
 
 
+ 
+Theorem sinst_srpl1:
+(∀tm i t σ.
+(∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = {}) ∧
+(∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = {}) ⇒
+tinst σ (trpl i t tm) =
+trpl i (tinst σ t) (tinst σ tm)) ∧
+(∀st i t σ.
+(∀n s. (n,s) ∈ sfv st ⇒ sbounds s = {}) ∧
+(∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = {}) ⇒
+sinst σ (srpl i t st) =
+srpl i (tinst σ t) (sinst σ st))
+Proof
+ho_match_mp_tac better_tm_induction >>
+rw[] (* 4 *)
+>- (Cases_on ‘(s0,st) ∈ FDOM σ ’ >> simp[trpl_def] >>
+    rw[Once EQ_SYM_EQ] >>
+   irule $ cj 1 trpl_id >>
+   first_x_assum $ drule_then assume_tac >> gs[])
+>- (rw[trpl_def,tinst_def] (* 2 *)
+   >- (first_x_assum irule >> simp[] >>
+      gs[SUBSET_DEF] >> metis_tac[]) >>
+   rw[SF ETA_ss,MAP_MAP_o,MAP_EQ_f] >>
+   first_x_assum irule >> simp[] >>
+   gs[SUBSET_DEF] >> metis_tac[])
+>- rw[trpl_def,tinst_def] >>
+rw[trpl_def,tinst_def] >>
+rw[SF ETA_ss,MAP_MAP_o,MAP_EQ_f] >>
+first_x_assum irule >> simp[] >>
+gs[SUBSET_DEF] >> metis_tac[]
+QED
 
+        
 Theorem sinst_srpl:
 (∀tm i t σ.
 (∀n s. (n,s) ∈ tfv tm ⇒ sbounds s = {}) ∧
@@ -3634,6 +3751,23 @@ first_x_assum (qspecl_then [‘0’] assume_tac) >> gs[]
 QED
 
 
+
+Theorem MAP_sinst_specsl1:
+∀sl i t σ.
+(∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = ∅) ∧
+(∀n s st. MEM st sl ∧ (n,s) ∈ sfv st ⇒ sbounds s = ∅) ⇒
+MAP (sinst σ) (specsl i t sl) =
+specsl i (tinst σ t) (MAP (sinst σ) sl)
+Proof
+Induct_on ‘sl’ >> simp[specsl_def] >>
+rw[] (* 2 *)
+>- (irule $ cj 2 sinst_srpl1 >>
+   gs[no_bound_def] >> gs[SUBSET_DEF] >>
+   metis_tac[]) >>
+first_x_assum irule >> gs[SUBSET_DEF] >> metis_tac[]
+QED
+
+        
 Theorem MAP_sinst_specsl:
 ∀sl i t σ.
 (∀v. v ∈ FDOM σ ⇒ tbounds (σ ' v) = ∅) ∧
@@ -4091,6 +4225,11 @@ QED
 
 
 
+
+
+
+
+        
 Theorem tinst_tabs:
 (∀tm i σ.
 cstt σ ∧ no_bound σ ∧

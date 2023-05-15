@@ -1,8 +1,8 @@
-structure tmsytxTheory :> tmsytxTheory =
+structure tmTheory :> tmTheory =
 struct
   
   val _ = if !Globals.print_thy_loads
-    then TextIO.print "Loading tmsytxTheory ... "
+    then TextIO.print "Loading tmTheory ... "
     else ()
   
   open Type Term Thm
@@ -10,8 +10,8 @@ struct
   
   structure TDB = struct
     val thydata = 
-      TheoryReader.load_thydata "tmsytx"
-        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formalisation/tmsytxTheory.dat")
+      TheoryReader.load_thydata "tm"
+        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/tmTheory.dat")
     fun find s = HOLdict.find (thydata,s)
   end
   
@@ -231,6 +231,8 @@ struct
   val op FAPPLY_o_vmap = TDB.find "FAPPLY_o_vmap"
   fun op FDOM_o_vmap _ = () val op FDOM_o_vmap = TDB.find "FDOM_o_vmap"
   fun op inst_o_vmap _ = () val op inst_o_vmap = TDB.find "inst_o_vmap"
+  fun op tinst_o_vmap _ = () val op tinst_o_vmap = TDB.find "tinst_o_vmap"
+  fun op sinst_o_vmap _ = () val op sinst_o_vmap = TDB.find "sinst_o_vmap"
   fun op match_SOME_iff_inst' _ = ()
   val op match_SOME_iff_inst' = TDB.find "match_SOME_iff_inst'"
   fun op cstt_sort_of_tinst' _ = ()
@@ -246,6 +248,8 @@ struct
   fun op no_bound_not_is_bound _ = ()
   val op no_bound_not_is_bound = TDB.find "no_bound_not_is_bound"
   fun op tinst_subtm _ = () val op tinst_subtm = TDB.find "tinst_subtm"
+  fun op tinst_subtm1 _ = () val op tinst_subtm1 = TDB.find "tinst_subtm1"
+  fun op tfv_tinst _ = () val op tfv_tinst = TDB.find "tfv_tinst"
   fun op tfv_sinst _ = () val op tfv_sinst = TDB.find "tfv_sinst"
   fun op tmatch_TRANS_lemma _ = ()
   val op tmatch_TRANS_lemma = TDB.find "tmatch_TRANS_lemma"
@@ -292,6 +296,8 @@ struct
   fun op variant_def _ = () val op variant_def = TDB.find "variant_def"
   fun op variant_NOT_fIN _ = ()
   val op variant_NOT_fIN = TDB.find "variant_NOT_fIN"
+  fun op variant_NOTIN _ = ()
+  val op variant_NOTIN = TDB.find "variant_NOTIN"
   fun op variant_var_NOTIN _ = ()
   val op variant_var_NOTIN = TDB.find "variant_var_NOTIN"
   fun op trpl_ind _ = () val op trpl_ind = TDB.find "trpl_ind"
@@ -388,8 +394,11 @@ struct
   fun op wfabsap_ok_abs _ = ()
   val op wfabsap_ok_abs = TDB.find "wfabsap_ok_abs"
   fun op wfabsap_wft _ = () val op wfabsap_wft = TDB.find "wfabsap_wft"
+  fun op sinst_srpl1 _ = () val op sinst_srpl1 = TDB.find "sinst_srpl1"
   fun op sinst_srpl _ = () val op sinst_srpl = TDB.find "sinst_srpl"
   fun op ok_abs_HD _ = () val op ok_abs_HD = TDB.find "ok_abs_HD"
+  fun op MAP_sinst_specsl1 _ = ()
+  val op MAP_sinst_specsl1 = TDB.find "MAP_sinst_specsl1"
   fun op MAP_sinst_specsl _ = ()
   val op MAP_sinst_specsl = TDB.find "MAP_sinst_specsl"
   fun op specsl_EL _ = () val op specsl_EL = TDB.find "specsl_EL"
@@ -400,6 +409,10 @@ struct
   val op tfv_trpl_SUBSET1 = TDB.find "tfv_trpl_SUBSET1"
   fun op wfabsap_sfv_SUBSET _ = ()
   val op wfabsap_sfv_SUBSET = TDB.find "wfabsap_sfv_SUBSET"
+  fun op wfabsap_sfv_tfv _ = ()
+  val op wfabsap_sfv_tfv = TDB.find "wfabsap_sfv_tfv"
+  fun op wfabsap_sfv_sort_of _ = ()
+  val op wfabsap_sfv_sort_of = TDB.find "wfabsap_sfv_sort_of"
   fun op wfabsap_sinst_tinst _ = ()
   val op wfabsap_sinst_tinst = TDB.find "wfabsap_sinst_tinst"
   fun op tsubst_eq_tinst1 _ = ()
@@ -513,7 +526,7 @@ struct
   
   
 val _ = if !Globals.print_thy_loads then TextIO.print "done\n" else ()
-val _ = Theory.load_complete "tmsytx"
+val _ = Theory.load_complete "tm"
 
-val tmsytx_grammars = valOf (Parse.grammarDB {thyname = "tmsytx"})
+val tm_grammars = valOf (Parse.grammarDB {thyname = "tm"})
 end

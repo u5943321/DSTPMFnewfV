@@ -6,7 +6,7 @@ struct
     else ()
   
   open Type Term Thm
-  local open fsytxTheory in end;
+  local open fmTheory in end;
   
   structure TDB = struct
     val thydata = 
@@ -24,6 +24,8 @@ struct
   val op fVmap_rename_def = TDB.find "fVmap_rename_def"
   fun op fVmap_eff_def _ = ()
   val op fVmap_eff_def = TDB.find "fVmap_eff_def"
+  fun op Leq_def _ = () val op Leq_def = TDB.find "Leq_def"
+  fun op Req_def _ = () val op Req_def = TDB.find "Req_def"
   fun op slprpl_id _ = () val op slprpl_id = TDB.find "slprpl_id"
   fun op ok_abs_slprpl_fix _ = ()
   val op ok_abs_slprpl_fix = TDB.find "ok_abs_slprpl_fix"

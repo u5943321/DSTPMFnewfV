@@ -2,7 +2,7 @@ open HolKernel Parse boolLib bossLib;
 open finite_setTheory;
 open finite_mapTheory;
 open pred_setTheory;
-val _ = new_theory "fsytx";
+val _ = new_theory "fm";
 
 
 
@@ -3418,6 +3418,109 @@ QED
 
 
 
+(*
+
+Theorem cstt_EXT1:
+cstt σ ∧ wfcod Σ σ ⇒
+∀vs. FINITE vs ⇒
+     ∃σ1. FDOM σ1 = (gcont vs) ∧ complete σ1 ∧ cstt σ1 ∧
+          wfcod Σ σ1 ∧
+          ∀v. v ∈ vs ⇒
+              inst_eff σ1 v = inst_eff σ v
+Proof
+rw[] >>
+qexists ‘FUN_FMAP (λ(n,s). if (n,s) ∈ FDOM σ then σ ' (n,s) else Var n (sinst σ s)) (gcont vs)’ >>
+rw[FUN_FMAP_DEF] (* 3 *)
+>- (drule_then assume_tac gcont_FINITE >>
+   rw[FUN_FMAP_DEF])
+>- (rw[complete_FDOM_is_cont]  >>
+   drule_then assume_tac gcont_FINITE >>
+   rw[FUN_FMAP_DEF] >>
+   metis_tac[gcont_is_cont])
+>- (rw[cstt_def] >>
+   drule_then assume_tac gcont_FINITE >>
+   gs[FUN_FMAP_DEF] >>
+   Cases_on ‘(n,s) ∈ FDOM σ’ >> gs[] (* 2 *)
+   >- (gs[cstt_def] >> 
+      irule $ cj 2 inst_eff_tinst >>
+      rw[inst_eff_def] >> rw[] (* 4 *)
+      >- rw[FUN_FMAP_DEF]
+      >- metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]
+      >- rw[FUN_FMAP_DEF] >>
+      metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]) >>
+   rw[sort_of_def] >>
+   irule $ cj 2 inst_eff_tinst >>
+      rw[inst_eff_def] >> rw[] (* 4 *)
+      >- rw[FUN_FMAP_DEF]
+      >- metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]
+      >- rw[FUN_FMAP_DEF] >>
+      metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]) >>
+‘FINITE (gcont vs)’ by simp[gcont_FINITE]>>
+simp[wfcod_def,FUN_FMAP_DEF] >>
+rw[] (* 2 *)
+>- gs[wfcod_def] >>
+
+
+
+        
+Cases_on ‘v’ >> rename [‘(n,s)’] >>
+drule_then assume_tac gcont_FINITE >>
+rw[inst_eff_def] (* 4 *)
+>- gs[FUN_FMAP_DEF]
+>- gs[FUN_FMAP_DEF]
+>- gs[gcont_def,EXTENSION] >>
+gs[gcont_def]
+QED        
+*)
+
+        
+Theorem cstt_EXT1:
+cstt σ ⇒
+∀vs. FINITE vs ⇒
+     ∃σ1. FDOM σ1 = (gcont vs) ∧ complete σ1 ∧ cstt σ1 ∧
+          ∀v. v ∈ vs ⇒
+              inst_eff σ1 v = inst_eff σ v
+Proof
+rw[] >>
+qexists ‘FUN_FMAP (λ(n,s). if (n,s) ∈ FDOM σ then σ ' (n,s) else Var n (sinst σ s)) (gcont vs)’ >>
+rw[FUN_FMAP_DEF] (* 3 *)
+>- (drule_then assume_tac gcont_FINITE >>
+   rw[FUN_FMAP_DEF])
+>- (rw[complete_FDOM_is_cont]  >>
+   drule_then assume_tac gcont_FINITE >>
+   rw[FUN_FMAP_DEF] >>
+   metis_tac[gcont_is_cont])
+>- (rw[cstt_def] >>
+   drule_then assume_tac gcont_FINITE >>
+   gs[FUN_FMAP_DEF] >>
+   Cases_on ‘(n,s) ∈ FDOM σ’ >> gs[] (* 2 *)
+   >- (gs[cstt_def] >> 
+      irule $ cj 2 inst_eff_tinst >>
+      rw[inst_eff_def] >> rw[] (* 4 *)
+      >- rw[FUN_FMAP_DEF]
+      >- metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]
+      >- rw[FUN_FMAP_DEF] >>
+      metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]) >>
+   rw[sort_of_def] >>
+   irule $ cj 2 inst_eff_tinst >>
+      rw[inst_eff_def] >> rw[] (* 4 *)
+      >- rw[FUN_FMAP_DEF]
+      >- metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]
+      >- rw[FUN_FMAP_DEF] >>
+      metis_tac[gcont_is_cont,is_cont_def,SUBSET_DEF]) >>
+Cases_on ‘v’ >> rename [‘(n,s)’] >>
+drule_then assume_tac gcont_FINITE >>
+rw[inst_eff_def] (* 4 *)
+>- gs[FUN_FMAP_DEF]
+>- gs[FUN_FMAP_DEF]
+>- gs[gcont_def,EXTENSION] >>
+gs[gcont_def]
+QED        
+
+
+
+
+        
 Theorem cstt_EXT:
 cstt σ ⇒
 ∀vs. FINITE vs ∧ FDOM σ ⊆ vs ⇒
@@ -3476,7 +3579,20 @@ Induct_on ‘f’ >> gs[ffv_thm,fabs_def,PULL_EXISTS,MEM_MAP] (* 4 *)
 rw[] (* 2 *)
 >- metis_tac[vsort_tfv_closed] >>
 metis_tac[ill_formed_tabs_still_in]
-QED    
+QED
+
+
+
+Theorem wff_IMP:
+  wff Σ (IMP f1 f2) ⇔ wff Σ f1 ∧ wff Σ f2
+Proof
+  rw[EQ_IMP_THM]
+  >- gs[Once wff_cases,mk_FALL_def,EQ_def]
+  >- gs[Once wff_cases,mk_FALL_def,EQ_def] >>
+  Cases_on ‘Σ’ >> Cases_on ‘r’ >> irule wff_IMP >>
+  simp[]
+QED                          
+                 
 
 
            

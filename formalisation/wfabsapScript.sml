@@ -372,6 +372,10 @@ Proof
 metis_tac[EL_specslwtl]
 QED
 
+
+
+        
+
         
 (*
 Theorem EL_specslwtl_alt:
@@ -512,6 +516,8 @@ rw[EXTENSION] >> metis_tac[]
 QED
         
 
+
+(*        
 Theorem mk_FALLL_FALLL:
 mk_FALLL vl b = FALLL (vl2sl vl)
 Proof
@@ -522,7 +528,7 @@ Definition tabsl_def:
   tabsl (v :: vs) i tm = tabs (tabsl vs tm)     
 
 Definition fabsl_def:
-        
+*)        
 (*
 Theorem ffv_FALLL:
 ∀k vl f. LENGTH vl = k ⇒
@@ -618,6 +624,355 @@ QED
 
 
 
+
+Definition wfgenl_def:
+wfgenl Σ vl f ⇔
+(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
+     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
+(∀n. n < LENGTH vl ⇒
+  ∀n1 s1. (n1,s1) ∈ ffv f DIFF (set (DROP n vl)) ⇒
+          (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ EL n vl ∉ fVslfv f)
+End
+
+Theorem wfgenl_TL:
+wfgenl Σ (h :: t) f ⇒ wfgenl Σ t f
+Proof
+simp[wfgenl_def]>> rw[] (* 4 *)
+>- (last_x_assum $ qspecl_then [‘SUC n’] assume_tac >> gs[] >>
+   first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
+   metis_tac[])
+>- (qpat_x_assum ‘∀n. _ ⇒ wfs _ _’
+                (qspecl_then [‘SUC n’] assume_tac) >> gs[]) 
+>- (qpat_x_assum ‘∀n. _ ⇒ ∀n1 s1. _ _’
+                (qspecl_then [‘SUC n’] assume_tac) >> gs[] >>
+   metis_tac[]) >>
+first_x_assum $ qspecl_then [‘SUC n’] assume_tac >> gs[]
+QED
+
+(*
+Datatype: HLtm = HLv string | HLf string (HLtm list)
+End
+
+
+Datatype: HLfm = HLeq HLtm HLtm
+          | HLimp HLfm HLfm
+          | HLand HLtm HLfm
+          | HLnot HLfm
+          | HLex HLtm HLfm
+End
+
+
+Definition HLall_def:
+HLall v fm = HLnot (HLex v (HLnot fm))
+End
+
+
+Inductive HLPf:
+[~HLeq_refl:]
+  HLPf [HLall v (HLeq v v)] ∧
+[~mp:]
+  HLPf (l1 ++ [HLimp f1 f2]) ∧
+  HLPf (l2 ++ [f1]) ⇒
+  HLPf ((l1 ++ [HLimp f1 f2]) ++
+        (l2 ++ [f1]) ++ [f2])     
+End
+*)
+
+
+
+Theorem IN_BIGFOLD:
+v ∈ FOLDR
+     (λabv vs. vs ∪ sfv (SND abv) DELETE abv) s vl
+⇔ v ∈ s ∧ ¬MEM v ∃n. n < LENGTH vl ∧ v                  
+Proof
+
+                        
+Theorem ffv_mk_FALLL_eq:
+∀f.wfgenl Σ vl f ⇒
+ffv (mk_FALLL vl f) =
+FOLDR (λabv vs. vs ∪ sfv (SND abv) DELETE abv) (ffv f) vl 
+Proof
+Induct_on ‘LENGTH vl’ (* 2 *)
+>- rw[mk_FALLL_def] >> 
+Cases_on ‘vl’ >> simp[] >> rw[] >>
+‘wfgenl Σ t f’ by metis_tac[wfgenl_TL]>>
+first_x_assum $ drule_at_then Any assume_tac >>
+gs[] >>  Cases_on ‘h’ >> rename [‘(n,s)’] >>
+simp[mk_FALLL_def] >>
+qspecl_then [‘mk_FALLL t f’,‘n’,‘s’] assume_tac ffv_mk_FALL >>
+‘ffv (mk_FALL n s (mk_FALLL t f)) =
+        ffv (mk_FALLL t f) ∪ sfv s DELETE (n,s)’
+ by first_x_assum irule >> simp[fVars_mk_FALLL] >>
+    gs[SUBSET_DEF]
+  cheat >>
+gs[]
+QED
+
+
+Theorem ffv_mk_FALLL_eq:
+∀f.wfgenl Σ vl f ⇒
+ffv (mk_FALLL vl f) =
+FOLDR (λabv vs. vs ∪ sfv (SND abv) DELETE abv) (ffv f) vl 
+Proof
+Induct_on ‘LENGTH vl’ (* 2 *)
+>- rw[mk_FALLL_def] >> 
+Cases_on ‘vl’ >> simp[] >> rw[] >>
+‘wfgenl Σ t f’ by metis_tac[wfgenl_TL]>>
+first_x_assum $ drule_at_then Any assume_tac >>
+gs[] >>  Cases_on ‘h’ >> rename [‘(n,s)’] >>
+simp[mk_FALLL_def] >>
+qspecl_then [‘mk_FALLL t f’,‘n’,‘s’] assume_tac ffv_mk_FALL >>
+‘ffv (mk_FALL n s (mk_FALLL t f)) =
+        ffv (mk_FALLL t f) ∪ sfv s DELETE (n,s)’
+ by first_x_assum irule >> simp[fVars_mk_FALLL] >>
+    gs[SUBSET_DEF]
+  cheat >>
+gs[]
+QED
+
+
+
+Theorem ffv_mk_FALLL_eq:
+∀f.wfgenl Σ vl f ⇒
+ffv (mk_FALLL vl f) =
+FOLDR (λabv vs. vs ∪ sfv (SND abv) DELETE abv) (ffv f) vl 
+Proof
+Induct_on ‘LENGTH vl’ (* 2 *)
+>- rw[mk_FALLL_def] >> 
+Cases_on ‘vl’ >> simp[] >> rw[] >>
+‘wfgenl Σ t f’ by metis_tac[wfgenl_TL]>>
+first_x_assum $ drule_at_then Any assume_tac >>
+gs[] >>  Cases_on ‘h’ >> rename [‘(n,s)’] >>
+simp[mk_FALLL_def] >>
+qspecl_then [‘mk_FALLL t f’,‘n’,‘s’] assume_tac ffv_mk_FALL >>
+‘ffv (mk_FALL n s (mk_FALLL t f)) =
+        ffv (mk_FALLL t f) ∪ sfv s DELETE (n,s)’
+ by first_x_assum irule >> simp[fVars_mk_FALLL] >>
+    gs[SUBSET_DEF]
+  cheat >>
+gs[]
+QED
+ 
+
+
+
+ 
+
+
+
+Theorem wff_mk_FALLL: 
+∀k vl. LENGTH vl = k ⇒
+wfgenl Σ vl f ⇒
+∀vh vt. vl = vh :: vt ⇒ ∀n s. (n,s) ∈ ffv (mk_FALLL vt f) ⇒
+vh ∉ sfv s
+Proof             
+Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
+rw[] >> Cases_on ‘h’ >> rename [‘(hn,hs)’] >>
+first_x_assum $ qspecl_then [‘t’] assume_tac >> pop_assum mp_tac >>
+simp[] >> rw[] >> drule_then assume_tac wfgenl_TL >> gs[] >> 
+Cases_on ‘t’
+>- (gs[wfgenl_def] >>
+   gs[mk_FALLL_def,DECIDE “n < 1 ⇔ n = 0”] >> 
+   first_x_assum $ drule_then assume_tac >>
+   Cases_on ‘n = hn ⇒ s ≠ hs’ >> gs[] >> metis_tac[tm_tree_WF]) >>
+fs[] >> Cases_on ‘h’ >> gs[mk_FALLL_def] >>
+qspecl_then [‘(mk_FALLL t' f)’,‘q’,‘r’] assume_tac ffv_mk_FALL >>
+first_x_assum $ drule_then assume_tac >>
+‘ffv (mk_FALL q r (mk_FALLL t' f)) =
+        ffv (mk_FALLL t' f) ∪ sfv r DELETE (q,r)’ by cheat>>
+gs[] (* 2 *)
+>-         
+
+                        
+Theorem wff_mk_FALLL: 
+∀k vl. LENGTH vl = k ⇒
+(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
+     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
+(∀n. n < LENGTH vl ⇒
+  ∀n1 s1. (n1,s1) ∈ ffv f DIFF (set (DROP n vl)) ⇒
+          (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ EL n vl ∉ fVslfv f) ⇒
+∀vh vt. vl = vh :: vt ⇒ ∀n s. (n,s) ∈ ffv (mk_FALLL vt f) ⇒
+vh ∉ sfv s
+Proof             
+Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
+rw[] >> Cases_on ‘h’ >> rename [‘(hn,hs)’] >>
+first_x_assum $ qspecl_then [‘t’] assume_tac >> pop_assum mp_tac >>
+simp[] >> rw[] >>
+Cases_on ‘t’
+>- (gs[mk_FALLL_def,DECIDE “n < 1 ⇔ n = 0”] >>
+   first_x_assum $ drule_then assume_tac >>
+   Cases_on ‘n = hn ⇒ s ≠ hs’ >> gs[] >> metis_tac[tm_tree_WF]) >>
+fs[] >>    
+
+
+     
+simp[mk_FALLL_def]>> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+rename [‘(Σf,Σp,Σe)’] >>
+irule $ cj 6 wff_rules >>
+‘wff (Σf,Σp,Σe) (mk_FALLL t f)’
+ by (first_x_assum irule >> simp[] >>
+    gs[] >> rw[] (* 4 *)
+    >- (first_x_assum $ drule_at_then Any assume_tac >>
+        first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])
+    >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
+       first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
+       metis_tac[]) 
+    >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])>>
+    qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
+gs[] >>
+‘wfs Σf s’
+ by (qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘0’] assume_tac >> gs[]) >> gs[] >>
+simp[fVslfv_mk_FALLL] >> reverse (rw[]) (* 2 *)
+>- (first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >>
+‘(n1,s1) ∈ slfv (MAP SND t) ∨ (n1,s1) ∈ ffv f’
+     by (qspecl_then [‘(Σf,Σp,Σe)’,‘LENGTH t’,‘t’,‘f’] assume_tac
+        (Q.GEN ‘Σ’ ffv_mk_FALLL_SUBSET) >>
+        ‘ffv (mk_FALLL t f) ⊆ ffv f ∪ slfv (MAP SND t)’
+         suffices_by (gs[SUBSET_DEF] >> metis_tac[]) >>
+        first_x_assum irule >> rw[] (* 4 *)
+        >- (first_x_assum $ drule_at_then Any assume_tac >>
+            first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+            gs[])
+        >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[] >>
+           first_x_assum $ qspecl_then [‘SUC m’] assume_tac >>
+           gs[] >> metis_tac[])
+        >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[]) >>
+        qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’
+        $ qspecl_then [‘SUC n'’] assume_tac >> gs[])  cheat
+    >- (gs[IN_slfv,MEM_MAP,MEM_EL] >>
+       last_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
+       first_x_assum irule >>
+       qexistsl [‘SUC n'’,‘n1’] >> simp[]) >>
+    first_x_assum $ drule_at_then Any assume_tac >>
+    first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]    
+QED    
+                        
+Theorem wff_mk_FALLL: 
+∀k vl. LENGTH vl = k ⇒
+(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
+     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
+(∀n. n < LENGTH vl ⇒
+  ∀n1 s1. (n1,s1) ∈ ffv f DIFF (set (DROP n vl)) ⇒
+          (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ EL n vl ∉ fVslfv f) ⇒
+wff Σ f ⇒
+wff Σ (mk_FALLL vl f) ∧
+∀h t. vl = h :: t ⇒ 
+Proof             
+Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
+rw[] >> Cases_on ‘h’ >> rename [‘(n,s)’] >>
+simp[mk_FALLL_def]>> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+rename [‘(Σf,Σp,Σe)’] >>
+irule $ cj 6 wff_rules >>
+‘wff (Σf,Σp,Σe) (mk_FALLL t f)’
+ by (first_x_assum irule >> simp[] >>
+    gs[] >> rw[] (* 4 *)
+    >- (first_x_assum $ drule_at_then Any assume_tac >>
+        first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])
+    >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
+       first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
+       metis_tac[]) 
+    >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])>>
+    qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
+gs[] >>
+‘wfs Σf s’
+ by (qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘0’] assume_tac >> gs[]) >> gs[] >>
+simp[fVslfv_mk_FALLL] >> reverse (rw[]) (* 2 *)
+>- (first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >>
+‘(n1,s1) ∈ slfv (MAP SND t) ∨ (n1,s1) ∈ ffv f’
+     by (qspecl_then [‘(Σf,Σp,Σe)’,‘LENGTH t’,‘t’,‘f’] assume_tac
+        (Q.GEN ‘Σ’ ffv_mk_FALLL_SUBSET) >>
+        ‘ffv (mk_FALLL t f) ⊆ ffv f ∪ slfv (MAP SND t)’
+         suffices_by (gs[SUBSET_DEF] >> metis_tac[]) >>
+        first_x_assum irule >> rw[] (* 4 *)
+        >- (first_x_assum $ drule_at_then Any assume_tac >>
+            first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+            gs[])
+        >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[] >>
+           first_x_assum $ qspecl_then [‘SUC m’] assume_tac >>
+           gs[] >> metis_tac[])
+        >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[]) >>
+        qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’
+        $ qspecl_then [‘SUC n'’] assume_tac >> gs[])  cheat
+    >- (gs[IN_slfv,MEM_MAP,MEM_EL] >>
+       last_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
+       first_x_assum irule >>
+       qexistsl [‘SUC n'’,‘n1’] >> simp[]) >>
+    first_x_assum $ drule_at_then Any assume_tac >>
+    first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]    
+QED    
+
+
+
+
+Theorem wff_mk_FALLL: 
+∀k vl. LENGTH vl = k ⇒
+(∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
+     ∀n1 s1. (n1,s1) ∈ sfv (SND (EL m vl)) ⇒ (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ wfs (FST Σ) (SND (EL n vl))) ∧
+(∀n. n < LENGTH vl ⇒
+  ∀n1 s1. (n1,s1) ∈ ffv f DIFF (set (DROP n vl)) ⇒
+          (EL n vl) ∉ sfv s1) ∧
+(∀n. n < LENGTH vl ⇒ EL n vl ∉ fVslfv f) ⇒
+wff Σ f ⇒
+wff Σ (mk_FALLL vl f) 
+Proof             
+Induct_on ‘k’ >> Cases_on ‘vl’ >>simp[mk_FALLL_def] >>
+rw[] >> Cases_on ‘h’ >> rename [‘(n,s)’] >>
+simp[mk_FALLL_def]>> Cases_on ‘Σ’ >> Cases_on ‘r’ >>
+rename [‘(Σf,Σp,Σe)’] >>
+irule $ cj 6 wff_rules >>
+‘wff (Σf,Σp,Σe) (mk_FALLL t f)’
+ by (first_x_assum irule >> simp[] >>
+    gs[] >> rw[] (* 4 *)
+    >- (first_x_assum $ drule_at_then Any assume_tac >>
+        first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])
+    >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[] >>
+       first_x_assum $ qspecl_then [‘SUC m’] assume_tac >> gs[] >>
+       metis_tac[]) 
+    >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >> gs[])>>
+    qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘SUC n'’] assume_tac >> gs[]) >>
+gs[] >>
+‘wfs Σf s’
+ by (qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’ $ qspecl_then [‘0’] assume_tac >> gs[]) >> gs[] >>
+simp[fVslfv_mk_FALLL] >> reverse (rw[]) (* 2 *)
+>- (first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]) >>
+‘(n1,s1) ∈ slfv (MAP SND t) ∨ (n1,s1) ∈ ffv f’
+     by (qspecl_then [‘(Σf,Σp,Σe)’,‘LENGTH t’,‘t’,‘f’] assume_tac
+        (Q.GEN ‘Σ’ ffv_mk_FALLL_SUBSET) >>
+        ‘ffv (mk_FALLL t f) ⊆ ffv f ∪ slfv (MAP SND t)’
+         suffices_by (gs[SUBSET_DEF] >> metis_tac[]) >>
+        first_x_assum irule >> rw[] (* 4 *)
+        >- (first_x_assum $ drule_at_then Any assume_tac >>
+            first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+            gs[])
+        >- (last_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[] >>
+           first_x_assum $ qspecl_then [‘SUC m’] assume_tac >>
+           gs[] >> metis_tac[])
+        >- (first_x_assum $ qspecl_then [‘SUC n'’] assume_tac >>
+           gs[]) >>
+        qpat_x_assum ‘∀n'. _ ⇒ wfs _ _’
+        $ qspecl_then [‘SUC n'’] assume_tac >> gs[])  cheat
+    >- (gs[IN_slfv,MEM_MAP,MEM_EL] >>
+       last_x_assum $ qspecl_then [‘0’] assume_tac >> gs[] >>
+       first_x_assum irule >>
+       qexistsl [‘SUC n'’,‘n1’] >> simp[]) >>
+    first_x_assum $ drule_at_then Any assume_tac >>
+    first_x_assum $ qspecl_then [‘0’] assume_tac >> gs[]    
+QED    
+
+
+        
 Theorem wff_mk_FALLL:
 ∀k vl. LENGTH vl = k ⇒
 (∀n. n < LENGTH vl ⇒ ∀m. n < m ∧ m < LENGTH vl ⇒
@@ -723,6 +1078,7 @@ simp[rich_listTheory.EL_COUNT_LIST] >>
  by (irule $ cj 3 MAP_ZIP >> simp[]) >> gs[]
 QED 
 *)
+
 
 
 (*
@@ -1085,21 +1441,12 @@ QED
 
 
 Theorem fVar_MAP_vpv2b1:
-ALL_DISTINCT vl ⇒ (MAP (vpv2b (mk_v2b vl)) (REVERSE vl)) =
+ALL_DISTINCT vl ⇒ (MAP (vpv2b (mk_v2b (REVERSE vl))) vl) =
 (MAP Bound (REVERSE (COUNT_LIST (LENGTH vl))))
 Proof
-rw[] >> 
-irule LIST_EQ >> simp[rich_listTheory.LENGTH_COUNT_LIST] >>
-rw[] >> simp[EL_MAP] >>
-‘LENGTH (COUNT_LIST (LENGTH vl)) = LENGTH vl’ by
-simp[rich_listTheory.LENGTH_COUNT_LIST] >>
-‘LENGTH (REVERSE (COUNT_LIST (LENGTH vl))) = LENGTH vl’ by simp[] >>
-simp[EL_MAP] >>
-drule_all_then assume_tac vpv2b_mk_v2b_EL >> gs[] >>
-simp[EL_REVERSE] >> simp[Once EQ_SYM_EQ] >>
-‘(PRE (LENGTH vl − x)) < LENGTH vl’ by simp[] >>
-drule_all_then assume_tac vpv2b_mk_v2b_EL >> gs[] >>
-irule rich_listTheory.EL_COUNT_LIST >> simp[]
+rw[] >>
+‘ALL_DISTINCT (REVERSE vl)’ by simp[] >>
+drule_all_then assume_tac fVar_MAP_vpv2b >> gs[]
 QED
 
 
@@ -1167,18 +1514,43 @@ QED
 
         
 
+Theorem wfabsap0_LENGTH:
+  wfabsap0 Σ sl tl ⇒ LENGTH sl = LENGTH tl
+Proof
+  rw[] >> gs[wfabsap_iff_wfabsap0] >>
+  metis_tac[wfabsap_LENGTH]
+QED  
+
 Theorem mk_FALLL_wfabsap:
-ALL_DISTINCT vl ∧ LENGTH sl = LENGTH vl ⇒
+ wfabsap0 Σ sl (MAP Var' vl) ∧
+ (∀v. MEM v vl ⇒ v ∉ slfv sl) ∧
+ ALL_DISTINCT vl ⇒
 mk_FALLL vl (fVar P sl (MAP Var' vl)) =
 FALLL sl (plainfV (P,sl))
 Proof
-rw[] >> drule_then assume_tac mk_FALLL_fVar1 >>
+rw[] >>
+drule_then assume_tac wfabsap0_LENGTH >>
+drule_then assume_tac mk_FALLL_fVar1 >>
 gs[] >> simp[plainfV_def] >> 
-qspecl_then [‘LENGTH (vl)’,‘(vl)’] assume_tac mk_FALLL_fVar >
-> gs[] >>c
-simp[]
+qspecl_then [‘LENGTH (vl)’,‘(vl)’] assume_tac mk_FALLL_fVar >>
+gs[] >> 
+‘(vl2sl vl) = sl ∧
+(MAP (vpv2b (mk_v2b (REVERSE vl))) vl) =
+(MAP Bound (REVERSE (COUNT_LIST (LENGTH vl))))’
+suffices_by metis_tac[] >> reverse (rw[]) (* 2 *)
+>- (irule fVar_MAP_vpv2b1 >> simp[]) >>
+irule wfabsaps_Var'_vl2sl >> simp[] >> metis_tac[]
+QED
 
-
+Theorem wfabsaps_wff_FALLL:
+wfabsap0 (FST Σ) sl (MAP Var' vl) ∧
+(∀v. MEM v vl ⇒ v ∉ slfv sl) ∧
+ALL_DISTINCT vl ⇒ wff Σ (FALLL sl (plainfV (P,sl)))
+Proof
+rw[] >> drule_all_then assume_tac mk_FALLL_wfabsap >>
+pop_assum $ assume_tac o GSYM >> gs[] >>
+pop_assum $ K all_tac >>
+irule wff_mk_FALLL >> 
         
 Theorem mk_FALLL_fVar:
 ∀k vl0.

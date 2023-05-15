@@ -106,8 +106,7 @@ End
 
 Definition fVinsth_def:
   fVinsth σf (ct,asm,f) =
-  (ct ∪ ofFMAP ffv σf (Uof fVars ({f} ∪ asm)), 
-  IMAGE (fVinst σf) asm,fVinst σf f)
+  (ct, IMAGE (fVinst σf) asm,fVinst σf f)
 End
 
 Definition insth_def:      
@@ -443,19 +442,13 @@ QED
 
 Theorem insth_instf:
   insth fσ vσ (Γ,A,f) =
-  (vinst_cont vσ Γ ∪
-   ofFMAP ffv fσ
-   (Uof (IMAGE (vinst_fVar vσ) o fVars) ({f} ∪ A)),
+  (vinst_cont vσ Γ,
   IMAGE (instf fσ vσ) A,
   instf fσ vσ f)
 Proof  
  rw[insth_def,fVinsth_def,vinsth_def,instf_def,
     IMAGE_IMAGE,instf_fVinst_finst] >>
- rw[Uof_UNION,Uof_Sing,fVars_vinst] >>
- ‘Uof fVars (IMAGE (finst vσ) A) =
-  Uof (IMAGE (vinst_fVar vσ) ∘ fVars) A’
-  suffices_by metis_tac[] >>
- rw[Once EXTENSION,IN_Uof,PULL_EXISTS,fVars_vinst]
+ rw[Uof_UNION,Uof_Sing,fVars_vinst]
 QED
 
 
@@ -1334,18 +1327,6 @@ Proof
 QED
 
 
-(*        
-
-Theorem wff_IMP:
-  wff Σ (IMP f1 f2) ⇔ wff Σ f1 ∧ wff Σ f2
-Proof
-  rw[EQ_IMP_THM]
-  >- gs[Once wff_cases,mk_FALL_def,EQ_def]
-  >- gs[Once wff_cases,mk_FALL_def,EQ_def] >>
-  Cases_on ‘Σ’ >> Cases_on ‘r’ >> irule wff_IMP >>
-  simp[]
-QED                          
-*)         
 
 Theorem wfvmap_IN_ofMAP_wfs:
 wfvmap Σf vσ ∧ (n,s) ∈ ofFMAP tfv vσ vs ⇒

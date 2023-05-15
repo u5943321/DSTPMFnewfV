@@ -3,6 +3,8 @@ sig
   type thm = Thm.thm
   
   (*  Definitions  *)
+    val Leq_def : thm
+    val Req_def : thm
     val bmap_eff_def : thm
     val bmap_equiv_def : thm
     val fVmap_eff_def : thm
@@ -54,7 +56,15 @@ sig
   
   val fVinst_grammars : type_grammar.grammar * term_grammar.grammar
 (*
-   [fsytx] Parent theory of "fVinst"
+   [fm] Parent theory of "fVinst"
+   
+   [Leq_def]  Definition
+      
+      ⊢ Leq = FST ∘ dest_eq
+   
+   [Req_def]  Definition
+      
+      ⊢ Req = SND ∘ dest_eq
    
    [bmap_eff_def]  Definition
       

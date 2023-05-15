@@ -1,17 +1,17 @@
-structure wfgenl1Theory :> wfgenl1Theory =
+structure wfgenlTheory :> wfgenlTheory =
 struct
   
   val _ = if !Globals.print_thy_loads
-    then TextIO.print "Loading wfgenl1Theory ... "
+    then TextIO.print "Loading wfgenlTheory ... "
     else ()
   
   open Type Term Thm
-  local open fVinst1Theory in end;
+  local open fVinstTheory in end;
   
   structure TDB = struct
     val thydata = 
-      TheoryReader.load_thydata "wfgenl1"
-        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal1/wfgenl1Theory.dat")
+      TheoryReader.load_thydata "wfgenl"
+        (holpathdb.subst_pathvars "/Users/yimingxu/Documents/GitHub/DSTPMFnewfV/formal/wfgenlTheory.dat")
     fun find s = HOLdict.find (thydata,s)
   end
   
@@ -248,22 +248,14 @@ struct
   val op slnames_FINITE = TDB.find "slnames_FINITE"
   fun op wffVsl_sinst _ = () val op wffVsl_sinst = TDB.find "wffVsl_sinst"
   fun op tinst_wffstl _ = () val op tinst_wffstl = TDB.find "tinst_wffstl"
-  fun op IN_Uof _ = () val op IN_Uof = TDB.find "IN_Uof"
-  fun op vl2sl_fix _ = () val op vl2sl_fix = TDB.find "vl2sl_fix"
-  fun op wfvl_alt _ = () val op wfvl_alt = TDB.find "wfvl_alt"
-  fun op wfs_wffVsl_wfvl_lemma _ = ()
-  val op wfs_wffVsl_wfvl_lemma = TDB.find "wfs_wffVsl_wfvl_lemma"
   fun op specsl_wfs_fix _ = ()
   val op specsl_wfs_fix = TDB.find "specsl_wfs_fix"
-  fun op sl2vl_no_bound _ = ()
-  val op sl2vl_no_bound = TDB.find "sl2vl_no_bound"
-  fun op wfs_wffVsl _ = () val op wfs_wffVsl = TDB.find "wfs_wffVsl"
   fun op wfabsap_of_wfsl _ = ()
   val op wfabsap_of_wfsl = TDB.find "wfabsap_of_wfsl"
   
   
 val _ = if !Globals.print_thy_loads then TextIO.print "done\n" else ()
-val _ = Theory.load_complete "wfgenl1"
+val _ = Theory.load_complete "wfgenl"
 
-val wfgenl1_grammars = valOf (Parse.grammarDB {thyname = "wfgenl1"})
+val wfgenl_grammars = valOf (Parse.grammarDB {thyname = "wfgenl"})
 end
