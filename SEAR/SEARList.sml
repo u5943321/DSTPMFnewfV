@@ -505,7 +505,7 @@ e0
 “!A a:mem(A) l. Length(Cons(a,l)) = Suc(Length(l))”));
 
 
-
+ 
 
 
 (*HD (h::t) = h*)
@@ -644,4 +644,20 @@ e0
 (form_goal “!n l. Lt(n,Length(l)) ==>
   Eln(n,Map(f,l)) = App(OM(f:X->Y),Eln(n,l))”));
 
+
+
+(*
+rastt "Lrec(Tpm(Id(List(A))), om0(CONSe(a), List(A)))"
+
+rastt "Lrec(Tpm(Id(List(A))), om0(CONSe(a), List(A)))"
+
+val aprecf_def = 
+qfun_compr ‘af:mem(A * Exp(List(A),List(A)))’ 
+‘Tpm(CONSe(Fst(af)) o tof(Snd(af)))’
+|> qsimple_uex_spec "aprecf" [‘A’] |> gen_all
+
+rastt "Tpm(Id(List(A)))"
+rastt "om0(CONSe(a:mem(A)),List(A))"
+(a,f) |-> Cons(a) o f
+*)
 
